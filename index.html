@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kho Game Của Tôi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#13121c;
+    --bg-soft:#1b1a29;
+    --panel:#211f31;
+    --panel-line: rgba(255,255,255,0.08);
+    --ink:#f3f1e7;
+    --ink-dim:#a7a3bd;
+    --amber:#ffcf56;
+    --mint:#6fe7c4;
+    --coral:#ff7a7a;
+    --violet:#b39cff;
+    --sky:#7fd1ff;
+    --radius:14px;
+  }
+
+  *{ box-sizing:border-box; }
+  html{ scroll-behavior:smooth; }
+
+  body{
+    margin:0;
+    background:
+      radial-gradient(circle at 15% 0%, rgba(179,156,255,0.10), transparent 45%),
+      radial-gradient(circle at 85% 10%, rgba(255,207,86,0.08), transparent 40%),
+      var(--bg);
+    color:var(--ink);
+    font-family:'Space Grotesk', system-ui, sans-serif;
+    min-height:100vh;
+  }
+
+  a{ color:inherit; }
+
+  /* ---------- MARQUEE HEADER ---------- */
+  .marquee{
+    position:relative;
+    padding: 56px 24px 40px;
+    text-align:center;
+    overflow:hidden;
+    border-bottom:1px solid var(--panel-line);
+  }
+  .marquee::before{
+    content:"";
+    position:absolute; inset:0;
+    background-image: radial-gradient(circle, rgba(255,255,255,0.35) 1.5px, transparent 1.6px);
+    background-size: 26px 26px;
+    background-position: 0 0;
+    opacity:0.05;
+    pointer-events:none;
+  }
+  .bulbs{
+    display:flex; justify-content:center; gap:10px; margin-bottom:22px;
+  }
+  .bulb{
+    width:8px; height:8px; border-radius:50%;
+    background: var(--amber);
+    box-shadow:0 0 6px 2px rgba(255,207,86,0.6);
+    animation: flicker 2.6s infinite;
+  }
+  .bulb:nth-child(2n){ background:var(--mint); box-shadow:0 0 6px 2px rgba(111,231,196,0.6); animation-delay:.4s; }
+  .bulb:nth-child(3n){ background:var(--coral); box-shadow:0 0 6px 2px rgba(255,122,122,0.6); animation-delay:.8s; }
+  .bulb:nth-child(5n){ background:var(--sky); box-shadow:0 0 6px 2px rgba(127,209,255,0.6); animation-delay:1.2s; }
+  @keyframes flicker{
+    0%, 18%, 22%, 62%, 66%, 100% { opacity:1; }
+    20%, 64% { opacity:0.25; }
+  }
+
+  .title{
+    font-family:'Press Start 2P', monospace;
+    font-size: clamp(20px, 4vw, 34px);
+    line-height:1.6;
+    margin:0;
+    letter-spacing:1px;
+    color:var(--ink);
+    text-shadow: 0 0 18px rgba(255,207,86,0.25);
+  }
+  .subtitle{
+    margin:18px auto 0;
+    max-width:560px;
+    color:var(--ink-dim);
+    font-size:15px;
+  }
+
+  /* ---------- CONTROLS ---------- */
+  .controls{
+    max-width:1100px;
+    margin: 32px auto 0;
+    padding: 0 24px;
+    display:flex;
+    flex-wrap:wrap;
+    gap:12px;
+    align-items:center;
+    justify-content:space-between;
+  }
+  .search-wrap{
+    position:relative;
+    flex:1 1 240px;
+    max-width:340px;
+  }
+  .search-wrap input{
+    width:100%;
+    padding:11px 14px 11px 38px;
+    border-radius:999px;
+    border:1px solid var(--panel-line);
+    background:var(--panel);
+    color:var(--ink);
+    font-family:inherit;
+    font-size:14px;
+    outline:none;
+    transition:border-color .15s ease;
+  }
+  .search-wrap input:focus-visible{ border-color:var(--amber); }
+  .search-wrap svg{
+    position:absolute; left:13px; top:50%; transform:translateY(-50%);
+    width:15px; height:15px; opacity:0.6;
+  }
+
+  .tags{
+    display:flex; flex-wrap:wrap; gap:8px;
+  }
+  .tag-btn{
+    border:1px solid var(--panel-line);
+    background:var(--panel);
+    color:var(--ink-dim);
+    padding:8px 14px;
+    border-radius:999px;
+    font-family:inherit;
+    font-size:13px;
+    cursor:pointer;
+    transition: all .15s ease;
+  }
+  .tag-btn:hover{ color:var(--ink); border-color:rgba(255,255,255,0.2); }
+  .tag-btn:focus-visible{ outline:2px solid var(--amber); outline-offset:2px; }
+  .tag-btn.active{
+    background:var(--amber);
+    border-color:var(--amber);
+    color:#1a1508;
+    font-weight:600;
+  }
+
+  /* ---------- GRID ---------- */
+  .grid{
+    max-width:1100px;
+    margin: 30px auto 80px;
+    padding: 0 24px;
+    display:grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap:22px;
+  }
+
+  .cartridge{
+    position:relative;
+    background:var(--panel);
+    border-radius:var(--radius);
+    border:1px solid var(--panel-line);
+    padding:22px 18px 18px;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+    text-decoration:none;
+    color:var(--ink);
+    transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+  }
+  .cartridge::before{
+    content:"";
+    position:absolute;
+    top:-9px; left:24px;
+    width:44px; height:16px;
+    background:var(--card-color, var(--amber));
+    border-radius:4px 4px 0 0;
+    opacity:0.9;
+  }
+  .cartridge::after{
+    content:"";
+    position:absolute;
+    inset:0;
+    border-radius:var(--radius);
+    padding:1px;
+    background: linear-gradient(140deg, var(--card-color, var(--amber)), transparent 40%);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    opacity:0;
+    transition: opacity .18s ease;
+    pointer-events:none;
+  }
+  .cartridge:hover, .cartridge:focus-visible{
+    transform: translateY(-6px);
+    box-shadow: 0 14px 30px -12px rgba(0,0,0,0.55);
+    border-color: transparent;
+  }
+  .cartridge:hover::after, .cartridge:focus-visible::after{ opacity:1; }
+  .cartridge:focus-visible{ outline:2px solid var(--amber); outline-offset:3px; }
+
+  .cart-top{
+    display:flex; align-items:center; gap:12px;
+  }
+  .cart-icon{
+    font-size:26px;
+    width:46px; height:46px;
+    display:flex; align-items:center; justify-content:center;
+    border-radius:10px;
+    background: color-mix(in srgb, var(--card-color, var(--amber)) 18%, transparent);
+    flex-shrink:0;
+  }
+  .cart-name{
+    font-size:16px;
+    font-weight:600;
+    margin:0;
+    line-height:1.3;
+  }
+  .cart-genre{
+    font-size:11.5px;
+    color: var(--card-color, var(--amber));
+    text-transform:uppercase;
+    letter-spacing:0.06em;
+    margin-top:2px;
+    display:block;
+  }
+  .cart-desc{
+    font-size:13.5px;
+    color:var(--ink-dim);
+    line-height:1.55;
+    margin:0;
+    flex:1;
+  }
+  .cart-footer{
+    display:flex; align-items:center; justify-content:space-between;
+    margin-top:4px;
+  }
+  .play-label{
+    font-size:13px;
+    font-weight:600;
+    display:flex; align-items:center; gap:6px;
+  }
+  .play-label svg{ width:13px; height:13px; transition: transform .15s ease; }
+  .cartridge:hover .play-label svg{ transform:translateX(3px); }
+
+  .badge-soon{
+    font-size:10.5px;
+    padding:3px 9px;
+    border-radius:999px;
+    background:rgba(255,255,255,0.08);
+    color:var(--ink-dim);
+    letter-spacing:0.03em;
+  }
+  .cartridge.is-soon{
+    opacity:0.55;
+    cursor:not-allowed;
+    pointer-events:none;
+  }
+
+  /* empty state */
+  .empty{
+    grid-column: 1 / -1;
+    text-align:center;
+    padding:60px 20px;
+    color:var(--ink-dim);
+  }
+  .empty p:first-child{
+    font-family:'Press Start 2P', monospace;
+    font-size:13px;
+    color:var(--ink);
+    margin-bottom:14px;
+  }
+
+  footer{
+    text-align:center;
+    padding: 28px 20px 40px;
+    color:var(--ink-dim);
+    font-size:12.5px;
+    border-top:1px solid var(--panel-line);
+  }
+  footer code{
+    background:var(--panel);
+    padding:2px 6px;
+    border-radius:4px;
+    color:var(--mint);
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .bulb{ animation:none !important; }
+    .cartridge{ transition:none !important; }
+    html{ scroll-behavior:auto; }
+  }
+</style>
+</head>
+<body>
+
+<header class="marquee">
+  <div class="bulbs" aria-hidden="true">
+    <span class="bulb"></span><span class="bulb"></span><span class="bulb"></span>
+    <span class="bulb"></span><span class="bulb"></span><span class="bulb"></span>
+    <span class="bulb"></span>
+  </div>
+  <h1 class="title">KHO GAME CỦA TÔI</h1>
+  <p class="subtitle">Tuyển tập các web game tự làm — chọn một cartridge bên dưới để bắt đầu chơi.</p>
+</header>
+
+<div class="controls">
+  <div class="search-wrap">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input id="search" type="text" placeholder="Tìm game theo tên..." aria-label="Tìm game">
+  </div>
+  <div class="tags" id="tagFilters"></div>
+</div>
+
+<main class="grid" id="grid"></main>
+
+<footer>© 2026 Bản quyền thuộc về Nguyễn Hoàng Khoa</footer>
+
+<script>
+/* =====================================================================
+   DANH SÁCH GAME — chỉnh sửa ở đây
+   =====================================================================
+   Mỗi game là một object gồm các trường:
+     title  : Tên game hiển thị
+     genre  : Thể loại (VD: "Arcade", "Puzzle", "Đua xe"...)
+     desc   : Mô tả ngắn 1 câu
+     icon   : Một emoji đại diện cho game
+     color  : Mã màu viền/nhấn cho card (dùng mã hex, VD "#6fe7c4")
+     href   : Đường dẫn tới file game của bạn (VD: "games/rắn-săn-mồi/index.html")
+              -> để trống "" hoặc đặt soon:true nếu game chưa xong
+     soon   : true nếu game chưa sẵn sàng (card sẽ mờ đi, không bấm được)
+
+   Copy một object bên dưới, dán thêm dấu phẩy, rồi sửa nội dung cho
+   game tiếp theo của bạn. Không cần đụng vào phần code phía dưới.
+   ===================================================================== */
+  const games = [
+    {
+      title: "Cờ Ca Rô",
+      genre: "Cờ",
+      desc: "Đánh cờ ca rô 2 người, ai xếp được 3 quân liên tiếp trước sẽ thắng.",
+      icon: "❌",
+      color: "#ffcf56",
+      href: "game/coxo.html"
+    },
+    {
+      title: "Cờ Cá Ngựa",
+      genre: "Cờ",
+      desc: "Đổ xúc xắc, đưa 4 con ngựa của mình về đích trước đối thủ.",
+      icon: "🐴",
+      color: "#ff7a7a",
+      href: "game/cangua.html"
+    },
+    {
+      title: "Cờ Thú",
+      genre: "Cờ",
+      desc: "Điều khiển các con thú với sức mạnh khác nhau, ăn quân đối phương để vào hang.",
+      icon: "🐯",
+      color: "#6fe7c4",
+      href: "game/cothu.html"
+    },
+    {
+      title: "Cờ Tướng",
+      genre: "Cờ",
+      desc: "Cờ tướng cổ điển 2 người, chiếu bí tướng đối phương để giành chiến thắng.",
+      icon: "🀄",
+      color: "#b39cff",
+      href: "game/cotuong.html"
+    }
+  ];
+/* ===================================================================== */
+
+  const grid = document.getElementById('grid');
+  const tagFiltersEl = document.getElementById('tagFilters');
+  const searchInput = document.getElementById('search');
+
+  let activeGenre = 'Tất cả';
+  let query = '';
+
+  function renderTags(){
+    const genres = ['Tất cả', ...new Set(games.map(g => g.genre))];
+    tagFiltersEl.innerHTML = '';
+    genres.forEach(g => {
+      const btn = document.createElement('button');
+      btn.className = 'tag-btn' + (g === activeGenre ? ' active' : '');
+      btn.textContent = g;
+      btn.type = 'button';
+      btn.addEventListener('click', () => {
+        activeGenre = g;
+        renderTags();
+        renderGrid();
+      });
+      tagFiltersEl.appendChild(btn);
+    });
+  }
+
+  function playIcon(){
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 4l14 8-14 8V4z"/></svg>';
+  }
+
+  function renderGrid(){
+    const q = query.trim().toLowerCase();
+    const filtered = games.filter(g => {
+      const matchGenre = activeGenre === 'Tất cả' || g.genre === activeGenre;
+      const matchQuery = g.title.toLowerCase().includes(q);
+      return matchGenre && matchQuery;
+    });
+
+    grid.innerHTML = '';
+
+    if(filtered.length === 0){
+      grid.innerHTML = `
+        <div class="empty">
+          <p>KHÔNG TÌM THẤY GAME</p>
+          <p>Thử từ khoá khác hoặc chọn lại thể loại.</p>
+        </div>`;
+      return;
+    }
+
+    filtered.forEach(g => {
+      const isSoon = !!g.soon || !g.href;
+      const el = document.createElement(isSoon ? 'div' : 'a');
+      if(!isSoon){
+        el.href = g.href;
+        el.target = '_self';
+      }
+      el.className = 'cartridge' + (isSoon ? ' is-soon' : '');
+      el.style.setProperty('--card-color', g.color || '#ffcf56');
+      if(!isSoon) el.tabIndex = 0;
+
+      el.innerHTML = `
+        <div class="cart-top">
+          <div class="cart-icon">${g.icon || '🎮'}</div>
+          <div>
+            <p class="cart-name">${g.title}</p>
+            <span class="cart-genre">${g.genre}</span>
+          </div>
+        </div>
+        <p class="cart-desc">${g.desc || ''}</p>
+        <div class="cart-footer">
+          ${isSoon
+            ? '<span class="badge-soon">SẮP RA MẮT</span>'
+            : `<span class="play-label">CHƠI NGAY ${playIcon()}</span>`
+          }
+        </div>
+      `;
+      grid.appendChild(el);
+    });
+  }
+
+  searchInput.addEventListener('input', (e) => {
+    query = e.target.value;
+    renderGrid();
+  });
+
+  renderTags();
+  renderGrid();
+</script>
+
+</body>
+</html>
