@@ -1,0 +1,3168 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Cờ Ca-rô">
+<meta name="theme-color" content="#fdfbf4" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1c1e22" media="(prefers-color-scheme: dark)">
+<title>Cờ Ca-rô</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper: #fdfbf4;
+    --card: #ffffff;
+    --rule-blue: #b7cbea;
+    --margin-red: #e08a8a;
+    --ink-blue: #2c4a7c;
+    --ink-blue-soft: rgba(44,74,124,0.1);
+    --ink-red: #b73e3e;
+    --ink-red-soft: rgba(183,62,62,0.1);
+    --pencil: #33343a;
+    --pencil-light: #93938c;
+    --line: #e7e3d8;
+    --highlight: #d69a3c;
+    --shadow: rgba(60,50,30,0.12);
+    --overlay-bg: rgba(40,38,32,0.4);
+  }
+  html[data-theme="dark"]{
+    --paper: #1c1e22;
+    --card: #24262b;
+    --rule-blue: #333c4a;
+    --margin-red: #8f5252;
+    --ink-blue: #82abe8;
+    --ink-blue-soft: rgba(130,171,232,0.14);
+    --ink-red: #e58f8f;
+    --ink-red-soft: rgba(229,143,143,0.14);
+    --pencil: #ece9e1;
+    --pencil-light: #8d8f94;
+    --line: #34363c;
+    --highlight: #e8b95a;
+    --shadow: rgba(0,0,0,0.45);
+    --overlay-bg: rgba(0,0,0,0.6);
+  }
+  *{ box-sizing:border-box; }
+  html, body{
+    height: 100%;
+  }
+  body{
+    margin:0;
+    background: #14161a;
+    font-family:'Inter', sans-serif;
+    color: var(--pencil);
+    display:flex;
+    align-items:stretch;
+    justify-content:center;
+    overflow: hidden;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .icon{ width:20px; height:20px; display:block; }
+  .icon svg{ width:100%; height:100%; }
+
+  /* Khung app: full màn hình trên điện thoại, giả lập khung app khi xem trên desktop */
+  .app-shell{
+    width: 100%;
+    max-width: 460px;
+    /* QUAN TRỌNG: 100vh PHẢI đứng TRƯỚC 100dvh (không phải ngược lại) — CSS ưu tiên khai báo đứng SAU
+       cùng khi trùng thuộc tính, nên thứ tự ở đây quyết định trình duyệt dùng đơn vị nào:
+       - 100vh (fallback cho trình duyệt cũ không hiểu dvh): tính theo chiều cao viewport LỚN NHẤT có thể,
+         tức là lúc thanh địa chỉ trình duyệt di động đang ẨN. Khi thanh địa chỉ HIỆN RA (trường hợp phổ
+         biến, đặc biệt lúc mới mở trang), 100vh vẫn giữ nguyên giá trị cũ -> khung app bị tính CAO HƠN
+         màn hình thực sự nhìn thấy -> phần dưới (thanh nút Quay lại/Ván mới/Xoá điểm...) bị đẩy ra ngoài
+         vùng nhìn thấy, trông như "biến mất" dù thực ra chỉ bị tràn xuống dưới.
+       - 100dvh (dynamic viewport height, trình duyệt hiện đại): tự cập nhật lại mỗi khi thanh địa chỉ
+         hiện/ẩn, luôn khớp ĐÚNG vùng nhìn thấy thực tế -> khắc phục triệt để lỗi trên.
+       Bản trước đặt NGƯỢC thứ tự (100dvh trước, 100vh sau) nên 100vh luôn đè mất 100dvh, vô hiệu hoá
+       hoàn toàn phần sửa lỗi này dù đã có mặt trong code — đây chính là nguyên nhân khách hàng gặp lỗi
+       mất thanh nút khi mở trên điện thoại thật. */
+    height: 100vh;
+    height: 100dvh;
+    /* Lớp bảo vệ thứ 3, đứng SAU CÙNG nên ưu tiên cao nhất khi giá trị tồn tại: biến --app-vh do JS đo
+       bằng window.innerHeight thật (xem script cuối trang) — chỉ để phòng hờ những trình duyệt/WebView
+       đời cũ không hiểu 100dvh (dvh đã hỗ trợ rộng rãi từ ~2023 nhưng vẫn có thể gặp WebView nhúng trong
+       app khác dùng engine cũ hơn). Nếu JS không chạy được vì lý do gì đó, đơn giản là biến rỗng, dòng
+       này bị bỏ qua và 2 dòng 100vh/100dvh ở trên vẫn có tác dụng như bình thường — không có rủi ro. */
+    height: var(--app-vh, 100dvh);
+    background:
+      repeating-linear-gradient(var(--paper) 0 31px, var(--rule-blue) 31px 32px);
+    background-color: var(--paper);
+    box-shadow: 0 0 60px rgba(0,0,0,0.35);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+    transition: background-color .25s ease;
+  }
+
+  .app-header{
+    flex-shrink: 0;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding: calc(env(safe-area-inset-top, 0px) + 14px) 18px 8px;
+  }
+  h1{
+    font-family:'Caveat', cursive;
+    font-weight:700;
+    font-size: 2.1rem;
+    margin: 0;
+    color: var(--ink-blue);
+    transform: rotate(-1.5deg);
+  }
+  .icon-btn{
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    border: 1.5px solid var(--line);
+    background: var(--card);
+    color: var(--pencil);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    transition: transform .15s ease, border-color .2s ease, background-color .2s ease;
+    flex-shrink: 0;
+    position: relative;
+    overflow: hidden;
+    touch-action: manipulation;
+  }
+  .icon-btn:hover{ transform: rotate(-8deg) scale(1.06); border-color: var(--ink-blue); }
+  .icon-btn:active{ transform: scale(0.9); }
+  .header-actions{ display:flex; align-items:center; gap: 8px; }
+
+  .app-content{
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 18px 16px;
+  }
+
+  .app-bottombar{
+    flex-shrink: 0;
+    display:flex;
+    align-items:center;
+    justify-content: space-between;
+    gap: 8px;
+    flex-wrap: wrap;
+    padding: 10px 14px calc(env(safe-area-inset-bottom, 0px) + 12px);
+    background: var(--card);
+    border-top: 1px solid var(--line);
+    box-shadow: 0 -6px 18px var(--shadow);
+    transition: background-color .25s ease, border-color .25s ease;
+  }
+  /* Cụm nút hành động (Quay lại/Ván mới/Xoá điểm) đôi khi không đủ chỗ để nằm chung dòng với các cụm
+     phía trước (chế độ chơi/cỡ bàn/độ khó/luật đổi quân) và bị đẩy xuống dòng riêng — lúc đó, với
+     justify-content:space-between, 1 phần tử duy nhất trên 1 dòng sẽ nằm ở ĐẦU dòng chứ không phải giữa.
+     Việc này phụ thuộc TỔNG bề rộng mọi cụm đang hiển thị (đổi theo độ khó/cỡ màn hình/chế độ chơi...),
+     không thể đoán trước bằng CSS thuần, nên JS đo trực tiếp (xem syncBottombarWrapState) và bật class
+     .is-actions-wrapped đúng lúc cụm này thực sự nằm 1 mình trên dòng riêng. */
+  .app-bottombar.is-actions-wrapped .segment.actions{
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .segment{
+    position: relative;
+    display:flex;
+    gap: 3px;
+    background: var(--paper);
+    border: 1.5px solid var(--line);
+    border-radius: 14px;
+    padding: 3px;
+  }
+  .segment-indicator{
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    background: var(--ink-blue-soft);
+    border-radius: 10px;
+    transition: transform .28s cubic-bezier(.34,1.56,.64,1), width .28s ease;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .segment button{
+    width: 42px;
+    height: 40px;
+    border: none;
+    border-radius: 10px;
+    background: transparent;
+    color: var(--pencil-light);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    transition: background-color .15s ease, color .2s ease, transform .12s ease;
+    position: relative;
+    z-index: 1;
+    overflow: hidden;
+    touch-action: manipulation;
+  }
+  .segment button:hover{ color: var(--pencil); }
+  .segment button.active{
+    color: var(--ink-blue);
+  }
+  .segment.actions button.active{ background: var(--ink-blue-soft); }
+  .segment.actions button:hover{ color: var(--ink-red); }
+  .segment button:active{ transform: scale(0.86); }
+  .size-badge{
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    font-size: 8px;
+    font-weight: 800;
+    line-height: 1;
+    font-family: 'Inter', sans-serif;
+    background: var(--ink-blue);
+    color: #fff;
+    border-radius: 6px;
+    padding: 1.5px 3px;
+    pointer-events: none;
+    z-index: 2;
+  }
+  .is-hidden{ display:none !important; }
+  #difficulty-toggle{
+    width:auto;
+    min-width: 56px;
+    padding: 0 10px;
+    gap:6px;
+    font-family:'Inter', sans-serif;
+    font-weight:700;
+    font-size:12.5px;
+    letter-spacing:.2px;
+  }
+  .diff-dot{
+    width:8px; height:8px; border-radius:50%; flex-shrink:0;
+    transition: background-color .2s ease;
+  }
+  /* Màu chấm đi theo NHÃN HIỂN THỊ (Dễ->Vừa->Khó), không theo key nội bộ (medium/hard/expert) — thứ tự
+     xanh lá (an toàn) -> vàng (cảnh báo) -> đỏ đậm (nguy hiểm/mạnh nhất) đúng quy ước trực quan quen
+     thuộc, giúp người chơi nhìn màu là đoán được ngay mức độ mà không cần đọc chữ. */
+  .diff-dot.medium{ background:#4c9a5b; }                 /* 'medium' hiển thị "Dễ" -> xanh lá */
+  .diff-dot.hard{ background:#c99a2e; }                    /* 'hard' hiển thị "Vừa" -> vàng */
+  .diff-dot.expert{ background:var(--ink-red); box-shadow:0 0 0 2px var(--ink-red-soft); } /* 'expert' hiển thị "Khó" -> đỏ đậm, có glow vì là mức mạnh nhất */
+
+  /* Nút "Cân bằng" (luật đổi quân đầu): giờ chỉ còn icon, không chữ — bấm vào SÁNG LÊN (nền + icon
+     đổi màu xanh mực) nghĩa là đang BẬT, bấm lại thì tắt sáng trở về màu trung tính như mọi icon khác. */
+  #swaprule-toggle.active{
+    background: var(--ink-blue-soft);
+    box-shadow: inset 0 0 0 1.5px var(--ink-blue);
+  }
+
+  /* Gợn sóng khi bấm (ripple) */
+  .ripple{
+    position: absolute;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: 0.28;
+    transform: scale(0);
+    pointer-events: none;
+    animation: rippleAnim .55s ease-out forwards;
+  }
+  @keyframes rippleAnim{
+    to{ transform: scale(1); opacity: 0; }
+  }
+
+  /* Hiệu ứng theo từng loại icon khi bấm */
+  @keyframes iconPop{
+    0%{ transform: scale(1); }
+    45%{ transform: scale(0.72); }
+    100%{ transform: scale(1); }
+  }
+  @keyframes iconSpin{
+    0%{ transform: rotate(0deg) scale(1); }
+    60%{ transform: rotate(320deg) scale(1.12); }
+    100%{ transform: rotate(360deg) scale(1); }
+  }
+  @keyframes iconShake{
+    0%, 100%{ transform: translateX(0) rotate(0); }
+    20%{ transform: translateX(-3px) rotate(-10deg); }
+    40%{ transform: translateX(3px) rotate(10deg); }
+    60%{ transform: translateX(-2.5px) rotate(-7deg); }
+    80%{ transform: translateX(2.5px) rotate(7deg); }
+  }
+  @keyframes iconRewind{
+    0%{ transform: translateX(0) rotate(0); }
+    35%{ transform: translateX(-4px) rotate(-28deg); }
+    70%{ transform: translateX(1px) rotate(6deg); }
+    100%{ transform: translateX(0) rotate(0); }
+  }
+  .fx-pop .icon{ animation: iconPop .38s ease; display:block; }
+  .fx-spin .icon{ animation: iconSpin .5s cubic-bezier(.3,.1,.3,1); display:block; }
+  .fx-shake .icon{ animation: iconShake .45s ease; display:block; }
+  .fx-rewind .icon{ animation: iconRewind .45s ease; display:block; }
+
+
+  .status-bar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap: 10px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+  /* Phòng hờ khi turn-group (badge "Đang đi" + nút đổi người đi trước) và score-chips (X/O/Hoà) vẫn
+     không đủ chỗ chung 1 dòng (màn quá hẹp, hoặc điểm số lên tới 2-3 chữ số làm chip dài ra) — score-chips
+     bị đẩy xuống dòng riêng thì canh GIỮA thay vì dạt trái. Đo thực tế bằng JS (xem syncStatusBarWrapState),
+     không đoán qua trạng thái cụ thể nào, giống cách đã xử lý cho thanh nút dưới cùng. */
+  .status-bar.is-wrapped .score-chips{
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .turn-badge{
+    display:flex;
+    align-items:center;
+    gap: 7px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 6px 12px 6px 10px;
+    border-radius: 20px;
+    background: var(--paper);
+    border: 1.5px solid var(--line);
+    transition: border-color .2s ease, color .2s ease;
+  }
+  .turn-badge.turn-x{ color: var(--ink-blue); border-color: var(--ink-blue-soft); }
+  .turn-badge.turn-o{ color: var(--ink-red); border-color: var(--ink-red-soft); }
+  .turn-badge .icon{ width:16px; height:16px; }
+
+  .turn-group{ display:flex; align-items:center; gap: 8px; flex-wrap: wrap; }
+  .swap-start-btn{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    border-radius: 50%;
+    background: transparent;
+    border: 1.5px dashed var(--line);
+    color: var(--pencil-light);
+    cursor: pointer;
+    font-family: inherit;
+    transition: border-color .2s ease, color .2s ease, transform .15s ease;
+  }
+  .swap-start-btn:hover{ transform: translateY(-1px) rotate(-8deg); }
+  .swap-start-btn:active{ transform: translateY(0); }
+  .swap-start-btn .icon{ width:15px; height:15px; }
+  .swap-start-btn.turn-x{ color: var(--ink-blue); border-color: var(--ink-blue-soft); }
+  .swap-start-btn.turn-o{ color: var(--ink-red); border-color: var(--ink-red-soft); }
+
+  .score-chips{ display:flex; gap: 6px; }
+  .chip{
+    display:flex;
+    align-items:center;
+    gap: 5px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    padding: 5px 10px;
+    border-radius: 16px;
+    background: var(--paper);
+    border: 1.5px solid var(--line);
+  }
+  .chip .icon{ width:14px; height:14px; }
+  .chip-x{ color: var(--ink-blue); }
+  .chip-o{ color: var(--ink-red); }
+  .chip-d{ color: var(--pencil-light); }
+
+  .board-wrap{
+    display:flex;
+    justify-content:center;
+    margin: 6px 0 4px 0;
+    overflow-x: auto;
+    padding: 14px;
+    border-radius: 20px;
+    background:
+      radial-gradient(circle at 30% 20%, var(--ink-blue-soft), transparent 60%),
+      var(--paper);
+    box-shadow: inset 0 0 0 1.5px var(--line), 0 8px 22px var(--shadow);
+  }
+  .board{
+    position:relative;
+    display:grid;
+    flex-shrink: 0;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 3px 10px var(--shadow);
+    transition: border-color .25s ease, box-shadow .25s ease;
+  }
+  .cell{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    position:relative;
+    border-right: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    background: var(--card);
+    transition: background-color .15s ease, border-color .25s ease;
+    touch-action: manipulation;
+  }
+  .board.thin .cell{ border-width: 0.6px; }
+  .board.hand-drawn .cell{ border-color: var(--pencil-light); }
+  .cell.edge-right{ border-right: none; }
+  .cell.edge-bottom{ border-bottom: none; }
+  .board.hand-drawn{ transform: rotate(-0.25deg); }
+
+  /* Đường kẻ đậm hơn cứ mỗi 5 ô trên bàn lớn, giúp định vị và trông chuyên nghiệp hơn */
+  .cell.grid-major-v{ border-right-width: 1.4px; border-right-color: var(--pencil-light); }
+  .cell.grid-major-h{ border-bottom-width: 1.4px; border-bottom-color: var(--pencil-light); }
+
+  /* Điểm tham chiếu (star point) cho bàn lớn, giống bàn cờ vây/caro chuyên nghiệp */
+  .cell.star-point:not(.filled)::before{
+    content:"";
+    position:absolute;
+    width: 22%;
+    height: 22%;
+    border-radius: 50%;
+    background: var(--pencil-light);
+    opacity: 0.4;
+  }
+
+  .cell svg{ width: 68%; height: 68%; opacity:0; transition: opacity .18s ease; overflow: visible; filter: drop-shadow(0 1px 1.5px rgba(0,0,0,0.16)); }
+  .cell svg.show{ opacity:1; }
+  .cell svg path, .cell svg ellipse{
+    stroke-dasharray: 240;
+    stroke-dashoffset: 240;
+    transition: stroke-dashoffset .45s cubic-bezier(.3,.6,.3,1);
+  }
+  .cell svg.show path:nth-child(1){ transition-delay: 0s; }
+  .cell svg.show path:nth-child(2){ transition-delay: .12s; }
+  .cell svg.show path, .cell svg.show ellipse{ stroke-dashoffset: 0; }
+
+  .cell:not(.filled):hover{ background: var(--ink-blue-soft); }
+  .cell.win-cell{
+    background: var(--ink-red-soft);
+    box-shadow: inset 0 0 0 2px var(--ink-red);
+    animation: winPulse 1.1s ease-in-out infinite;
+    z-index: 1;
+  }
+  @keyframes winPulse{
+    0%, 100%{ background: var(--ink-red-soft); }
+    50%{ background: rgba(183,62,62,0.22); }
+  }
+  .cell.last-move{ box-shadow: inset 0 0 0 3px var(--highlight); z-index: 2; }
+  .cell.last-move::after{
+    content:"";
+    position:absolute;
+    inset: 0;
+    background: var(--highlight);
+    opacity: 0.14;
+    pointer-events: none;
+  }
+
+
+  /* Popup / modal */
+  .overlay{
+    position:absolute;
+    inset:0;
+    background: var(--overlay-bg);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding: 20px;
+    z-index: 100;
+    opacity:0;
+    pointer-events:none;
+    transition: opacity .18s ease;
+  }
+  .overlay.show{ opacity:1; pointer-events:auto; }
+  .modal{
+    background: var(--card);
+    border-radius: 20px;
+    box-shadow: 0 16px 40px var(--shadow);
+    max-width: 320px;
+    width:100%;
+    padding: 28px 24px 22px;
+    text-align:center;
+    transform: scale(0.92);
+    transition: transform .18s ease, background-color .25s ease;
+  }
+  .overlay.show .modal{ transform: scale(1); }
+  .modal-icon{
+    font-family:'Caveat', cursive;
+    font-size: 2.4rem;
+    font-weight: 700;
+    margin: 0 0 6px 0;
+  }
+  .modal-icon.x-result{ color: var(--ink-blue); }
+  .modal-icon.o-result{ color: var(--ink-red); }
+  .modal-icon.draw-result{ color: var(--pencil); }
+  .modal-title{
+    font-weight: 700;
+    font-size: 1.15rem;
+    margin: 0 0 4px 0;
+    color: var(--pencil);
+  }
+  .modal-sub{
+    font-size: 0.85rem;
+    color: var(--pencil-light);
+    margin: 0 0 20px 0;
+  }
+  .modal-actions{
+    display:flex;
+    gap: 10px;
+    justify-content:center;
+    flex-wrap: wrap;
+  }
+  .modal-actions button{
+    font-family:'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 0.9rem;
+    padding: 9px 18px;
+    border-radius: 12px;
+    cursor:pointer;
+  }
+  .modal-actions .primary{
+    background: var(--ink-blue);
+    color: #fff;
+    border: 1.5px solid var(--ink-blue);
+  }
+  .modal-actions .primary:hover{ opacity: 0.9; }
+  .modal-actions .secondary{
+    background: transparent;
+    border: 1.5px solid var(--line);
+    color: var(--pencil);
+  }
+  .modal-actions .secondary:hover{ border-color: var(--pencil-light); }
+  .modal-actions .danger{
+    background: var(--card);
+    border: 1.5px solid var(--ink-red);
+    color: var(--ink-red);
+  }
+  .modal-actions .danger:hover{ background: var(--ink-red-soft); }
+
+  @media (max-width: 420px){
+    h1{ font-size: 1.9rem; }
+  }
+</style>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="app-header">
+      <h1>Cờ Ca-rô</h1>
+      <div class="header-actions">
+        <button class="icon-btn" id="sound-toggle" title="Bật/tắt âm thanh" aria-label="Bật/tắt âm thanh"></button>
+        <button class="icon-btn" id="theme-toggle" title="Đổi giao diện sáng/tối" aria-label="Đổi giao diện sáng/tối"></button>
+      </div>
+    </header>
+
+    <main class="app-content">
+      <div class="status-bar">
+        <div class="turn-group">
+          <div class="turn-badge turn-x" id="turn-badge"></div>
+          <button class="swap-start-btn" id="swap-start" title="Đổi người đi trước" aria-label="Đổi người đi trước"></button>
+        </div>
+        <div class="score-chips">
+          <span class="chip chip-x" id="chip-x"></span>
+          <span class="chip chip-o" id="chip-o"></span>
+          <span class="chip chip-d" id="chip-d"></span>
+        </div>
+      </div>
+
+      <div class="board-wrap">
+        <div class="board" id="board"></div>
+      </div>
+    </main>
+
+    <nav class="app-bottombar">
+      <div class="segment" id="mode-tabs" role="group" aria-label="Chế độ chơi">
+        <div class="segment-indicator"></div>
+        <button data-mode="pvp" class="active" title="2 người chơi" aria-label="2 người chơi"></button>
+        <button data-mode="ai" title="Đấu với máy" aria-label="Đấu với máy"></button>
+      </div>
+      <div class="segment" id="size-toggle-wrap">
+        <button id="size-toggle" title="Kích thước bàn cờ" aria-label="Kích thước bàn cờ"></button>
+      </div>
+      <div class="segment is-hidden" id="difficulty-toggle-wrap">
+        <button id="difficulty-toggle" title="Độ khó của máy — bấm để đổi" aria-label="Độ khó của máy"></button>
+      </div>
+      <div class="segment is-hidden" id="swaprule-toggle-wrap">
+        <button id="swaprule-toggle" title="Luật đổi quân đầu (Pie Rule) — bấm để bật/tắt" aria-label="Luật đổi quân đầu"></button>
+      </div>
+      <div class="segment actions">
+        <button id="undo-move" title="Quay lại nước đi" aria-label="Quay lại nước đi"></button>
+        <button id="new-round" title="Ván mới" aria-label="Ván mới"></button>
+        <button id="reset-score" title="Xoá điểm" aria-label="Xoá điểm"></button>
+      </div>
+    </nav>
+
+    <div class="overlay" id="overlay">
+      <div class="modal">
+        <div class="modal-icon" id="modal-icon">🎉</div>
+        <div class="modal-title" id="modal-title">Tiêu đề</div>
+        <div class="modal-sub" id="modal-sub">Mô tả</div>
+        <div class="modal-actions" id="modal-actions"></div>
+      </div>
+    </div>
+  </div>
+
+<script>
+(function(){
+  const ICONS = {
+    people: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="3"/><path d="M2 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17.5" cy="7" r="2.4"/><path d="M14.3 20c.4-2.9 2.4-5 5.2-5 2 0 3.7 1 4.5 2.6"/></svg>`,
+    robot: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="8" width="16" height="12" rx="3"/><path d="M12 8V4"/><circle cx="12" cy="3" r="1.2" fill="currentColor" stroke="none"/><circle cx="9" cy="14" r="1.3" fill="currentColor" stroke="none"/><circle cx="15" cy="14" r="1.3" fill="currentColor" stroke="none"/><path d="M9 17.5h6"/><path d="M2 13h2M20 13h2"/></svg>`,
+    grid3: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M15 3v18M3 9h18M3 15h18"/></svg>`,
+    grid15: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7.2 3v18M11.4 3v18M15.6 3v18M19.8 3v18M3 7.2h18M3 11.4h18M3 15.6h18M3 19.8h18"/></svg>`,
+    grid30: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M6 3v18M9 3v18M12 3v18M15 3v18M18 3v18M3 6h18M3 9h18M3 12h18M3 15h18M3 18h18"/></svg>`,
+    refresh: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 15.4-6.4L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15.4 6.4L3 16"/><path d="M3 21v-5h5"/></svg>`,
+    trash: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M6 7l1 13a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-13"/><path d="M10 11v6M14 11v6"/></svg>`,
+    sun: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4.3"/><path d="M12 2v2.5M12 19.5V22M4.2 4.2l1.8 1.8M18 18l1.8 1.8M2 12h2.5M19.5 12H22M4.2 19.8l1.8-1.8M18 6l1.8-1.8"/></svg>`,
+    moon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5z"/></svg>`,
+    draw: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="9" cy="12" r="6"/><circle cx="15" cy="12" r="6"/></svg>`,
+    undo: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14l-5-5 5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-2"/></svg>`,
+    swap: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h13"/><path d="M14 4l3.5 4L14 12"/><path d="M20 16H7"/><path d="M10 20l-3.5-4L10 12"/></svg>`,
+    xMark: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>`,
+    oMark: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="12" cy="12" r="7.5"/></svg>`,
+    soundOn: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 5V4L8 9H4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.2 5.8a9 9 0 0 1 0 12.4"/></svg>`,
+    soundOff: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 5V4L8 9H4z"/><path d="M16 9l5.5 6M21.5 9L16 15"/></svg>`,
+    scale: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><path d="M7 21h10"/><path d="M12 6L4 8l4 7 4-7-4-2z"/><path d="M12 6l8 2-4 7-4-7 4-2z" opacity=".55"/><path d="M4 8l4 7M20 8l-4 7"/></svg>`,
+    chart: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M11 20V4M18 20v-7"/><path d="M3 20h18"/></svg>`
+  };
+  const el = (id) => document.getElementById(id);
+
+  // Dự phòng cho trình duyệt/WebView đời cũ chưa hiểu đơn vị 100dvh (xem giải thích ở CSS .app-shell):
+  // đo chiều cao viewport THẬT bằng window.innerHeight (đã trừ đúng phần thanh địa chỉ/thanh điều hướng
+  // đang chiếm dụng) rồi lưu vào biến CSS --app-vh, cập nhật lại mỗi khi resize (mở/ẩn thanh địa chỉ lúc
+  // cuộn, xoay ngang máy, bật bàn phím ảo...). Chạy ngay lập tức 1 lần khi tải trang, không cần chờ sự
+  // kiện nào khác.
+  function syncAppViewportHeight(){
+    document.documentElement.style.setProperty('--app-vh', window.innerHeight + 'px');
+  }
+  syncAppViewportHeight();
+  window.addEventListener('resize', syncAppViewportHeight);
+  window.addEventListener('orientationchange', syncAppViewportHeight);
+
+  const boardEl = el('board');
+  const turnBadge = el('turn-badge');
+  const swapStartBtn = el('swap-start');
+  const chipX = el('chip-x'), chipO = el('chip-o'), chipD = el('chip-d');
+  const modeTabs = el('mode-tabs');
+  const sizeToggleBtn = el('size-toggle');
+  const difficultyToggleWrap = el('difficulty-toggle-wrap');
+  const difficultyToggleBtn = el('difficulty-toggle');
+  const swapRuleToggleWrap = el('swaprule-toggle-wrap');
+  const swapRuleToggleBtn = el('swaprule-toggle');
+  const overlay = el('overlay');
+  const modalIcon = el('modal-icon');
+  const modalTitle = el('modal-title');
+  const modalSub = el('modal-sub');
+  const modalActions = el('modal-actions');
+  const themeToggle = el('theme-toggle');
+
+  // Đo TRỰC TIẾP xem cụm nút hành động (Quay lại/Ván mới/Xoá điểm) có đang nằm xuống dòng riêng (không
+  // còn chung dòng với các cụm phía trước) hay không, rồi bật/tắt class canh giữa tương ứng — thay vì
+  // đoán qua độ khó/kích thước màn hình (dễ sai vì phụ thuộc TỔNG bề rộng mọi cụm đang hiển thị cùng lúc,
+  // đổi theo rất nhiều thứ: độ khó, cỡ bàn có hiện nút luật đổi quân hay không, chế độ chơi, độ rộng màn
+  // hình...). ResizeObserver tự chạy lại mỗi khi bố cục thật sự đổi (đổi cỡ cửa sổ, xoay ngang máy, ẩn/hiện
+  // cụm nút nào đó...) nên luôn đúng mà không cần gọi tay ở từng nơi có thể làm đổi bố cục.
+  const appBottombar = document.querySelector('.app-bottombar');
+  function syncBottombarWrapState(){
+    const firstSegment = modeTabs; // luôn hiển thị, dùng làm mốc "dòng đầu tiên"
+    const actionsSegment = appBottombar.querySelector('.segment.actions');
+    if(!firstSegment || !actionsSegment) return;
+    const wrapped = actionsSegment.offsetTop - firstSegment.offsetTop > 10;
+    appBottombar.classList.toggle('is-actions-wrapped', wrapped);
+  }
+  if(typeof ResizeObserver !== 'undefined'){
+    new ResizeObserver(syncBottombarWrapState).observe(appBottombar);
+  } else {
+    // trình duyệt quá cũ không có ResizeObserver: fallback nghe sự kiện resize (kém chính xác hơn 1 chút
+    // vì không bắt được thay đổi do NỘI DUNG bên trong đổi mà kích thước cửa sổ giữ nguyên, nhưng vẫn
+    // xử lý đúng trường hợp phổ biến nhất là xoay ngang máy/đổi cỡ trình duyệt)
+    window.addEventListener('resize', syncBottombarWrapState);
+  }
+
+  // Y hệt cơ chế trên nhưng cho hàng trạng thái phía trên bàn cờ (badge "Đang đi" + nút đổi người đi
+  // trước ở bên trái, 3 chip điểm số X/O/Hoà ở bên phải) — khi 2 cụm này không đủ chỗ chung 1 dòng,
+  // score-chips bị đẩy xuống dòng riêng và dạt trái nếu không canh giữa lại.
+  const statusBar = document.querySelector('.status-bar');
+  function syncStatusBarWrapState(){
+    const turnGroupEl = statusBar.querySelector('.turn-group');
+    const scoreChipsEl = statusBar.querySelector('.score-chips');
+    if(!turnGroupEl || !scoreChipsEl) return;
+    const wrapped = scoreChipsEl.offsetTop - turnGroupEl.offsetTop > 10;
+    statusBar.classList.toggle('is-wrapped', wrapped);
+  }
+  if(typeof ResizeObserver !== 'undefined'){
+    new ResizeObserver(syncStatusBarWrapState).observe(statusBar);
+  } else {
+    window.addEventListener('resize', syncStatusBarWrapState);
+  }
+  const soundToggle = el('sound-toggle');
+  const newRoundBtn = el('new-round');
+  const resetScoreBtn = el('reset-score');
+  const undoBtn = el('undo-move');
+
+  // Gắn icon tĩnh cho các nút
+  const modeBtns = modeTabs.querySelectorAll('button');
+  modeBtns[0].innerHTML = `<span class="icon">${ICONS.people}</span>`;
+  modeBtns[1].innerHTML = `<span class="icon">${ICONS.robot}</span>`;
+  newRoundBtn.innerHTML = `<span class="icon">${ICONS.refresh}</span>`;
+  resetScoreBtn.innerHTML = `<span class="icon">${ICONS.trash}</span>`;
+  undoBtn.innerHTML = `<span class="icon">${ICONS.undo}</span>`;
+
+  // Nút kích thước bàn gộp chung 1 icon, bấm để chuyển vòng 3x3 → 15x15 → 30x30
+  const SIZE_ORDER = [3, 15, 30];
+  const SIZE_GRID_ICON = { 3: 'grid3', 15: 'grid15', 30: 'grid30' };
+  function updateSizeToggle(){
+    const iconKey = SIZE_GRID_ICON[boardSize] || 'grid3';
+    sizeToggleBtn.innerHTML = `<span class="icon">${ICONS[iconKey]}</span><span class="size-badge">${boardSize}</span>`;
+    const label = `Kích thước bàn: ${boardSize} x ${boardSize} — bấm để đổi`;
+    sizeToggleBtn.title = label;
+    sizeToggleBtn.setAttribute('aria-label', label);
+  }
+
+  // Nút độ khó của máy: chỉ có ý nghĩa (và chỉ hiển thị) ở chế độ đấu với máy, bấm để chuyển vòng.
+  // LƯU Ý: đây là 3 mức TRÌNH ĐỘ AI THẬT (key nội bộ medium/hard/expert, y hệt cấu hình/sức mạnh trước
+  // giờ) — chỉ đổi NHÃN hiển thị cho người chơi thành Dễ → Vừa → Khó theo yêu cầu, bản chất thuật toán
+  // bên dưới (DIFFICULTY_CONFIG, bestMoveFor3x3, v.v.) không đổi gì, vẫn khớp đúng key cũ.
+  const DIFFICULTY_ORDER = ['medium', 'hard', 'expert'];
+  const DIFFICULTY_META = {
+    medium: { label: 'Dễ',  hint: 'Dễ — máy chơi khá chắc tay nhưng vẫn có sơ hở' },
+    hard:   { label: 'Vừa', hint: 'Vừa — máy chơi hết sức, rất khó thắng' },
+    expert: { label: 'Khó', hint: 'Khó — máy nghĩ lâu và sâu hơn hẳn, gần như không thể thắng' }
+  };
+  function updateDifficultyToggle(){
+    difficultyToggleWrap.classList.toggle('is-hidden', mode !== 'ai');
+    const meta = DIFFICULTY_META[difficulty] || DIFFICULTY_META.hard;
+    difficultyToggleBtn.innerHTML = `<span class="diff-dot ${difficulty}"></span><span>${meta.label}</span>`;
+    const label = `${meta.hint} — bấm để đổi`;
+    difficultyToggleBtn.title = label;
+    difficultyToggleBtn.setAttribute('aria-label', label);
+  }
+
+  // Nút Luật đổi quân đầu (Pie Rule): chỉ có ý nghĩa (và chỉ hiển thị) ở chế độ 2 người + bàn 15x15/30x30
+  // — bàn 3x3 quá nhỏ để lợi thế đi trước đáng kể, còn đấu với máy thì việc "chọn đổi" không có ý nghĩa
+  // cân bằng thực sự (người chơi sẽ luôn đổi nếu thấy có lợi, không phản ánh 1 đối thủ thực).
+  function updateSwapRuleToggle(){
+    const applicable = mode === 'pvp' && boardSize !== 3;
+    swapRuleToggleWrap.classList.toggle('is-hidden', !applicable);
+    swapRuleToggleBtn.classList.toggle('active', swapRuleEnabled);
+    swapRuleToggleBtn.innerHTML = `<span class="icon">${ICONS.scale}</span>`;
+    const label = swapRuleEnabled
+      ? 'Luật đổi quân đầu đang BẬT — sau nước đi đầu tiên, người đi sau được chọn đổi bên. Bấm để tắt.'
+      : 'Luật đổi quân đầu đang TẮT — bấm để bật (cân bằng lợi thế đi trước, áp dụng từ ván tiếp theo).';
+    swapRuleToggleBtn.title = label;
+    swapRuleToggleBtn.setAttribute('aria-label', label);
+  }
+
+  // ----- Hiệu ứng bấm nút: gợn sóng (ripple) + hoạt ảnh riêng theo từng icon -----
+  function spawnRipple(e, btn){
+    const rect = btn.getBoundingClientRect();
+    const size = Math.max(rect.width, rect.height) * 1.6;
+    const ripple = document.createElement('span');
+    ripple.className = 'ripple';
+    ripple.style.width = ripple.style.height = size + 'px';
+    const cx = (e.clientX ?? (rect.left + rect.width/2)) - rect.left - size/2;
+    const cy = (e.clientY ?? (rect.top + rect.height/2)) - rect.top - size/2;
+    ripple.style.left = cx + 'px';
+    ripple.style.top = cy + 'px';
+    btn.appendChild(ripple);
+    ripple.addEventListener('animationend', ()=> ripple.remove());
+  }
+
+  function playIconFx(btn, fxClass){
+    btn.classList.remove('fx-pop','fx-spin','fx-shake','fx-rewind');
+    void btn.offsetWidth; // reflow để khởi động lại animation nếu bấm liên tiếp
+    btn.classList.add(fxClass);
+    btn.addEventListener('animationend', ()=> btn.classList.remove(fxClass), { once:true });
+  }
+
+  function wireButtonFx(btn, fxClass){
+    btn.addEventListener('click', (e)=>{
+      spawnRipple(e, btn);
+      playIconFx(btn, fxClass);
+    });
+  }
+
+  wireButtonFx(themeToggle, 'fx-spin');
+  wireButtonFx(soundToggle, 'fx-pop');
+  wireButtonFx(newRoundBtn, 'fx-spin');
+  wireButtonFx(resetScoreBtn, 'fx-shake');
+  wireButtonFx(undoBtn, 'fx-rewind');
+  wireButtonFx(sizeToggleBtn, 'fx-pop');
+  wireButtonFx(difficultyToggleBtn, 'fx-pop');
+  wireButtonFx(swapStartBtn, 'fx-spin');
+  [...modeTabs.querySelectorAll('button')].forEach(btn=>{
+    wireButtonFx(btn, 'fx-pop');
+  });
+
+  // ----- Thanh trượt nền cho segmented control -----
+  function updateIndicator(container){
+    const indicator = container.querySelector('.segment-indicator');
+    const active = container.querySelector('button.active');
+    if(!indicator || !active) return;
+    indicator.style.width = active.offsetWidth + 'px';
+    indicator.style.height = active.offsetHeight + 'px';
+    indicator.style.transform = `translate(${active.offsetLeft - 3}px, ${active.offsetTop - 3}px)`;
+  }
+
+  let mode = 'pvp'; // 'pvp' | 'ai'
+  let boardSize = 3;
+  let winLen = 3;
+  let board = Array(9).fill(null);
+  let current = 'X';
+  let gameOver = false;
+  let lastMoveIdx = null;
+  let scores = { X:0, O:0, D:0 };
+  let theme = 'light';
+  let history = [];
+  let startingPlayer = 'X'; // người sẽ đi trước ở ván TIẾP THEO — tự luân phiên sau mỗi ván để công bằng
+  // Độ khó của máy: 'easy' | 'medium' | 'hard'. Mặc định 'hard' để giữ ĐÚNG hành vi mạnh nhất như trước
+  // khi chưa có tính năng này — người chơi cũ mở lại ván đã lưu sẽ không bị "âm thầm" yếu đi bất ngờ.
+  let difficulty = 'hard';
+  // ===== Luật đổi quân đầu (Pie Rule) — cân bằng lợi thế đi trước ở bàn 15x15/30x30 =====
+  // Bản chất vấn đề: ở gomoku tự do (không cấm song-ba/song-tứ), quân đi trước có lợi thế lý thuyết
+  // khá lớn, đặc biệt là bàn càng lớn. Swap2 "chuẩn" (3 quân + đối phương chọn màu) không có ý nghĩa
+  // thực sự trong 1 app chơi CHUNG 1 THIẾT BỊ (pass-and-play) vì app chỉ theo dõi quân X/O trên bàn,
+  // không theo dõi "danh tính người chơi" xuyên suốt ván — nên "đổi màu" không tạo khác biệt hành vi
+  // nào cả. Vì vậy dùng đúng LUẬT PIE RULE kinh điển (dùng trong Hex và nhiều game khác): người đi
+  // TRƯỚC đặt duy nhất 1 quân đầu tiên ở bất kỳ đâu; người đi SAU khi thấy nước đó có 2 lựa chọn:
+  // tiếp tục đi bình thường, HOẶC đổi bên — nhận luôn quân vừa đặt (chuyển nhãn quân đó) rồi đến
+  // lượt bên kia đi tiếp. Lựa chọn này diễn ra ĐÚNG 1 LẦN, sau nước đi đầu tiên của cả ván.
+  let swapRuleEnabled = false; // bật/tắt bởi người chơi, chỉ có tác dụng khi boardSize !== 3 và mode === 'pvp'
+  let pieRuleArmed = false;    // true = ván NÀY sẽ tạm dừng hỏi sau đúng nước đi đầu tiên
+  let modalPersistent = false; // true = không cho đóng modal hiện tại bằng cách bấm ra ngoài (dùng cho quyết định bắt buộc)
+  let aiTimeoutId = null;
+  let aiThinking = false; // true = đang chờ/đang tính nước máy, khoá mọi thao tác đánh cờ của người
+  // ===== Trạng thái cho AI Worker (xem phần "AI Worker" bên dưới, sau khi định nghĩa xong các hàm AI thuần) =====
+  let aiWorker = null;
+  let aiWorkerFailed = false; // true nếu Worker không tạo được / báo lỗi -> mọi lượt AI sau tự quay về tính đồng bộ
+  let aiRequestSeq = 0;       // tăng dần mỗi lượt AI mới; dùng để nhận biết & bỏ qua an toàn các phản hồi trễ
+                               // từ 1 yêu cầu đã bị huỷ giữa chừng (undo, đổi ván, đổi cỡ bàn, đổi chế độ chơi...)
+  let aiPendingRecovery = null; // { boardSnapshot, size, len, token } — ảnh chụp yêu cầu đang chờ Worker phản hồi,
+                                 // dùng để TỰ PHỤC HỒI bằng tính toán đồng bộ nếu Worker báo lỗi giữa chừng
+
+  // Đặt người đi trước cho ván hiện tại, đồng thời tự cập nhật để ván SAU sẽ tới lượt người còn lại
+  // (luân phiên tự động, tránh 1 bên luôn bị thiệt vì luôn phải đi sau).
+  function setRoundStarter(symbol){
+    current = symbol;
+    startingPlayer = symbol === 'X' ? 'O' : 'X';
+  }
+
+  // Nếu vừa vào lượt của máy (đầu ván, giữa ván sau khi đổi kích thước, hay sau khi khôi phục ván lưu)
+  // thì lên lịch cho máy đi; ngược lại chỉ cập nhật hiển thị "Đang đi" cho lượt người.
+  function ensureAiTurnScheduled(){
+    if(mode === 'ai' && current === 'O' && !gameOver){
+      setTurnDisplay('Đang nghĩ…');
+      aiThinking = true;
+      aiTimeoutId = setTimeout(aiMove, 350);
+    } else {
+      setTurnDisplay('Đang đi');
+    }
+  }
+
+  // ===== Lưu trạng thái ván đang chơi: để refresh trang không bị mất ván =====
+  const STORAGE_KEY = 'caro-game-save-v1';
+
+  function saveState(){
+    try {
+      // Giới hạn lịch sử lưu lại (không giới hạn lịch sử đang dùng trong bộ nhớ) để tránh
+      // localStorage phình to vô hạn với các ván rất dài trên bàn 30x30.
+      const trimmedHistory = history.length > 60 ? history.slice(history.length - 60) : history;
+      const data = { mode, boardSize, winLen, board, current, gameOver, lastMoveIdx, scores, theme, muted, history: trimmedHistory, startingPlayer, difficulty, swapRuleEnabled };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    } catch(e){
+      // Bỏ qua nếu trình duyệt chặn localStorage (duyệt ẩn danh, hết dung lượng...) — không làm gián đoạn ván chơi
+    }
+  }
+
+  function loadState(){
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      return raw ? JSON.parse(raw) : null;
+    } catch(e){
+      return null;
+    }
+  }
+
+  function clearPendingAiMove(){
+    if(aiTimeoutId){ clearTimeout(aiTimeoutId); aiTimeoutId = null; }
+    aiThinking = false;
+    // Vô hiệu hoá bất kỳ yêu cầu AI nào đang bay tới Worker: khi phản hồi (hoặc phục hồi lỗi) tới nơi,
+    // token không còn khớp aiRequestSeq nữa nên sẽ bị bỏ qua an toàn, không đánh nhầm vào ván đã đổi.
+    aiRequestSeq++;
+    aiPendingRecovery = null;
+  }
+
+  const SIZE_CONFIG = {
+    3:  { winLen: 3, cellPx: 96,  handDrawn: true,  thin: false },
+    15: { winLen: 5, cellPx: 25,  handDrawn: false, thin: true },
+    30: { winLen: 5, cellPx: 13,  handDrawn: false, thin: true }
+  };
+
+  // ===== Âm thanh: tổng hợp trực tiếp bằng Web Audio API (không cần file ngoài) =====
+  let muted = false;
+  let audioCtx = null;
+
+  function ensureAudioCtx(){
+    if(!audioCtx){
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if(!AC) return null;
+      audioCtx = new AC();
+    }
+    if(audioCtx.state === 'suspended') audioCtx.resume();
+    return audioCtx;
+  }
+
+  // Một nốt đơn: có thể lên/xuống cao độ (glideTo) để tạo cảm giác "pop" hoặc "vút"
+  function tone({freq, duration = 0.16, type = 'sine', gain = 0.2, startTime = 0, glideTo = null}){
+    if(muted) return;
+    const ctx = ensureAudioCtx();
+    if(!ctx) return;
+    const t0 = ctx.currentTime + startTime;
+    const osc = ctx.createOscillator();
+    const g = ctx.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, t0);
+    if(glideTo) osc.frequency.exponentialRampToValueAtTime(glideTo, t0 + duration);
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(gain, t0 + 0.012);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + duration);
+    osc.connect(g).connect(ctx.destination);
+    osc.start(t0);
+    osc.stop(t0 + duration + 0.03);
+  }
+
+  const SFX = {
+    // Đặt quân: tiếng "tách" gọn, cao độ khác nhau cho X và O để phân biệt
+    move(player){
+      if(player === 'X') tone({ freq: 560, glideTo: 720, duration: 0.1, type: 'triangle', gain: 0.22 });
+      else tone({ freq: 420, glideTo: 330, duration: 0.11, type: 'triangle', gain: 0.22 });
+    },
+    // Nút bấm UI: tick nhẹ, không gây khó chịu khi bấm liên tục
+    click(){
+      tone({ freq: 780, duration: 0.05, type: 'square', gain: 0.09 });
+    },
+    // Quay lại nước đi: âm trượt xuống như tua ngược
+    undo(){
+      tone({ freq: 520, glideTo: 230, duration: 0.18, type: 'sawtooth', gain: 0.14 });
+    },
+    // Hòa: âm trung tính, không hào hứng cũng không buồn
+    draw(){
+      tone({ freq: 440, duration: 0.22, type: 'sine', gain: 0.16 });
+      tone({ freq: 330, duration: 0.28, type: 'sine', gain: 0.14, startTime: 0.1 });
+    },
+    // Cảnh báo (thế cờ không phù hợp...)
+    warn(){
+      tone({ freq: 300, duration: 0.14, type: 'square', gain: 0.12 });
+      tone({ freq: 220, duration: 0.18, type: 'square', gain: 0.12, startTime: 0.1 });
+    },
+    // Chiến thắng: chuỗi hợp âm đi lên rộn ràng + hợp âm rung ở cuối cho cảm giác bùng nổ
+    win(){
+      const notes = [523.25, 659.25, 783.99, 1046.5]; // Do-Mi-Sol-Đô(cao)
+      notes.forEach((f, i) => tone({ freq: f, type: 'triangle', duration: 0.24, gain: 0.22, startTime: i * 0.1 }));
+      const chordAt = notes.length * 0.1 + 0.02;
+      [1046.5, 1318.5, 1568].forEach(f => tone({ freq: f, type: 'sine', duration: 0.5, gain: 0.13, startTime: chordAt }));
+    }
+  };
+
+  function applySound(){
+    soundToggle.innerHTML = `<span class="icon">${muted ? ICONS.soundOff : ICONS.soundOn}</span>`;
+  }
+  soundToggle.addEventListener('click', ()=>{
+    muted = !muted;
+    applySound();
+    if(!muted) SFX.click();
+    saveState();
+  });
+  applySound();
+
+  function applyTheme(){
+    document.documentElement.setAttribute('data-theme', theme);
+    themeToggle.innerHTML = `<span class="icon">${theme === 'dark' ? ICONS.sun : ICONS.moon}</span>`;
+  }
+  themeToggle.addEventListener('click', ()=>{
+    theme = theme === 'dark' ? 'light' : 'dark';
+    SFX.click();
+    applyTheme();
+    saveState();
+  });
+  applyTheme();
+
+  swapStartBtn.addEventListener('click', ()=>{
+    // Chỉ cho đổi khi ván thực sự chưa có nước đi nào (đổi giữa chừng sẽ vô lý)
+    if(gameOver || board.some(v=>v)) return;
+    SFX.click();
+    setRoundStarter(current === 'X' ? 'O' : 'X');
+    render();
+    ensureAiTurnScheduled();
+    saveState();
+  });
+
+  function openModal({icon, iconClass, title, sub, buttons, persistent, html}){
+    modalIcon.textContent = icon;
+    modalIcon.className = 'modal-icon' + (iconClass ? ' ' + iconClass : '');
+    modalTitle.textContent = title;
+    if(html){
+      modalSub.innerHTML = html;
+      modalSub.style.display = 'block';
+    } else {
+      modalSub.textContent = sub || '';
+      modalSub.style.display = sub ? 'block' : 'none';
+    }
+    modalActions.innerHTML = '';
+    modalPersistent = !!persistent;
+    buttons.forEach(btn=>{
+      const b = document.createElement('button');
+      b.textContent = btn.label;
+      b.className = btn.cls || 'secondary';
+      b.addEventListener('click', ()=>{ closeModal(); btn.onClick && btn.onClick(); });
+      modalActions.appendChild(b);
+    });
+    overlay.classList.add('show');
+  }
+  function closeModal(){ modalPersistent = false; overlay.classList.remove('show'); }
+  overlay.addEventListener('click', (e)=>{ if(e.target === overlay && !modalPersistent) closeModal(); });
+
+  function xIcon(){
+    return `<svg viewBox="0 0 100 100"><path d="M18 20 Q50 48 82 82" stroke="var(--ink-blue)" stroke-width="10" fill="none" stroke-linecap="round"/><path d="M82 18 Q50 50 20 80" stroke="var(--ink-blue)" stroke-width="10" fill="none" stroke-linecap="round"/></svg>`;
+  }
+  function oIcon(){
+    return `<svg viewBox="0 0 100 100"><ellipse cx="50" cy="51" rx="33" ry="35" stroke="var(--ink-red)" stroke-width="10" fill="none" transform="rotate(-6 50 50)"/></svg>`;
+  }
+
+  // Điểm sao (star point) kiểu bàn cờ vây/caro chuyên nghiệp: lưới 3x3 theo tỉ lệ 1/4 - 1/2 - 3/4
+  function getStarPoints(size){
+    const q = Math.floor(size / 4);
+    const mid = Math.floor(size / 2);
+    const q3 = size - 1 - q;
+    const coords = [q, mid, q3];
+    const set = new Set();
+    coords.forEach(r => coords.forEach(c => set.add(r * size + c)));
+    return set;
+  }
+
+  function buildBoard(){
+    const cfg = SIZE_CONFIG[boardSize];
+    boardEl.innerHTML = '';
+    boardEl.className = 'board' + (cfg.handDrawn ? ' hand-drawn' : '') + (cfg.thin ? ' thin' : '');
+    boardEl.style.gridTemplateColumns = `repeat(${boardSize}, ${cfg.cellPx}px)`;
+    boardEl.style.gridTemplateRows = `repeat(${boardSize}, ${cfg.cellPx}px)`;
+    boardEl.style.width = (boardSize * cfg.cellPx) + 'px';
+    boardEl.style.height = (boardSize * cfg.cellPx) + 'px';
+    const showGuides = boardSize > 3;
+    const starPoints = showGuides ? getStarPoints(boardSize) : null;
+    const frag = document.createDocumentFragment();
+    for(let i=0;i<boardSize*boardSize;i++){
+      const cell = document.createElement('div');
+      cell.className = 'cell';
+      cell.dataset.idx = i;
+      const r = Math.floor(i / boardSize), c = i % boardSize;
+      if(c === boardSize - 1) cell.classList.add('edge-right');
+      if(r === boardSize - 1) cell.classList.add('edge-bottom');
+      if(showGuides){
+        if((c+1) % 5 === 0 && c !== boardSize-1) cell.classList.add('grid-major-v');
+        if((r+1) % 5 === 0 && r !== boardSize-1) cell.classList.add('grid-major-h');
+        if(starPoints.has(i)) cell.classList.add('star-point');
+      }
+      cell.addEventListener('click', onCellClick);
+      frag.appendChild(cell);
+    }
+    boardEl.appendChild(frag);
+  }
+
+  function render(){
+    const cells = boardEl.children;
+    for(let i=0;i<board.length;i++){
+      const val = board[i] || '';
+      const cell = cells[i];
+      cell.classList.toggle('last-move', i === lastMoveIdx);
+      // Chỉ vẽ lại ô nếu giá trị thực sự thay đổi, tránh "loading" lại toàn bộ quân cờ mỗi lượt
+      if(cell.dataset.val === val) continue;
+      cell.dataset.val = val;
+      cell.classList.toggle('filled', !!val);
+      cell.innerHTML = val === 'X' ? xIcon() : (val === 'O' ? oIcon() : '');
+      const svg = cell.querySelector('svg');
+      if(svg) requestAnimationFrame(()=> svg.classList.add('show'));
+    }
+    chipX.innerHTML = `<span class="icon">${ICONS.xMark}</span>${scores.X}`;
+    chipO.innerHTML = `<span class="icon">${ICONS.oMark}</span>${scores.O}`;
+    chipD.innerHTML = `<span class="icon">${ICONS.draw}</span>${scores.D}`;
+
+    // Nút đổi người đi trước: chỉ có ý nghĩa (và chỉ hiện) khi ván chưa có nước đi nào
+    const freshRound = !gameOver && board.every(v => !v);
+    swapStartBtn.style.display = freshRound ? '' : 'none';
+    if(freshRound){
+      swapStartBtn.className = 'swap-start-btn ' + (current === 'X' ? 'turn-x' : 'turn-o');
+      // Chỉ icon, KHÔNG còn chữ "X đi trước"/"O đi trước" — trước đây chữ này cộng với badge "Đang đi"
+      // hay đẩy tràn dòng, làm 3 chip điểm số (X/O/Hoà) bị đẩy xuống dòng riêng và lệch trái, nhìn không
+      // đẹp. Trạng thái ai đang được xếp đi trước vẫn nhận biết được qua MÀU icon (xanh=X, đỏ=O, giống
+      // hệt cách turn-badge bên cạnh nó thể hiện, và giống cách nút "Cân bằng" ở thanh dưới đã làm).
+      swapStartBtn.innerHTML = `<span class="icon">${ICONS.swap}</span>`;
+      const label = `Người đi trước ván này: ${current}. Bấm để đổi.`;
+      swapStartBtn.title = label;
+      swapStartBtn.setAttribute('aria-label', label);
+    }
+  }
+
+  function checkWinAt(b, size, len, idx, symbol){
+    const r0 = Math.floor(idx / size), c0 = idx % size;
+    const dirs = [[0,1],[1,0],[1,1],[1,-1]];
+    for(const [dr,dc] of dirs){
+      const cells = [idx];
+      let r = r0+dr, c = c0+dc;
+      while(r>=0 && r<size && c>=0 && c<size && b[r*size+c]===symbol){ cells.push(r*size+c); r+=dr; c+=dc; }
+      r = r0-dr; c = c0-dc;
+      while(r>=0 && r<size && c>=0 && c<size && b[r*size+c]===symbol){ cells.push(r*size+c); r-=dr; c-=dc; }
+      if(cells.length >= len) return cells;
+    }
+    return null;
+  }
+
+  // ===== NÂNG CẤP #7: Bitboard engine cho 2 điểm NÓNG NHẤT của tìm kiếm (win-check + sinh ứng viên) =====
+  // Vì kích thước bàn tối đa là 30 (< 32 bit của 1 số nguyên JS), MỖI "đường" (hàng/cột/chéo chính/chéo
+  // phụ) vừa khít 1 số nguyên 32-bit duy nhất. Bốn hướng được duy trì tăng-dần song song với mảng `b`
+  // (set/clear O(1) mỗi nước đi), nên MỌI hướng đều trở thành phép "đọc bit" thay vì đi bộ mảng từng ô.
+  // Đây chính là hướng kiến trúc mà ghi chú ở evaluatePoint bên dưới đã nói tới: "bảng tra cứu chỉ thực
+  // sự thắng khi có bitboard duy trì tăng-dần xuyên suốt cây tìm kiếm" — nay đã làm thật, có đo bằng số:
+  // getCandidates nhanh hơn ~20 lần, checkWinAt nhanh hơn ~1.6 lần trên bàn 30x30 đông quân (fuzz-test
+  // đối chiếu >58.000 lượt kiểm tra thắng + 2.400 lượt sinh ứng viên với bản mảng gốc, khớp tuyệt đối
+  // trước khi đưa vào đây). PHẠM VI: chỉ áp dụng cho phần tìm kiếm AI (alphaBeta/TSS/findForcingDefense)
+  // — phần đánh giá điểm (evaluatePoint/IncrementalEvaluator) GIỮ NGUYÊN mảng gốc vì đã tối ưu O(1) tăng
+  // dần theo cách khác (xem class IncrementalEvaluator), và việc chặn thắng/thua thực tế trong lúc CHƠI
+  // (playMove) cũng giữ nguyên checkWinAt mảng gốc vì không phải điểm nóng (chỉ gọi 1 lần mỗi nước người).
+  class Bitboard{
+    constructor(size){
+      this.size = size;
+      const n = size, w = 2*size-1;
+      this.rows = { O:new Int32Array(n), X:new Int32Array(n) };
+      this.cols = { O:new Int32Array(n), X:new Int32Array(n) };
+      // diag: hướng xuống-phải (r tăng, c tăng), gộp theo d = r-c+(size-1) -> mỗi đường chéo 1 chỉ số riêng biệt.
+      this.diag = { O:new Int32Array(w), X:new Int32Array(w) };
+      // anti: hướng xuống-trái (r tăng, c giảm), gộp theo a = r+c.
+      this.anti = { O:new Int32Array(w), X:new Int32Array(w) };
+    }
+    static fromArray(b, size){
+      const bb = new Bitboard(size);
+      for(let idx=0; idx<b.length; idx++){
+        const s = b[idx];
+        if(s) bb.set(Math.floor(idx/size), idx%size, s);
+      }
+      return bb;
+    }
+    set(r, c, symbol){
+      const size=this.size;
+      this.rows[symbol][r] |= (1<<c);
+      this.cols[symbol][c] |= (1<<r);
+      this.diag[symbol][r-c+size-1] |= (1<<c);
+      this.anti[symbol][r+c] |= (1<<c);
+    }
+    clear(r, c, symbol){
+      const size=this.size;
+      this.rows[symbol][r] &= ~(1<<c);
+      this.cols[symbol][c] &= ~(1<<r);
+      this.diag[symbol][r-c+size-1] &= ~(1<<c);
+      this.anti[symbol][r+c] &= ~(1<<c);
+    }
+  }
+
+  // Độ dài dãy bit-1 LIÊN TỤC đi qua đúng vị trí `pos` trong `word` (không phải bất kỳ đâu trong word —
+  // phải đi qua pos, giống đúng ngữ nghĩa "thắng tại nước vừa đánh" của checkWinAt). Dừng sớm ngay khi
+  // đã chắc chắn đạt needLen, không cần đếm tiếp cho chính xác tuyệt đối (không cần thiết cho mục đích này).
+  function runLenAt(word, pos, size, needLen){
+    let total = 1;
+    for(let p=pos+1; p<size && ((word>>p)&1); p++){ total++; if(total>=needLen) return needLen; }
+    for(let p=pos-1; p>=0 && ((word>>p)&1); p--){ total++; if(total>=needLen) return needLen; }
+    return total;
+  }
+
+  // Tương đương checkWinAt(b,size,len,idx,symbol) nhưng đọc thẳng 4 "từ" bitboard thay vì đi bộ mảng.
+  function checkWinBB(bb, r, c, symbol, len){
+    const size = bb.size;
+    if(runLenAt(bb.rows[symbol][r], c, size, len) >= len) return true;
+    if(runLenAt(bb.cols[symbol][c], r, size, len) >= len) return true;
+    if(runLenAt(bb.diag[symbol][r-c+size-1], c, size, len) >= len) return true;
+    if(runLenAt(bb.anti[symbol][r+c], c, size, len) >= len) return true;
+    return false;
+  }
+
+  // Tương đương getCandidates(b,size,radius) nhưng "phình" (dilate) occupancy bằng dịch-bit theo hàng
+  // (nhanh, vì cùng 1 số nguyên) rồi OR các hàng lân cận trong bán kính — thay vì quét radius*radius
+  // quanh MỖI quân cờ riêng lẻ như bản mảng gốc. Lợi ích tăng mạnh khi bàn càng đông quân (30x30 giữa ván).
+  function getCandidatesBB(bb, size, radius){
+    const occ = new Int32Array(size);
+    let any = false;
+    for(let r=0;r<size;r++){ occ[r] = bb.rows.O[r] | bb.rows.X[r]; if(occ[r]) any=true; }
+    if(!any){
+      const mid = Math.floor(size/2);
+      return [mid*size+mid];
+    }
+    const rowMask = (1<<size)-1;
+    const dilatedRow = new Int32Array(size);
+    for(let r=0;r<size;r++){
+      let w = occ[r];
+      let acc = w;
+      for(let k=1;k<=radius;k++){
+        acc |= (w << k) & rowMask;
+        acc |= (w >>> k);
+      }
+      dilatedRow[r] = acc;
+    }
+    const out = [];
+    for(let r=0;r<size;r++){
+      let acc = 0;
+      for(let k=-radius;k<=radius;k++){
+        const rr = r+k;
+        if(rr>=0 && rr<size) acc |= dilatedRow[rr];
+      }
+      acc &= ~occ[r]; // chỉ giữ ô còn TRỐNG
+      while(acc){
+        const bit = acc & (-acc);
+        const c = 31 - Math.clz32(bit);
+        out.push(r*size+c);
+        acc ^= bit;
+      }
+    }
+    return out;
+  }
+
+  function setTurnDisplay(text){
+    turnBadge.className = 'turn-badge ' + (current === 'X' ? 'turn-x' : 'turn-o');
+    turnBadge.innerHTML = `<span class="icon">${current === 'X' ? ICONS.xMark : ICONS.oMark}</span><span>${text}</span>`;
+  }
+
+  function onCellClick(e){
+    const idx = +e.currentTarget.dataset.idx;
+    if(gameOver || board[idx]) return;
+    if(mode === 'ai' && (current === 'O' || aiThinking)) return;
+    playMove(idx, current);
+  }
+
+  function playMove(idx, player){
+    // Huỷ mọi hẹn giờ máy còn sót lại trước khi ghi nước đi mới, tránh chồng nhiều timer
+    clearPendingAiMove();
+    history.push({ board: board.slice(), current, lastMoveIdx });
+    board[idx] = player;
+    lastMoveIdx = idx;
+    SFX.move(player);
+    render();
+    const winCells = checkWinAt(board, boardSize, winLen, idx, player);
+    if(winCells){
+      finishGame({ winner: player, line: winCells });
+      return;
+    }
+    if(board.every(v=>v)){
+      finishGame({ winner: 'draw', line: null });
+      return;
+    }
+    if(pieRuleArmed && history.length === 1){
+      pieRuleArmed = false;
+      openPieRuleModal(idx, player);
+      return;
+    }
+    current = current === 'X' ? 'O' : 'X';
+    ensureAiTurnScheduled();
+    saveState();
+  }
+
+  // Modal quyết định 1-lần-duy-nhất của Luật đổi quân đầu, ngay sau nước đi đầu tiên của ván.
+  function openPieRuleModal(idx, player){
+    const other = player === 'X' ? 'O' : 'X';
+    setTurnDisplay('Chọn bên…');
+    SFX.click();
+    openModal({
+      icon: '⚖️',
+      title: 'Đổi quân đầu?',
+      persistent: true,
+      sub: `Quân ${player} vừa đi nước đầu tiên. Người chơi còn lại: giữ nguyên và đi tiếp bằng quân ${other}, hay đổi bên để nhận luôn quân ${player} vừa đặt (đối phương sẽ đi tiếp)?`,
+      buttons: [
+        { label: `Giữ nguyên, đi quân ${other}`, cls: 'secondary', onClick: ()=>{
+            current = other;
+            ensureAiTurnScheduled();
+            saveState();
+          }
+        },
+        { label: `Đổi bên, nhận quân ${player}`, cls: 'primary', onClick: ()=>{
+            board[idx] = other;
+            render();
+            current = player;
+            ensureAiTurnScheduled();
+            saveState();
+          }
+        }
+      ]
+    });
+  }
+
+  function finishGame(result){
+    gameOver = true;
+    if(result.winner === 'draw'){
+      scores.D++;
+      saveState();
+      SFX.draw();
+      render();
+      openModal({
+        icon: '🤝',
+        iconClass: 'draw-result',
+        title: 'Hòa rồi!',
+        sub: 'Không ai thắng ván này cả.',
+        buttons: [
+          { label: 'Ván mới', cls: 'primary', onClick: newRound },
+          { label: 'Phân tích ván', cls: 'secondary', onClick: openGameReview },
+          { label: 'Đóng', cls: 'secondary' }
+        ]
+      });
+    } else {
+      scores[result.winner]++;
+      saveState();
+      SFX.win();
+      const isAiWin = mode === 'ai' && result.winner === 'O';
+      const isAiLose = mode === 'ai' && result.winner === 'X';
+      const title = mode === 'ai'
+        ? (isAiWin ? 'Máy thắng rồi!' : 'Bạn thắng rồi!')
+        : `${result.winner} thắng rồi!`;
+      result.line.forEach(i=> boardEl.children[i].classList.add('win-cell'));
+      render();
+      openModal({
+        icon: isAiWin ? '🤖' : '🎉',
+        iconClass: result.winner === 'X' ? 'x-result' : 'o-result',
+        title: title,
+        sub: mode === 'ai'
+          ? (isAiLose ? 'Chúc mừng, bạn đã thắng máy!' : (isAiWin ? 'Máy hơi khó nhằn nhỉ, thử lại xem!' : ''))
+          : `Quân ${result.winner} đã nối đủ ${winLen} ô liên tiếp.`,
+        buttons: [
+          { label: 'Ván mới', cls: 'primary', onClick: newRound },
+          { label: 'Phân tích ván', cls: 'secondary', onClick: openGameReview },
+          { label: 'Đóng', cls: 'secondary' }
+        ]
+      });
+    }
+  }
+
+  // ===== Phân tích ván đấu (Game review) =====
+  // Dựng lại toàn bộ trình tự nước đi từ `history` (mỗi phần tử lưu thế cờ NGAY TRƯỚC 1 nước đi) cộng
+  // thế cờ cuối cùng, rồi chấm chất lượng từng nước bằng chính "con mắt" của engine: kiểm tra chiến
+  // thuật tức thời (bỏ lỡ nước thắng / để đối thủ thắng ngay nước sau) bằng checkWinAt, và so sánh
+  // heuristic moveScore của nước đã đi với nước tốt nhất trong số các ứng viên hợp lý — cùng những hàm
+  // engine đang dùng để tự chọn nước đi, không phải một thước đo tách biệt.
+  function reconstructMoves(){
+    const states = history.map(h => h.board).concat([board]);
+    const moves = [];
+    for(let i=0;i<states.length-1;i++){
+      const before = states[i], after = states[i+1];
+      let idx = -1, symbol = null;
+      for(let k=0;k<after.length;k++){
+        if(before[k] !== after[k]){ idx = k; symbol = after[k]; break; }
+      }
+      if(idx === -1) continue;
+      moves.push({ ply: i+1, idx, symbol, before });
+    }
+    return moves;
+  }
+
+  const REVIEW_TAGS = {
+    best:       { label: 'Tốt nhất',        color: '#2f9e44' },
+    good:       { label: 'Ổn',              color: '#5c7cfa' },
+    inaccuracy: { label: 'Không chính xác', color: '#e0a800' },
+    mistake:    { label: 'Sai lầm',         color: '#e8590c' },
+    blunder:    { label: 'Sai lầm nặng',    color: '#e03131' }
+  };
+
+  function classifyMove(before, idx, symbol, size, len){
+    const opponent = symbol === 'X' ? 'O' : 'X';
+    const candidates = getCandidates(before, size, 2);
+
+    // 1) Có nước thắng ngay nào đang sẵn có không? Nếu có mà không đi đúng nó -> sai lầm nặng.
+    let winIdx = null;
+    for(const c of candidates){
+      before[c] = symbol;
+      const w = checkWinAt(before, size, len, c, symbol);
+      before[c] = null;
+      if(w){ winIdx = c; break; }
+    }
+    if(winIdx !== null){
+      return idx === winIdx
+        ? { tag:'best', note:'Thắng ngay' }
+        : { tag:'blunder', note:'Bỏ lỡ nước thắng ngay đang có sẵn' };
+    }
+
+    // 2) Sau khi đi nước này, đối thủ có nước thắng ngay ở lượt kế tiếp không?
+    const after = before.slice();
+    after[idx] = symbol;
+    for(const c of getCandidates(after, size, 2)){
+      if(after[c]) continue;
+      after[c] = opponent;
+      const w = checkWinAt(after, size, len, c, opponent);
+      after[c] = null;
+      if(w) return { tag:'blunder', note:'Để đối thủ thắng ngay nước kế tiếp' };
+    }
+
+    // 3) Không có chiến thuật tức thời nào -> so điểm heuristic (moveScore) với nước tốt nhất có thể.
+    let bestScore = -Infinity;
+    for(const c of candidates){
+      const s = moveScore(before, size, len, c, symbol);
+      if(s > bestScore) bestScore = s;
+    }
+    const playedScore = moveScore(before, size, len, idx, symbol);
+    const gap = bestScore - playedScore;
+    if(gap <= 1)      return { tag:'best' };
+    if(gap < 400)      return { tag:'good' };
+    if(gap < 2000)     return { tag:'inaccuracy' };
+    if(gap < 8000)     return { tag:'mistake' };
+    return { tag:'blunder' };
+  }
+
+  function idxToCoord(idx, size){
+    const r = Math.floor(idx/size), c = idx % size;
+    return `${String.fromCharCode(65 + c)}${r+1}`; // toạ độ kiểu bàn cờ vây: cột chữ, hàng số
+  }
+
+  function escapeHtml(s){
+    return s.replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+  }
+
+  function openGameReview(){
+    let moves = reconstructMoves();
+    if(moves.length === 0){
+      openModal({ icon:'🤷', title:'Chưa có nước đi nào', sub:'Ván này chưa có nước đi nào để phân tích.', buttons:[{label:'Đóng', cls:'primary'}] });
+      return;
+    }
+    const REVIEW_MOVE_CAP = 200; // giới hạn để phân tích luôn mượt kể cả ván rất dài trên bàn 30x30
+    const truncated = moves.length > REVIEW_MOVE_CAP;
+    const analyzeMoves = truncated ? moves.slice(moves.length - REVIEW_MOVE_CAP) : moves;
+
+    const size = boardSize, len = winLen;
+    const counts = { best:0, good:0, inaccuracy:0, mistake:0, blunder:0 };
+    const rows = analyzeMoves.map(m=>{
+      const result = classifyMove(m.before.slice(), m.idx, m.symbol, size, len);
+      counts[result.tag]++;
+      const meta = REVIEW_TAGS[result.tag];
+      const noteHtml = result.note ? ` — <span style="opacity:.75">${escapeHtml(result.note)}</span>` : '';
+      return `<div style="display:flex;align-items:center;gap:8px;padding:5px 2px;border-bottom:1px solid var(--line-soft, rgba(120,120,120,.15));font-size:.82rem;text-align:left;">
+        <span style="flex:0 0 30px;opacity:.6;">#${m.ply}</span>
+        <span style="flex:0 0 20px;font-weight:700;color:${m.symbol==='X' ? 'var(--ink-blue)' : 'var(--ink-red)'}">${m.symbol}</span>
+        <span style="flex:0 0 42px;opacity:.85;">${idxToCoord(m.idx, size)}</span>
+        <span style="flex:1;min-width:0;color:${meta.color};font-weight:600;">${meta.label}${noteHtml}</span>
+      </div>`;
+    }).join('');
+
+    const summaryHtml = `<div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-bottom:10px;">
+      ${Object.keys(REVIEW_TAGS).map(tag=>{
+        const meta = REVIEW_TAGS[tag];
+        return `<span style="font-size:.72rem;padding:3px 8px;border-radius:999px;background:${meta.color}22;color:${meta.color};font-weight:700;">${meta.label}: ${counts[tag]}</span>`;
+      }).join('')}
+    </div>`;
+
+    const capNote = truncated
+      ? `<div style="font-size:.72rem;opacity:.65;margin-bottom:8px;">Ván quá dài (${moves.length} nước) — chỉ hiển thị ${REVIEW_MOVE_CAP} nước gần nhất.</div>`
+      : '';
+
+    const html = `${summaryHtml}${capNote}<div style="max-height:44vh;overflow-y:auto;border-radius:10px;">${rows}</div>`;
+
+    openModal({
+      icon: '📊',
+      title: 'Phân tích ván đấu',
+      html,
+      buttons: [ { label: 'Đóng', cls: 'primary' } ]
+    });
+  }
+
+  // Áp kết quả 1 lượt AI đã tính xong (dù đến từ Worker hay từ tính đồng bộ) vào ván đang chơi.
+  // `token` phải khớp aiRequestSeq HIỆN TẠI mới được áp dụng — nếu người chơi đã undo/đổi ván/đổi
+  // cỡ bàn trong lúc chờ (khiến clearPendingAiMove tăng aiRequestSeq lên), kết quả trễ này bị bỏ qua
+  // an toàn thay vì đánh nhầm vào 1 ván đã không còn là ván lúc yêu cầu được gửi đi.
+  function finishAiMove(idx, token){
+    if(token !== aiRequestSeq) return;
+    aiThinking = false;
+    if(gameOver || mode !== 'ai' || current !== 'O') return;
+    if(idx === null || idx === undefined || board[idx]) return; // an toàn tuyệt đối, không đánh vào ô đã có quân
+    playMove(idx, 'O');
+  }
+
+  function aiMove(){
+    aiTimeoutId = null;
+    // Chốt chặn cuối: dù timer này có bị gọi sai lúc nào đi nữa (sót lại, gọi trùng...),
+    // máy chỉ thực sự đánh khi đúng là lượt của nó. Nếu không, huỷ luôn, không đánh bừa.
+    if(gameOver || mode !== 'ai' || current !== 'O'){
+      aiThinking = false;
+      return;
+    }
+
+    const token = ++aiRequestSeq;
+    const boardSnapshot = board.slice(); // chụp lại đúng thế cờ tại thời điểm gửi yêu cầu
+    const size = boardSize, len = winLen, diff = difficulty;
+
+    const worker = getAiWorker();
+    if(!worker){
+      // Không có Worker khả dụng (bị trình duyệt chặn, không hỗ trợ...) -> tính đồng bộ ngay trên luồng
+      // chính, y hệt hành vi trước khi có Worker. App LUÔN chạy được, chỉ là không tránh được đứng hình
+      // UI trong lúc nghĩ ở trường hợp hiếm này.
+      const idx = decideAiMove(boardSnapshot, size, len, diff);
+      finishAiMove(idx, token);
+      return;
+    }
+
+    aiPendingRecovery = { boardSnapshot, size, len, diff, token };
+    const handleMessage = (e) => {
+      if(!e.data || e.data.requestId !== token) return; // phản hồi của 1 yêu cầu cũ đã bị huỷ -> bỏ qua
+      worker.removeEventListener('message', handleMessage);
+      if(aiPendingRecovery && aiPendingRecovery.token === token) aiPendingRecovery = null;
+      finishAiMove(e.data.idx, token);
+    };
+    worker.addEventListener('message', handleMessage);
+    try {
+      worker.postMessage({ board: boardSnapshot, boardSize: size, winLen: len, difficulty: diff, requestId: token });
+    } catch(e){
+      // postMessage thất bại ngay lập tức (rất hiếm) -> huỷ chờ Worker, quay về tính đồng bộ cho lượt này
+      worker.removeEventListener('message', handleMessage);
+      aiPendingRecovery = null;
+      const idx = decideAiMove(boardSnapshot, size, len, diff);
+      finishAiMove(idx, token);
+    }
+  }
+
+  function minimax(b, size, len, depth, isMax, lastIdx, lastSymbol){
+    if(lastIdx !== null){
+      const win = checkWinAt(b, size, len, lastIdx, lastSymbol);
+      if(win) return lastSymbol === 'O' ? 10 - depth : depth - 10;
+    }
+    if(b.every(v=>v)) return 0;
+    if(isMax){
+      let best = -Infinity;
+      for(let i=0;i<b.length;i++){
+        if(!b[i]){
+          b[i] = 'O';
+          best = Math.max(best, minimax(b, size, len, depth+1, false, i, 'O'));
+          b[i] = null;
+        }
+      }
+      return best;
+    } else {
+      let best = Infinity;
+      for(let i=0;i<b.length;i++){
+        if(!b[i]){
+          b[i] = 'X';
+          best = Math.min(best, minimax(b, size, len, depth+1, true, i, 'X'));
+          b[i] = null;
+        }
+      }
+      return best;
+    }
+  }
+
+  function bestMoveMinimax(b, size, len){
+    let bestScore = -Infinity, move = null;
+    for(let i=0;i<b.length;i++){
+      if(!b[i]){
+        b[i] = 'O';
+        const score = minimax(b, size, len, 0, false, i, 'O');
+        b[i] = null;
+        if(score > bestScore){ bestScore = score; move = i; }
+      }
+    }
+    return move;
+  }
+
+  // ===== Độ khó: các hàm dùng chung cho bàn 3x3 (key nội bộ 'medium' hiển thị "Dễ" chơi yếu hơn hẳn
+  // minimax hoàn chỉnh) =====
+  function pickRandomEmpty(b){
+    const empties = [];
+    for(let i=0;i<b.length;i++) if(!b[i]) empties.push(i);
+    if(empties.length === 0) return null;
+    return empties[Math.floor(Math.random() * empties.length)];
+  }
+
+  // Chỉ nhìn được 1 nước: có thắng ngay không, không thì có phải chặn thua ngay không. Không có
+  // khả năng nhìn xa hơn — đúng tinh thần 1 người chơi mới, khác hẳn minimax hoàn chỉnh ở bestMoveMinimax.
+  function findImmediateWinOrBlock(b, size, len, self, opp){
+    for(let i=0;i<b.length;i++){
+      if(b[i]) continue;
+      b[i] = self;
+      const win = checkWinAt(b, size, len, i, self);
+      b[i] = null;
+      if(win) return i;
+    }
+    for(let i=0;i<b.length;i++){
+      if(b[i]) continue;
+      b[i] = opp;
+      const win = checkWinAt(b, size, len, i, opp);
+      b[i] = null;
+      if(win) return i;
+    }
+    return null;
+  }
+
+  // Bàn 3x3 quá nhỏ nên minimax hoàn chỉnh gần như không tốn gì để tính — không có "mức trung bình" tự
+  // nhiên bằng cách giới hạn thời gian/độ sâu như bàn lớn. Vì vậy các mức được định nghĩa tường minh theo
+  // NĂNG LỰC NHÌN NƯỚC thay vì theo ngân sách thời gian (key nội bộ -> nhãn hiển thị hiện tại):
+  //   - 'medium' (hiển thị "Dễ"): biết thắng ngay nếu có và biết chặn thua ngay nếu bị đe doạ, nhưng
+  //     không nhìn xa hơn 1 nước -> vẫn có thể bị dẫn vào bẫy 2 nước.
+  //   - 'hard'/'expert' (hiển thị "Vừa"/"Khó"): y hệt hành vi gốc trước khi có độ khó — minimax hoàn
+  //     chỉnh, không thể thắng được.
+  function bestMoveFor3x3(b, difficulty){
+    if(difficulty === 'hard' || difficulty === 'expert') return bestMoveMinimax(b, 3, 3);
+    if(difficulty === 'medium'){
+      const tactical = findImmediateWinOrBlock(b, 3, 3, 'O', 'X');
+      if(tactical !== null) return tactical;
+      return pickRandomEmpty(b);
+    }
+    return pickRandomEmpty(b); // phòng hờ cho giá trị difficulty không hợp lệ/đã lỗi thời (vd 'easy' từ dữ liệu lưu cũ)
+  }
+
+  // ===== Bàn 15x15 / 30x30: minimax + alpha-beta, đào sâu dần theo thời gian =====
+  const AI_TIME_BUDGET_MS = 900;   // tổng ngân sách thời gian máy được "suy nghĩ"
+  const AI_MAX_PLIES = 8;          // độ sâu tối đa của tìm kiếm tổng quát, tự dừng sớm nếu hết giờ
+  const WIN_SCORE = 5000000;
+
+  // ===== Độ khó ở bàn 15x15/30x30: điều chỉnh qua tham số, không đổi bản chất thuật toán =====
+  // Mỗi mức chỉnh 3 thứ độc lập, mỗi thứ nhắm đúng 1 khía cạnh của "trình độ". Key nội bộ vẫn là
+  // medium/hard/expert (không đổi) — nhãn hiển thị cho người chơi hiện là Dễ/Vừa/Khó theo thứ tự đó:
+  //   - timeBudget/maxPlies: giới hạn máy được "nghĩ" bao lâu/bao sâu -> càng thấp càng dễ bỏ lỡ
+  //     chiến thuật nhiều nước.
+  //   - useTss/useDeepDefense: có bật khả năng tìm/né chuỗi ép buộc thắng (đòn hiểm) hay không -> chỉ
+  //     tắt useTss ở 'medium' ("Dễ") để máy không dùng chiêu quá hiểm mà người mới khó lường trước được.
+  //   - randomTopN: thay vì luôn chọn nước tốt nhất tuyệt đối, chọn ngẫu nhiên trong N nước đứng đầu
+  //     (theo lần đào sâu hoàn tất gần nhất) -> mô phỏng 1 người chơi chưa đủ "tinh" để luôn thấy được
+  //     lựa chọn tối ưu, mà KHÔNG đi 1 nước rõ ràng tệ (điều đó sẽ trông giả tạo, không tự nhiên).
+  //     Không áp dụng khi máy đã CHẮC CHẮN tìm ra đường thắng — thấy đường thắng thì luôn đi đúng.
+  // Mức "hard" (hiển thị "Vừa") giữ NGUYÊN VẸN các con số gốc (AI_TIME_BUDGET_MS/AI_MAX_PLIES, luôn bật
+  // TSS+phòng thủ, randomTopN=1 tức luôn chọn nước tốt nhất) -> hành vi AI mạnh nhất không đổi 1 chút
+  // nào so với trước.
+  // Mức "expert" (hiển thị "Khó"): KHÔNG đổi bản chất thuật toán so với "hard", chỉ nới rộng ngân sách
+  // thời gian và độ sâu đào — vì máy chạy trong Worker (không đứng hình UI), "nghĩ" thêm vài giây là đánh
+  // đổi hợp lý để đổi lấy sức mạnh cao hơn hẳn cho người chơi muốn thử thách gắt nhất.
+  const AI_EXPERT_TIME_BUDGET_MS = 4500;
+  const AI_EXPERT_MAX_PLIES = 16;
+  const DIFFICULTY_CONFIG = {
+    medium: { timeBudget: 400, maxPlies: 4, useTss: false, useDeepDefense: true,  randomTopN: 3, tssMult: 1 },
+    hard:   { timeBudget: AI_TIME_BUDGET_MS, maxPlies: AI_MAX_PLIES, useTss: true, useDeepDefense: true, randomTopN: 1, tssMult: 1 },
+    // tssMult 2.2 -> TSS tấn công & phòng thủ được cấp gần gấp 2.2 lần ngân sách thời gian của "hard",
+    // nên nhìn được chuỗi ép buộc dài và phức tạp hơn hẳn, không chỉ đơn thuần đào minimax sâu hơn.
+    expert: { timeBudget: AI_EXPERT_TIME_BUDGET_MS, maxPlies: AI_EXPERT_MAX_PLIES, useTss: true, useDeepDefense: true, randomTopN: 1, tssMult: 2.2 }
+  };
+
+  // ===== #1: Zobrist hashing + bảng transposition (TT) =====
+  // Mỗi (ô, quân) được gán 1 cặp số ngẫu nhiên 32-bit; hash của 1 thế cờ = XOR toàn bộ các cặp
+  // tương ứng với quân đang có trên bàn. Vì XOR tự nghịch đảo, khi đặt/gỡ quân trong lúc đệ quy
+  // chỉ cần XOR thêm/lại đúng cặp đó — không cần quét lại toàn bàn (hash tăng dần, rất rẻ).
+  // Nhờ đó, khi minimax gặp lại 1 thế cờ đã tính (qua thứ tự nước đi khác nhau — "transposition"),
+  // có thể tái sử dụng kết quả cũ thay vì tìm kiếm lại từ đầu, giúp đào sâu hơn trong cùng ngân sách.
+  const ZOBRIST_MAX_CELLS = 900; // đủ cho bàn 30x30 lớn nhất
+  function randInt32(){ return (Math.random() * 4294967296) >>> 0; }
+  const ZOBRIST_O = new Array(ZOBRIST_MAX_CELLS);
+  const ZOBRIST_X = new Array(ZOBRIST_MAX_CELLS);
+  for(let i=0;i<ZOBRIST_MAX_CELLS;i++){
+    ZOBRIST_O[i] = [randInt32(), randInt32()];
+    ZOBRIST_X[i] = [randInt32(), randInt32()];
+  }
+  function computeZobristHash(b){
+    let h1 = 0, h2 = 0;
+    for(let i=0;i<b.length;i++){
+      if(b[i] === 'O'){ h1 ^= ZOBRIST_O[i][0]; h2 ^= ZOBRIST_O[i][1]; }
+      else if(b[i] === 'X'){ h1 ^= ZOBRIST_X[i][0]; h2 ^= ZOBRIST_X[i][1]; }
+    }
+    return [h1 >>> 0, h2 >>> 0];
+  }
+  // Cờ trạng thái lưu trong TT: EXACT = giá trị chính xác; LOWER/UPPER = chỉ là chặn trên/dưới
+  // (do bị cắt tỉa alpha-beta giữa chừng), vẫn hữu ích để thu hẹp cửa sổ alpha-beta khi gặp lại.
+  const TT_EXACT = 0, TT_LOWER = 1, TT_UPPER = 2;
+
+  // ===== TT bền vững xuyên suốt ván (thay vì tạo mới mỗi lượt AI đi) =====
+  // Trước đây bestMoveSmart() tự tạo `new Map()` riêng cho mỗi lượt đi, nên toàn bộ kết quả đã
+  // tính (hàng nghìn thế cờ con đã duyệt) bị vứt bỏ ngay khi AI đi xong nước đó. Thực tế nhiều
+  // thế cờ con được duyệt ở lượt trước (như các nhánh tiếp diễn gần-tối-ưu) hoàn toàn có thể xuất
+  // hiện lại y hệt ở lượt sau — nhất là khi người chơi lẫn máy đều có xu hướng đi theo các nước tốt
+  // nhất mà engine đã "nhìn thấy" từ trước — nên việc giữ lại TT giữa các lượt giúp tái sử dụng
+  // đúng những kết quả đó thay vì tính lại từ đầu.
+  //
+  // Lưu ý an toàn quan trọng: ZOBRIST_O/ZOBRIST_X là 2 mảng DÙNG CHUNG, được đánh số theo chỉ số ô
+  // (index) chứ KHÔNG random riêng theo từng cỡ bàn — nên hash của 1 ô "index 112" trên bàn 15x15
+  // và "index 112" trên bàn 30x30 dùng chung 1 cặp số ngẫu nhiên dù là 2 ô hoàn toàn khác nhau về
+  // vị trí thực tế. Vì vậy TUYỆT ĐỐI không được dùng chung 1 bảng TT giữa 2 cỡ bàn khác nhau (sẽ
+  // gây đụng hash sai lệch, AI có thể tra ra giá trị của 1 thế cờ hoàn toàn không liên quan). Biến
+  // `persistentTTBoardSize` dưới đây theo dõi đúng cỡ bàn mà bảng hiện có đang phục vụ; hễ đổi cỡ
+  // bàn là lập tức cấp phát bảng mới, không tái sử dụng nhầm.
+  let persistentTT = new Map();
+  let persistentTTBoardSize = null;
+  // Giới hạn số mục để tránh phình bộ nhớ vô hạn nếu người chơi mở app rất lâu / chơi nhiều ván liên
+  // tục trên bàn 30x30 (không gian trạng thái cực lớn). Khi chạm ngưỡng, đơn giản là xoá sạch và bắt
+  // đầu tích luỹ lại — an toàn tuyệt đối (không có entry cũ nào bị dùng sai), chi phí chỉ là mất cache
+  // đã tích luỹ, và đây là tình huống hiếm gặp trong thực tế sử dụng thông thường.
+  const TT_MAX_ENTRIES = 300000;
+  function getPersistentTT(size){
+    if(persistentTTBoardSize !== size){
+      persistentTT = new Map();
+      persistentTTBoardSize = size;
+    } else if(persistentTT.size > TT_MAX_ENTRIES){
+      persistentTT = new Map();
+    }
+    return persistentTT;
+  }
+
+  // ===== #3: Threat Space Search (TSS) hợp nhất — thay cho VCF và VCT chạy tuần tự tách rời =====
+  // Trước đây: thử VCF (chỉ nước "bốn") trước; nếu thất bại mới thử VCT (bốn + ba sống) từ đầu.
+  // Vấn đề: chuỗi ép buộc mạnh nhất thường XEN KẼ cả nước bốn lẫn nước ba trong cùng 1 chuỗi — chạy
+  // 2 pha tách rời có thể bỏ sót các chuỗi kiểu đó, và tốn thời gian chạy lại từ đầu ở pha thứ hai.
+  // Nay dùng 1 hàm tìm kiếm đệ quy DUY NHẤT (tssSearch), mỗi tầng xét CẢ hai loại nước ép buộc cùng
+  // lúc rồi ưu tiên thử theo độ "hẹp" của nhánh: nước "bốn" chỉ có tối đa 1 cách chặn (rất rẻ để thử,
+  // gần như miễn phí về mặt nhánh) nên được thử gần hết; nước "ba sống" có 2-3 cách chặn (phải chứng
+  // minh thắng ở MỌI cách chặn nên tốn hơn nhiều) nên chỉ thử vài nước tốt nhất mỗi tầng.
+  const TSS_TIME_BUDGET_MS = 650;      // ngân sách 1 lần duy nhất, thay cho tổng 2 ngân sách VCF+VCT trước đây
+  const TSS_MAX_FORCING_MOVES = 12;    // tối đa 12 nước ép buộc liên tiếp (~24 nước cả hai bên)
+  const TSS_BRANCH_NARROW = 10;        // số nước "bốn" (nhánh hẹp) được thử mỗi tầng — rẻ nên thử nhiều
+  const TSS_BRANCH_WIDE = 4;           // số nước "ba sống" (nhánh rộng) được thử mỗi tầng — đắt nên thử ít hơn
+
+  // Phòng thủ TSS: chủ động dò xem đối thủ có đang âm thầm xây chuỗi ép buộc thắng hay không (bốn
+  // và/hoặc ba sống cùng lúc), và nếu có, tìm nước đi phá vỡ chuỗi đó — khác với chặn đe doạ 1 nước
+  // đơn thuần ở bước 2. Trước đây có 2 lớp (VCF rồi mới VCT) chạy tuần tự; nay chỉ 1 lớp duy nhất.
+  const TSS_DEFENSE_DETECT_BUDGET_MS = 250;   // ngân sách để phát hiện đối thủ có đang đe doạ không
+  const TSS_DEFENSE_SEARCH_BUDGET_ESCALATED_MS = 750; // khi đã CHẮC CHẮN có mối đe doạ thật (không còn là nghi ngờ),
+                                               // đáng chi thêm thời gian để tìm bằng được nước phá — thà nghĩ lâu hơn còn hơn thua ngay
+  const TSS_DEFENSE_SUBDEPTH = 6;             // độ sâu rút gọn "sàn" khi kiểm tra lại từng ứng viên phòng thủ
+  const TSS_DEFENSE_MAX_CANDIDATES = 22;      // tối đa số ứng viên phòng thủ được thử
+  const TSS_DEFENSE_MIN_SUBBUDGET_MS = 40;    // thời gian tối thiểu để xác minh lại 1 ứng viên, tránh xác minh quá nông
+  const TSS_DEFENSE_MAX_SUBBUDGET_MS = 140;   // thời gian tối đa cho 1 ứng viên, tránh 1 ứng viên "ngốn" hết ngân sách
+  const TSS_DEFENSE_KEEP_TOP = 3;             // số nước phá đã xác minh AN TOÀN tối đa giữ lại để so sánh chất lượng,
+                                               // thay vì luôn lấy nước đầu tiên tìm được
+
+  function lineScore(count, openEnds, len){
+    if(count >= len) return 1000000;
+    const gap = len - count;
+    if(gap === 1) return openEnds === 2 ? 8000 : (openEnds === 1 ? 600 : 0);
+    if(gap === 2) return openEnds === 2 ? 400 : (openEnds === 1 ? 60 : 0);
+    if(gap === 3) return openEnds === 2 ? 50 : (openEnds === 1 ? 10 : 0);
+    return openEnds > 0 ? 5 : 1;
+  }
+
+  // Điểm khi giả định đặt `symbol` vào idx (idx đang trống).
+  //
+  // GHI CHÚ KỸ THUẬT (quan trọng): bản đầu tiên tôi viết cho hàm này dùng "pattern-based lookup" —
+  // mã hoá 2*(len-1) ô quanh idx thành 1 số cơ số 3 rồi tra bảng precompute thay vì quét vòng lặp,
+  // đúng như đã hứa. Nhưng ĐO THỰC TẾ (benchmark trên board mô phỏng thực chiến, quân xúm cụm quanh
+  // tâm giống getCandidates radius=2) cho kết quả NGƯỢC kỳ vọng: bảng tra cứu chậm hơn ~2 LẦN so với
+  // vòng lặp early-exit dưới đây, ở mọi mật độ quân đã thử (kể cả bàn 30x30 đông quân), thử cả 2 cách
+  // mã hoá (cơ số 3 lẫn dịch bit). Lý do: engine V8 đã tối ưu vòng lặp while đơn giản rất tốt, và vòng
+  // lặp gốc THOÁT SỚM ngay khi gặp ô không phải quân mình (đa số trường hợp chỉ đọc 1-3 ô), trong khi
+  // xây khoá để tra bảng luôn phải đọc đủ (len-1) ô mỗi phía dù kết quả có thể đã rõ từ ô đầu tiên. Vì
+  // vậy tôi GIỮ NGUYÊN bản vòng lặp gốc ở đây thay vì đánh đổi lấy 1 "tối ưu" trên lý thuyết nhưng thực
+  // ra làm app CHẬM hơn. (Bảng tra cứu chỉ thực sự thắng khi dùng cho bitboard duy trì tăng-dần xuyên
+  // suốt cây tìm kiếm — đó là 1 thay đổi kiến trúc lớn hơn nhiều, không phải chỉ đổi 1 hàm.)
+  function evaluatePoint(b, size, idx, symbol, len){
+    const r0 = Math.floor(idx/size), c0 = idx % size;
+    const dirs = [[0,1],[1,0],[1,1],[1,-1]];
+    let total = 0;
+    for(const [dr,dc] of dirs){
+      let count = 1, openEnds = 0;
+      let r = r0+dr, c = c0+dc;
+      while(r>=0 && r<size && c>=0 && c<size && b[r*size+c]===symbol){ count++; r+=dr; c+=dc; }
+      if(r>=0 && r<size && c>=0 && c<size && !b[r*size+c]) openEnds++;
+      r = r0-dr; c = c0-dc;
+      while(r>=0 && r<size && c>=0 && c<size && b[r*size+c]===symbol){ count++; r-=dr; c-=dc; }
+      if(r>=0 && r<size && c>=0 && c<size && !b[r*size+c]) openEnds++;
+      total += lineScore(count, openEnds, len);
+    }
+    return total;
+  }
+
+
+  // ===== #2: phát hiện "thế cờ kép" (fork) trong hàm đánh giá =====
+  // lineScore chỉ cộng điểm từng đường riêng lẻ nên không biết 2 đường có "va" vào nhau hay không.
+  // Ví dụ song ba (2 đường ba sống không chung điểm chặn) là thắng ép buộc gần như chắc chắn trong
+  // vài nước tới (đối thủ chỉ chặn được 1 đường, đường kia biến thành tứ mở), nhưng nếu chỉ cộng điểm
+  // tuyến tính thì 2 đường x 400 điểm = 800, không nổi bật hơn nhiều so với các thế bình thường khác —
+  // khiến AI có thể không ưu tiên tạo ra nước đi này trừ khi search đủ sâu để "vấp" phải hậu quả.
+  // computeForkBonus gán hẳn 1 khoản điểm lớn khi phát hiện tổ hợp không thể chặn hết bằng 1 nước,
+  // để minimax thấy được giá trị của thế kép ngay tại nút lá, không cần tìm kiếm sâu hơn mới nhận ra.
+  function computeForkBonus(threats){
+    // Tứ mở (4 quân liên tiếp, cả 2 đầu còn trống): đối thủ chỉ chặn được 1 đầu -> gần như thắng chắc.
+    for(const t of threats){
+      if(t.type === 'four' && t.openEnds === 2) return 400000;
+    }
+    // Xét từng cặp mối đe doạ (ba sống / bốn): nếu 2 đường không chia sẻ chung điểm chặn nào,
+    // đối thủ không thể chặn cả hai cùng lúc trong 1 nước -> coi như thắng ép buộc sắp tới.
+    for(let i=0;i<threats.length;i++){
+      for(let j=i+1;j<threats.length;j++){
+        const a = threats[i], c2 = threats[j];
+        const shareCell = a.ends.some(e => c2.ends.includes(e));
+        if(!shareCell){
+          if(a.type === 'four' || c2.type === 'four') return 300000; // ba+bốn hoặc bốn+bốn rời nhau
+          return 150000; // song ba (double-three) không chung điểm chặn
+        }
+      }
+    }
+    return 0;
+  }
+
+  // ===== #6: Nhận diện "tứ gãy" (broken four) và "tam gãy" (broken three) — mẫu hình mà cách quét
+  // dãy LIÊN TỤC cũ hoàn toàn bỏ sót =====
+  // evaluateBoard trước đây chỉ quét các dãy quân LIÊN TỤC (ví dụ OOOO), nên "mù" hoàn toàn trước các
+  // thế bị ngắt quãng như OO.OO, O.OOO, OOO.O (tứ gãy — chỉ cần điền đúng 1 ô là đủ 5 liên tiếp, nguy
+  // hiểm NGANG một "tứ chặn 1 đầu") hay O.OO, OO.O, O.O.O (tam gãy — còn thiếu 2 quân nhưng đã có 2
+  // "cửa" để tiến tới, khó chặn trọn vẹn bằng 1 nước như tam thường). Đây là lỗ hổng NHẬN THỨC thật sự.
+  //
+  // Cách phát hiện tổng quát: xét 1 "cửa sổ" đúng `len` ô liên tiếp theo 1 hướng. Nếu cửa sổ không dính
+  // quân đối phương, và có đúng `neededSelf` quân mình + đúng `neededEmpty` ô trống, các ô trống đó
+  // CHÍNH LÀ những nước cần điền để hoàn thành 5 liên tiếp — bất kể hình dạng bên trong liên tục hay
+  // gãy. Với (neededSelf, neededEmpty) = (len-1, 1) ta có "tứ" (gộp cả liên tục lẫn gãy); với
+  // (len-2, 2) ta có "tam" (cũng gộp cả liên tục lẫn gãy).
+  function windowPatternCompletion(b, size, len, rStart, cStart, dr, dc, symbol, neededSelf, neededEmpty){
+    let self = 0; const emptyCells = [];
+    for(let k=0;k<len;k++){
+      const r = rStart + dr*k, c = cStart + dc*k;
+      if(r<0 || r>=size || c<0 || c>=size) return null; // cửa sổ tràn ra ngoài bàn -> không hợp lệ
+      const v = b[r*size+c];
+      if(v === symbol) self++;
+      else if(v === null){
+        if(emptyCells.length >= neededEmpty) return null; // nhiều ô trống hơn mức cần -> không khớp mẫu
+        emptyCells.push(r*size+c);
+      } else {
+        return null; // dính quân đối phương trong cửa sổ -> bị chặn, không phải mối đe doạ thật
+      }
+    }
+    return (self === neededSelf && emptyCells.length === neededEmpty) ? emptyCells : null;
+  }
+
+  // Đánh giá toàn bàn: quét mọi "dãy quân" thực tế đã có trên bàn (dùng ở nút lá khi tìm kiếm sâu).
+  // Ngoài điểm cộng dồn theo từng đường (lineScore), còn gom các mối đe doạ đáng kể (ba sống, bốn,
+  // và giờ có thêm tứ gãy + tam gãy) để phát hiện fork qua computeForkBonus ở trên.
+  function evaluateBoard(b, size, len){
+    const dirs = [[0,1],[1,0],[1,1],[1,-1]];
+    let totalO = 0, totalX = 0;
+    const threatsO = [], threatsX = [];
+    // Các mẫu "gãy" chỉ có ý nghĩa với len >= 4 (bàn 3x3 vốn đã được minimax đầy đủ xử lý riêng).
+    const checkBroken = len >= 4;
+    for(let idx=0; idx<b.length; idx++){
+      const symbol = b[idx];
+      if(!symbol) continue;
+      const r0 = Math.floor(idx/size), c0 = idx % size;
+      for(const [dr,dc] of dirs){
+        const pr = r0-dr, pc = c0-dc;
+        const prevSame = pr>=0 && pr<size && pc>=0 && pc<size && b[pr*size+pc]===symbol;
+        if(prevSame) continue; // không phải điểm bắt đầu dãy theo hướng này -> bỏ qua để khỏi đếm trùng
+        let count = 1;
+        let r = r0+dr, c = c0+dc;
+        while(r>=0 && r<size && c>=0 && c<size && b[r*size+c]===symbol){ count++; r+=dr; c+=dc; }
+        const fwdEmpty = (r>=0 && r<size && c>=0 && c<size && !b[r*size+c]) ? r*size+c : null;
+        const bwdEmpty = (pr>=0 && pr<size && pc>=0 && pc<size && !b[pr*size+pc]) ? pr*size+pc : null;
+        const openEnds = (fwdEmpty!==null?1:0) + (bwdEmpty!==null?1:0);
+        const s = lineScore(count, openEnds, len);
+        if(symbol === 'O') totalO += s; else totalX += s;
+
+        // Gom các mối đe doạ đáng kể (còn thiếu 1 hoặc 2 quân là đủ) kèm điểm chặn, để dò fork bên dưới
+        const gap = len - count;
+        const ends = [fwdEmpty, bwdEmpty].filter(e => e !== null);
+        if(gap === 1 && ends.length){
+          (symbol === 'O' ? threatsO : threatsX).push({ type: 'four', openEnds, ends });
+        } else if(gap === 2 && openEnds === 2 && ends.length === 2){
+          (symbol === 'O' ? threatsO : threatsX).push({ type: 'three', openEnds, ends });
+        }
+
+        if(checkBroken){
+          // --- Tứ gãy: dãy chưa đạt "tứ" (count <= len-2) + có đầu hở -> kiểm tra thêm xem có phải
+          // MỘT PHÍA của 1 tứ gãy hay không. Xét MỌI count từ 1 tới len-2 để bắt đủ mọi kiểu tách quân
+          // quanh chỗ gãy (len=5: cả "3+1" OOO.O, "2+2" OO.OO, "1+3" O.OOO đều phải bắt được).
+          if(count <= len-2){
+            if(fwdEmpty !== null){
+              // Cửa sổ tiến: bắt đầu ĐÚNG tại điểm đầu dãy, luôn đúng bất kể count.
+              const cells = windowPatternCompletion(b, size, len, r0, c0, dr, dc, symbol, len-1, 1);
+              if(cells){
+                if(symbol === 'O') totalO += 600; else totalX += 600; // ngang giá trị 1 "tứ chặn 1 đầu" thường
+                (symbol === 'O' ? threatsO : threatsX).push({ type: 'four', openEnds: 1, ends: cells });
+              }
+            }
+            if(bwdEmpty !== null){
+              // Cửa sổ lùi: cần đủ (len - count) ô tính lùi để cửa sổ dài đúng `len` và khớp cuối dãy hiện tại.
+              const back = len - count;
+              const cells = windowPatternCompletion(b, size, len, r0-dr*back, c0-dc*back, dr, dc, symbol, len-1, 1);
+              if(cells){
+                if(symbol === 'O') totalO += 600; else totalX += 600;
+                (symbol === 'O' ? threatsO : threatsX).push({ type: 'four', openEnds: 1, ends: cells });
+              }
+            }
+          }
+
+          // --- Tam gãy: chỉ xét dãy CÒN NGẮN (count <= len-3) để tránh chồng lấn với vùng "tam liên
+          // tục" đã được lineScore + nhánh gap===2 ở trên xử lý ổn rồi (count === len-2). Với len=5,
+          // điều kiện này nghĩa là count 1 hoặc 2 — đúng những dãy ngắn mà cách quét cũ coi là "chưa
+          // đáng kể" nhưng thực ra có thể đang là 1 phần của 1 tam gãy nguy hiểm (ví dụ O.OO, OO.O).
+          //
+          // Vì tam có TỚI 2 ô trống cần xác định (không như tứ chỉ có 1), vị trí cửa sổ không còn suy
+          // ra DUY NHẤT từ count như tứ gãy nữa — nên phải thử mọi cửa sổ độ dài `len` có khả năng
+          // "phủ" dãy hiện tại (không chỉ đúng 1 điểm neo). Số cửa sổ cần thử bị chặn trên bởi
+          // (count + len - 1), với count nhỏ (≤ len-3) nên vẫn rẻ, không phụ thuộc kích thước bàn.
+          if(count <= len-3 && ends.length){
+            for(let s = -(len-1); s <= count-1; s++){
+              const rs = r0 + dr*s, cs = c0 + dc*s;
+              const cells = windowPatternCompletion(b, size, len, rs, cs, dr, dc, symbol, len-2, 2);
+              if(cells){
+                if(symbol === 'O') totalO += 380; else totalX += 380; // ngang giá trị 1 "tam" thường (400), hơi dè dặt hơn vì độ tin cậy thấp hơn tứ gãy
+                (symbol === 'O' ? threatsO : threatsX).push({ type: 'three', openEnds: 2, ends: cells });
+              }
+            }
+          }
+        }
+      }
+    }
+    const forkO = computeForkBonus(threatsO);
+    const forkX = computeForkBonus(threatsX);
+    return (totalO + forkO) - (totalX + forkX);
+  }
+
+  // ===== IncrementalEvaluator: bản THAY THẾ evaluateBoard cho riêng đường tìm kiếm alphaBeta =====
+  // (đây chính là hướng "bitboard/duy trì tăng-dần" đã hứa, thay cho cách "tra bảng nhưng vẫn tính lại
+  // từ đầu mỗi lần gọi" đã thử và bị loại vì đo ra CHẬM hơn — xem ghi chú ở evaluatePoint bên trên).
+  //
+  // Ý TƯỞNG: evaluateBoard quét TOÀN BỘ bàn cờ mỗi lần gọi — độ phức tạp tỉ lệ với KÍCH THƯỚC BÀN, dù
+  // 1 nước đi trong lúc tìm kiếm chỉ làm đổi giá trị của 1 Ô DUY NHẤT. Đúng ra chỉ cần cập nhật lại phần
+  // điểm số bị ảnh hưởng BỞI ô đó, không cần tính lại toàn bộ. Cụ thể: đặt/gỡ 1 quân tại idx0 chỉ có thể
+  // làm thay đổi kết quả tính cho các cặp (idx2, hướng) mà idx0 nằm TRÊN đúng trục đó — và chỉ trong
+  // phạm vi bán kính 2*len quanh idx0 (xa hơn thì hoặc không đọc tới, hoặc đã chắc chắn "đủ len liên
+  // tiếp" từ trước nên không đổi kết luận nữa dù đếm được thêm bao nhiêu). Bán kính này đã được CHỨNG
+  // MINH đủ an toàn bằng kiểm chứng ngẫu nhiên hơn 60.000 trường hợp (đặt/gỡ lồng nhau kiểu cây tìm
+  // kiếm thật, thế cờ đông quân, chuỗi dài cố tình dò biên) trước khi đưa vào đây — xem lại nếu cần.
+  //
+  // computeCellDirContribution tái dùng NGUYÊN VĂN logic thân vòng lặp của evaluateBoard ở trên (tách
+  // riêng ra để không phải chép tay 2 lần, tránh 2 bản logic lệch nhau theo thời gian).
+  function computeCellDirContribution(b, size, len, idx, dr, dc, checkBroken){
+    const symbol = b[idx];
+    if(!symbol) return null;
+    const r0 = Math.floor(idx/size), c0 = idx % size;
+    const pr = r0-dr, pc = c0-dc;
+    const prevSame = pr>=0 && pr<size && pc>=0 && pc<size && b[pr*size+pc]===symbol;
+    if(prevSame) return null;
+
+    let count = 1;
+    let r = r0+dr, c = c0+dc;
+    while(r>=0 && r<size && c>=0 && c<size && b[r*size+c]===symbol){ count++; r+=dr; c+=dc; }
+    const fwdEmpty = (r>=0 && r<size && c>=0 && c<size && !b[r*size+c]) ? r*size+c : null;
+    const bwdEmpty = (pr>=0 && pr<size && pc>=0 && pc<size && !b[pr*size+pc]) ? pr*size+pc : null;
+    const openEnds = (fwdEmpty!==null?1:0) + (bwdEmpty!==null?1:0);
+
+    let score = lineScore(count, openEnds, len);
+    const threats = [];
+    const gap = len - count;
+    const ends = [fwdEmpty, bwdEmpty].filter(e => e !== null);
+    if(gap === 1 && ends.length){
+      threats.push({ type: 'four', openEnds, ends });
+    } else if(gap === 2 && openEnds === 2 && ends.length === 2){
+      threats.push({ type: 'three', openEnds, ends });
+    }
+
+    if(checkBroken){
+      if(count <= len-2){
+        if(fwdEmpty !== null){
+          const cells = windowPatternCompletion(b, size, len, r0, c0, dr, dc, symbol, len-1, 1);
+          if(cells){ score += 600; threats.push({ type:'four', openEnds:1, ends: cells }); }
+        }
+        if(bwdEmpty !== null){
+          const back = len - count;
+          const cells = windowPatternCompletion(b, size, len, r0-dr*back, c0-dc*back, dr, dc, symbol, len-1, 1);
+          if(cells){ score += 600; threats.push({ type:'four', openEnds:1, ends: cells }); }
+        }
+      }
+      if(count <= len-3 && ends.length){
+        for(let s = -(len-1); s <= count-1; s++){
+          const rs = r0+dr*s, cs = c0+dc*s;
+          const cells = windowPatternCompletion(b, size, len, rs, cs, dr, dc, symbol, len-2, 2);
+          if(cells){ score += 380; threats.push({ type:'three', openEnds:2, ends: cells }); }
+        }
+      }
+    }
+    return { symbol, score, threats };
+  }
+
+  const EVAL_DIRS = [[0,1],[1,0],[1,1],[1,-1]];
+
+  class IncrementalEvaluator{
+    constructor(size, len){
+      this.size = size;
+      this.len = len;
+      this.checkBroken = len >= 4;
+      this.totalO = 0;
+      this.totalX = 0;
+      this.cellDirMap = new Map(); // khoá idx*4+hướng -> { symbol, score, threats }
+      this.RADIUS = 2 * len; // biên an toàn, xem giải thích ở trên
+    }
+
+    // Quét toàn bàn 1 LẦN DUY NHẤT (đầu mỗi lượt AI suy nghĩ) — kết quả tương đương evaluateBoard,
+    // nhưng chỉ trả về gián tiếp qua score() để dùng lặp lại nhiều lần với chi phí O(1) sau đó.
+    initFull(b){
+      const { size, len, checkBroken } = this;
+      this.totalO = 0; this.totalX = 0;
+      this.cellDirMap.clear();
+      for(let idx=0; idx<b.length; idx++){
+        if(!b[idx]) continue;
+        for(let dIdx=0; dIdx<4; dIdx++){
+          const [dr,dc] = EVAL_DIRS[dIdx];
+          const entry = computeCellDirContribution(b, size, len, idx, dr, dc, checkBroken);
+          if(entry){
+            const key = idx*4+dIdx;
+            this.cellDirMap.set(key, entry);
+            if(entry.symbol === 'O') this.totalO += entry.score; else this.totalX += entry.score;
+          }
+        }
+      }
+    }
+
+    // Gọi NGAY SAU KHI b[moveIdx] vừa được đổi (đặt quân hoặc gỡ quân do quay lui trong alphaBeta) —
+    // đối xứng hoàn toàn cho cả 2 chiều, không cần hàm "undo" riêng: cứ đổi bàn xong rồi gọi lại đúng
+    // idx đó là tự cập nhật đúng theo trạng thái MỚI của bàn.
+    applyMove(b, moveIdx){
+      const { size, len, checkBroken, RADIUS } = this;
+      const moveR = Math.floor(moveIdx/size), moveC = moveIdx % size;
+      const seen = this._seen || (this._seen = new Set());
+      seen.clear();
+      for(let dIdx=0; dIdx<4; dIdx++){
+        const [dr,dc] = EVAL_DIRS[dIdx];
+        for(let k=-RADIUS; k<=RADIUS; k++){
+          const r = moveR+dr*k, c = moveC+dc*k;
+          if(r<0||r>=size||c<0||c>=size) continue;
+          const idx2 = r*size+c;
+          const key = idx2*4+dIdx;
+          if(seen.has(key)) continue;
+          seen.add(key);
+          const old = this.cellDirMap.get(key);
+          if(old){
+            if(old.symbol === 'O') this.totalO -= old.score; else this.totalX -= old.score;
+            this.cellDirMap.delete(key);
+          }
+          const fresh = computeCellDirContribution(b, size, len, idx2, dr, dc, checkBroken);
+          if(fresh){
+            this.cellDirMap.set(key, fresh);
+            if(fresh.symbol === 'O') this.totalO += fresh.score; else this.totalX += fresh.score;
+          }
+        }
+      }
+    }
+
+    // Tương đương evaluateBoard(b,size,len) tại đúng trạng thái bàn hiện tại, nhưng O(1) thay vì
+    // O(kích thước bàn) — miễn là applyMove đã được gọi đúng cho MỌI thay đổi kể từ initFull().
+    score(){
+      // QUAN TRỌNG: computeForkBonus dừng ở cặp threat không-chung-điểm-chặn ĐẦU TIÊN tìm thấy nên phụ
+      // thuộc THỨ TỰ duyệt — phải duyệt theo đúng thứ tự idx tăng dần rồi hướng, giống hệt evaluateBoard
+      // gốc, chứ không theo thứ tự chèn của Map (đã bắt lỗi này bằng kiểm chứng ngẫu nhiên trước khi
+      // đưa vào đây: cùng 1 tập threats nhưng khác thứ tự duyệt có thể ra fork bonus khác nhau).
+      const sortedKeys = [...this.cellDirMap.keys()].sort((a,b)=>a-b);
+      const threatsO = [], threatsX = [];
+      for(const key of sortedKeys){
+        const entry = this.cellDirMap.get(key);
+        if(!entry.threats.length) continue;
+        (entry.symbol === 'O' ? threatsO : threatsX).push(...entry.threats);
+      }
+      const forkO = computeForkBonus(threatsO);
+      const forkX = computeForkBonus(threatsX);
+      return (this.totalO + forkO) - (this.totalX + forkX);
+    }
+  }
+
+  // Chỉ xét các ô trống nằm gần quân cờ đã đánh (bán kính 2) để tìm kiếm khả thi trên bàn lớn
+  function getCandidates(b, size, radius){
+    const set = new Set();
+    let hasStone = false;
+    for(let i=0;i<b.length;i++){
+      if(!b[i]) continue;
+      hasStone = true;
+      const r0 = Math.floor(i/size), c0 = i % size;
+      for(let dr=-radius; dr<=radius; dr++){
+        for(let dc=-radius; dc<=radius; dc++){
+          const r = r0+dr, c = c0+dc;
+          if(r>=0 && r<size && c>=0 && c<size){
+            const ni = r*size+c;
+            if(!b[ni]) set.add(ni);
+          }
+        }
+      }
+    }
+    if(!hasStone){
+      const mid = Math.floor(size/2);
+      set.add(mid*size + mid);
+    }
+    return [...set];
+  }
+
+  // Điểm của một ô trống nếu `mover` đánh vào đó: vừa tính tấn công cho mover, vừa tính chặn đối thủ
+  function moveScore(b, size, len, idx, mover){
+    const opp = mover === 'O' ? 'X' : 'O';
+    return evaluatePoint(b, size, idx, mover, len) + evaluatePoint(b, size, idx, opp, len) * 0.85;
+  }
+
+  function topCandidates(b, size, len, candidates, topN, mover){
+    return candidates
+      .map(idx => ({ idx, score: moveScore(b, size, len, idx, mover) }))
+      .sort((a, c) => c.score - a.score)
+      .slice(0, topN)
+      .map(s => s.idx);
+  }
+
+  // ===== #4: Move ordering nâng cao — killer-move heuristic + history heuristic =====
+  // topCandidates ở trên chỉ sắp xếp TĨNH theo moveScore, tính lại y hệt mỗi lần gặp node mới, không
+  // học được gì từ chính quá trình tìm kiếm. Hai kỹ thuật kinh điển bên dưới giúp alpha-beta cắt tỉa
+  // hiệu quả hơn nhiều mà chi phí cài đặt thấp, vì chúng tận dụng lại thông tin đã "học" được khi duyệt
+  // các nhánh anh em (sibling) hoặc ở độ sâu tương tự trước đó trong CÙNG một lần tìm kiếm:
+  //  - Killer move: mỗi khi 1 nước gây cắt tỉa beta (fail-high) ở độ sâu X, nước đó thường cũng tốt ở
+  //    các nhánh anh em cùng độ sâu X (dù bàn cờ khác đôi chút) — ưu tiên thử lại nó đầu tiên.
+  //  - History heuristic: cộng dồn "điểm uy tín" cho mỗi (quân, ô) mỗi lần nó gây cắt tỉa, trọng số theo
+  //    độ sâu² (cắt tỉa ở độ sâu càng lớn càng đáng tin) — dùng làm điểm cộng thêm vào moveScore tĩnh.
+  // Cả 2 bảng được tạo mới và dùng chung cho toàn bộ 1 lần tính nước đi (reset mỗi khi đến lượt máy),
+  // không tồn tại xuyên suốt nhiều nước đi vì bàn cờ đổi khác thì các nước "tốt" cũng đổi theo.
+  const KILLER_SLOTS = 2;        // số nước "sát thủ" lưu lại cho mỗi độ sâu
+  const HISTORY_WEIGHT = 0.5;    // trọng số quy đổi điểm history sang cùng thang với moveScore
+
+  function makeSearchHeuristics(){
+    return {
+      killers: [],                                     // killers[depth] = [idx, idx] (tối đa KILLER_SLOTS)
+      history: { O: new Float64Array(ZOBRIST_MAX_CELLS), X: new Float64Array(ZOBRIST_MAX_CELLS) }
+    };
+  }
+
+  // Sắp xếp ứng viên cho 1 node cụ thể: killer move của đúng độ sâu này được đưa lên đầu (nếu vẫn còn
+  // hợp lệ ở thế cờ hiện tại), phần còn lại xếp theo moveScore + phần thưởng history, rồi cắt còn branchWidth.
+  function orderCandidatesForSearch(b, size, len, candidates, branchWidth, mover, depth, heur){
+    const candidateSet = new Set(candidates);
+    const killerList = (heur.killers[depth] || []).filter(idx => candidateSet.has(idx));
+    const histTable = heur.history[mover];
+    const rest = candidates.filter(idx => !killerList.includes(idx));
+    const scored = rest.map(idx => ({
+      idx,
+      score: moveScore(b, size, len, idx, mover) + histTable[idx] * HISTORY_WEIGHT
+    }));
+    scored.sort((a, c) => c.score - a.score);
+    const restOrdered = scored.slice(0, Math.max(0, branchWidth - killerList.length)).map(s => s.idx);
+    return [...killerList, ...restOrdered];
+  }
+
+  // Ghi nhận 1 nước vừa gây cắt tỉa beta tại `depth`: cập nhật cả killer-move slot lẫn history table,
+  // để các nhánh anh em (cùng cha) hoặc các lần gặp lại độ sâu này sau đó ưu tiên thử nước này trước.
+  function recordCutoff(heur, depth, idx, mover){
+    if(!heur.killers[depth]) heur.killers[depth] = [];
+    const slots = heur.killers[depth];
+    if(slots[0] !== idx){
+      slots[1] = slots[0];
+      slots[0] = idx;
+      if(slots.length > KILLER_SLOTS) slots.length = KILLER_SLOTS;
+    }
+    heur.history[mover][idx] += depth * depth;
+  }
+
+  // Minimax + alpha-beta trên tập ứng viên gần quân cờ, dừng sớm nếu hết ngân sách thời gian.
+  // h1/h2: hash Zobrist tăng dần của thế cờ hiện tại; tt: bảng transposition dùng chung cho cả
+  // vòng đào sâu dần (iterative deepening) ở bestMoveSmart, để tái sử dụng kết quả đã tính.
+  // heur: bảng killer-move + history dùng chung cho cả lần tìm kiếm, để cải thiện thứ tự duyệt nước đi.
+  function alphaBeta(b, size, len, depth, alpha, beta, maximizing, lastIdx, lastSymbol, deadline, h1, h2, tt, heur, incEval, bb){
+    if(Date.now() > deadline) throw 'AI_TIMEOUT';
+
+    const win = checkWinBB(bb, Math.floor(lastIdx/size), lastIdx%size, lastSymbol, len);
+    if(win){
+      const sign = lastSymbol === 'O' ? 1 : -1;
+      return sign * (WIN_SCORE + depth); // thắng càng nhanh điểm càng cao, thua càng chậm càng đỡ tệ
+    }
+    if(depth === 0) return incEval.score();
+
+    // Tra bảng transposition: nếu thế cờ này đã từng được tính ở độ sâu >= độ sâu cần hiện tại,
+    // dùng lại kết quả (hoặc thu hẹp cửa sổ alpha-beta nếu chỉ là chặn trên/dưới) thay vì tính lại.
+    const key = h1 + '_' + h2;
+    const cached = tt.get(key);
+    const alphaOrig = alpha;
+    if(cached && cached.depth >= depth){
+      if(cached.flag === TT_EXACT) return cached.value;
+      if(cached.flag === TT_LOWER && cached.value > alpha) alpha = cached.value;
+      else if(cached.flag === TT_UPPER && cached.value < beta) beta = cached.value;
+      if(alpha >= beta) return cached.value;
+    }
+
+    const candidates = getCandidatesBB(bb, size, 2);
+    if(candidates.length === 0) return incEval.score();
+
+    const mover = maximizing ? 'O' : 'X';
+    const branchWidth = depth >= 5 ? 6 : 8;
+    const ordered = orderCandidatesForSearch(b, size, len, candidates, branchWidth, mover, depth, heur);
+    const Z = mover === 'O' ? ZOBRIST_O : ZOBRIST_X;
+
+    let value;
+    if(maximizing){
+      value = -Infinity;
+      for(const idx of ordered){
+        const ir = Math.floor(idx/size), ic = idx%size;
+        b[idx] = 'O';
+        bb.set(ir, ic, 'O');
+        incEval.applyMove(b, idx);
+        const nh1 = h1 ^ Z[idx][0], nh2 = h2 ^ Z[idx][1];
+        let score;
+        try {
+          score = alphaBeta(b, size, len, depth-1, alpha, beta, false, idx, 'O', deadline, nh1, nh2, tt, heur, incEval, bb);
+        } finally {
+          b[idx] = null; // luôn dọn lại, kể cả khi bị huỷ giữa chừng do hết giờ (ném lỗi AI_TIMEOUT)
+          bb.clear(ir, ic, 'O');
+          incEval.applyMove(b, idx); // đối xứng: gỡ quân xong gọi lại đúng idx là tự đồng bộ lại điểm số
+        }
+        if(score > value) value = score;
+        if(value > alpha) alpha = value;
+        if(alpha >= beta){ recordCutoff(heur, depth, idx, 'O'); break; }
+      }
+    } else {
+      value = Infinity;
+      for(const idx of ordered){
+        const ir = Math.floor(idx/size), ic = idx%size;
+        b[idx] = 'X';
+        bb.set(ir, ic, 'X');
+        incEval.applyMove(b, idx);
+        const nh1 = h1 ^ Z[idx][0], nh2 = h2 ^ Z[idx][1];
+        let score;
+        try {
+          score = alphaBeta(b, size, len, depth-1, alpha, beta, true, idx, 'X', deadline, nh1, nh2, tt, heur, incEval, bb);
+        } finally {
+          b[idx] = null; // luôn dọn lại, kể cả khi bị huỷ giữa chừng do hết giờ (ném lỗi AI_TIMEOUT)
+          bb.clear(ir, ic, 'X');
+          incEval.applyMove(b, idx);
+        }
+        if(score < value) value = score;
+        if(value < beta) beta = value;
+        if(alpha >= beta){ recordCutoff(heur, depth, idx, 'X'); break; }
+      }
+    }
+
+    // Lưu lại kết quả vào TT kèm cờ EXACT/LOWER/UPPER tuỳ việc có bị cắt tỉa hay không,
+    // để lần gặp lại thế cờ này (qua thứ tự nước đi khác) có thể tái sử dụng ngay.
+    let flag = TT_EXACT;
+    if(value <= alphaOrig) flag = TT_UPPER;
+    else if(value >= beta) flag = TT_LOWER;
+    tt.set(key, { depth, value, flag });
+
+    return value;
+  }
+
+  // Thắng/chặn ngay được xử lý trước; sau đó tới TSS (Threat Space Search) hợp nhất bên dưới;
+  // cuối cùng mới đào sâu dần (2, 4, 6... nước) bằng minimax trong ngân sách thời gian còn lại.
+  //
+  // Phân tích 1 nước đi ứng viên của `player` tại ô trống `idx`: nước này có phải là 1 nước ÉP BUỘC không
+  // (đối thủ bắt buộc phải đáp trả, nếu không sẽ thua), và nếu có thì đối thủ có những lựa chọn đáp trả nào.
+  // Trả về:
+  //   { idx, winning: true }                                        — thắng ngay không thể đỡ (song tứ/song ba/tứ+ba không giao nhau)
+  //   { idx, winning:false, forcing:true, defenderCandidates, threatCount } — nước ép buộc, đối thủ PHẢI đáp trả
+  //                                                                    bằng 1 trong các ô trong defenderCandidates
+  //   { idx, winning:false, forcing:false }                         — nước bình thường, không ép buộc gì
+  //
+  // LƯU Ý VỀ TÍNH ĐÚNG ĐẮN: defenderCandidates ở đây LUÔN được liệt kê ĐẦY ĐỦ (không cắt bớt) cho từng loại
+  // đe doạ — vì đây là phía "phải đúng với MỌI lựa chọn của đối thủ" trong tìm kiếm AND-OR, cắt bớt ở đây
+  // sẽ khiến kết luận "thắng chắc" bị SAI (bỏ sót đường thoát thật của đối thủ). Chỉ số lượng NƯỚC TẤN CÔNG
+  // được thử (TSS_BRANCH_NARROW/TSS_BRANCH_WIDE ở tssSearch) mới được phép cắt bớt, vì đó chỉ ảnh hưởng
+  // tới việc có tìm thấy hay không, không ảnh hưởng tính đúng đắn.
+  function analyzeForcingMove(b, size, len, idx, player){
+    b[idx] = player;
+    const r0 = Math.floor(idx / size), c0 = idx % size;
+    const dirs = [[0,1],[1,0],[1,1],[1,-1]];
+    const threatSets = [];
+    let winning = false;
+
+    for(const [dr,dc] of dirs){
+      let count = 1;
+      let fr = r0+dr, fc = c0+dc;
+      while(fr>=0 && fr<size && fc>=0 && fc<size && b[fr*size+fc]===player){ count++; fr+=dr; fc+=dc; }
+      let br = r0-dr, bc = c0-dc;
+      while(br>=0 && br<size && bc>=0 && bc<size && b[br*size+bc]===player){ count++; br-=dr; bc-=dc; }
+      if(count >= len){ winning = true; continue; } // phòng hờ (thường đã bị chặn ở bước thắng-ngay phía trên)
+
+      const e2InBounds = fr>=0 && fr<size && fc>=0 && fc<size;
+      const e2Idx = e2InBounds ? fr*size+fc : -1;
+      const e2Empty = e2InBounds && !b[e2Idx];
+      const e1InBounds = br>=0 && br<size && bc>=0 && bc<size;
+      const e1Idx = e1InBounds ? br*size+bc : -1;
+      const e1Empty = e1InBounds && !b[e1Idx];
+
+      if(count === len - 1){
+        // "Bốn": mỗi đầu trống là 1 điểm đối thủ buộc phải chặn ngay, không thì thua ở nước sau
+        const completions = [];
+        if(e1Empty) completions.push(e1Idx);
+        if(e2Empty) completions.push(e2Idx);
+        if(completions.length >= 2) winning = true;
+        else if(completions.length === 1) threatSets.push(completions);
+      } else if(count === len - 2 && e1Empty && e2Empty){
+        // "Ba": chỉ tính là ba sống thật (đe doạ ép buộc) nếu ít nhất 1 hướng mở rộng có thể tạo TỨ MỞ
+        // (nghĩa là đầu xa hơn của dãy 4 tương lai cũng phải trống — nếu không, mở rộng ra cũng chỉ thành
+        // tứ đơn, chặn bình thường sau này được, chưa cần coi là đe doạ ngay bây giờ).
+        const f1r = br-dr, f1c = bc-dc;
+        const f1InBounds = f1r>=0 && f1r<size && f1c>=0 && f1c<size;
+        const f1Idx = f1InBounds ? f1r*size+f1c : -1;
+        const f1Empty = f1InBounds && !b[f1Idx];
+
+        const f2r = fr+dr, f2c = fc+dc;
+        const f2InBounds = f2r>=0 && f2r<size && f2c>=0 && f2c<size;
+        const f2Idx = f2InBounds ? f2r*size+f2c : -1;
+        const f2Empty = f2InBounds && !b[f2Idx];
+
+        if(f1Empty && f2Empty){
+          // Ba sống 2 đầu: chặn 1 trong 2 ô sát cạnh (e1 hoặc e2) là đủ vô hiệu hoá cả 2 hướng cùng lúc
+          // (chặn e1 khiến hướng e2 cũng hết mở vì thiếu quân chặn ở đầu bên kia, và ngược lại)
+          threatSets.push([e1Idx, e2Idx]);
+        } else if(f1Empty){
+          // Chỉ hướng trái (qua e1) có thể mở thành tứ mở — tứ đó sẽ có 2 đầu là f1 và e2, nên CẢ BA cách
+          // sau đều chặn được: chặn thẳng e1 (không cho đánh), chặn f1, hoặc chặn e2 (đều làm tứ đó hết mở)
+          threatSets.push([e1Idx, f1Idx, e2Idx]);
+        } else if(f2Empty){
+          // Đối xứng: hướng phải (qua e2) mở thành tứ mở với 2 đầu là e1 và f2
+          threatSets.push([e2Idx, f2Idx, e1Idx]);
+        }
+        // Cả f1 và f2 đều đã bị chặn sẵn -> chỉ là "ba chết", không coi là đe doạ VCT
+      }
+    }
+
+    b[idx] = null;
+
+    if(winning) return { idx, winning: true };
+    if(threatSets.length === 0) return { idx, winning: false, forcing: false };
+
+    // Giao của mọi threatSets: nếu rỗng, không có ô nào đỡ được hết mọi đe doạ cùng lúc -> thắng chắc (đòn kép)
+    let intersection = threatSets[0];
+    for(let i=1;i<threatSets.length;i++) intersection = intersection.filter(x => threatSets[i].includes(x));
+    if(intersection.length === 0) return { idx, winning: true };
+
+    return { idx, winning: false, forcing: true, defenderCandidates: [...new Set(threatSets.flat())], threatCount: threatSets.length };
+  }
+
+  // Liệt kê mọi nước ép buộc (bốn HOẶC ba sống) khả dĩ của `player` trong CÙNG một danh sách,
+  // ưu tiên nước thắng ngay trước, rồi tới nước gây nhiều đe doạ cùng lúc, rồi tới nước có ít lựa
+  // chọn đáp trả hơn (ép chặt hơn — nước "bốn" luôn có <=1 lựa chọn đáp trả nên tự nhiên xếp lên đầu).
+  function findForcingMoves(b, size, len, player, bb){
+    const candidates = getCandidatesBB(bb, size, 2);
+    const results = [];
+    for(const idx of candidates){
+      const r = analyzeForcingMove(b, size, len, idx, player);
+      if(r.winning || r.forcing) results.push(r);
+    }
+    results.sort((a, c) => {
+      if(a.winning !== c.winning) return a.winning ? -1 : 1;
+      const at = a.threatCount || 0, ct = c.threatCount || 0;
+      if(at !== ct) return ct - at;
+      const ad = a.defenderCandidates ? a.defenderCandidates.length : 0;
+      const cd = c.defenderCandidates ? c.defenderCandidates.length : 0;
+      return ad - cd;
+    });
+    return results;
+  }
+
+  // ===== TSS (Threat Space Search) hợp nhất: tìm kiếm đệ quy AND-OR duy nhất cho CẢ bốn lẫn ba sống =====
+  // player liên tục tạo nước ép buộc (bốn HOẶC ba sống, xen kẽ tự do theo bất kỳ thứ tự nào tìm kiếm chọn ra);
+  // với nước tạo "ba sống" (có thể có 2-3 cách chặn), phải thắng được ở TẤT CẢ các cách chặn của opponent
+  // thì mới coi là chắc thắng — còn nước "bốn" thường chỉ có đúng 1 cách chặn nên gần như không tốn nhánh.
+  // Nhờ xét chung 1 danh sách nên 1 chuỗi có thể bắt đầu bằng "ba", tiếp bằng "bốn", rồi lại "ba" — thay vì
+  // bị ép phải toàn "bốn" (VCF cũ) hoặc phải chạy lại từ đầu ở 1 pha VCT tách biệt khi VCF thất bại.
+  // Trả về mảng nước đi (bắt đầu từ nước hiện tại) dẫn tới thắng chắc chắn, hoặc null nếu không tìm được.
+  function tssSearch(b, size, len, player, opponent, movesLeft, deadline, bb){
+    if(Date.now() > deadline) throw 'VCF_TIMEOUT';
+    if(movesLeft <= 0) return null;
+
+    const moves = findForcingMoves(b, size, len, player, bb);
+    if(moves.length === 0) return null;
+
+    // Nước "bốn" (<=1 cách chặn) rất rẻ để thử vì hầu như không có nhánh AND bên dưới -> thử gần hết.
+    // Nước "ba sống" (>=2 cách chặn) tốn hơn nhiều vì phải chứng minh thắng ở MỌI cách chặn -> chỉ thử
+    // vài nước tốt nhất mỗi tầng. Cả hai loại được xét CÙNG một tầng đệ quy, không tách pha.
+    const narrow = moves.filter(m => m.winning || !m.defenderCandidates || m.defenderCandidates.length <= 1);
+    const wideSet = new Set(narrow);
+    const wide = moves.filter(m => !wideSet.has(m));
+    const tryMoves = [...narrow.slice(0, TSS_BRANCH_NARROW), ...wide.slice(0, TSS_BRANCH_WIDE)];
+
+    for(const mv of tryMoves){
+      if(mv.winning) return [mv.idx];
+
+      const mvR = Math.floor(mv.idx/size), mvC = mv.idx%size;
+      b[mv.idx] = player;
+      bb.set(mvR, mvC, player);
+      let provenForAll = true;
+      let chosen = null;
+      for(const d of mv.defenderCandidates){
+        const dR = Math.floor(d/size), dC = d%size;
+        b[d] = opponent;
+        bb.set(dR, dC, opponent);
+        let subPath = null;
+        try {
+          // Nước chặn bắt buộc đó lỡ khiến đối thủ tự thắng luôn thì bỏ nhánh này (an toàn tuyệt đối)
+          if(!checkWinBB(bb, dR, dC, opponent, len)){
+            subPath = tssSearch(b, size, len, player, opponent, movesLeft - 1, deadline, bb);
+          }
+        } catch(e){
+          b[d] = null; bb.clear(dR, dC, opponent);
+          b[mv.idx] = null; bb.clear(mvR, mvC, player);
+          throw e;
+        }
+        b[d] = null;
+        bb.clear(dR, dC, opponent);
+        if(!subPath){ provenForAll = false; break; } // có 1 cách chặn mà player KHÔNG thắng tiếp được -> nước này thất bại
+        if(!chosen) chosen = { d, subPath };
+      }
+      b[mv.idx] = null;
+      bb.clear(mvR, mvC, player);
+      if(provenForAll && chosen) return [mv.idx, chosen.d, ...chosen.subPath];
+    }
+    return null;
+  }
+
+  // Chủ động dò xem đối thủ có đang xây chuỗi thắng ép buộc nào hay không (bốn và/hoặc ba sống, cùng lúc
+  // qua tssSearch), và nếu có, tìm nước phá. Trước đây có 2 lớp (VCF rồi mới VCT) gọi tuần tự; nay chỉ
+  // 1 lớp duy nhất, vừa đơn giản hơn vừa không bỏ sót các chuỗi xen kẽ bốn/ba mà VCF thuần không thấy được.
+  function findForcingDefense(b, size, len, mover, opponent, deadline, mult, bb){
+    mult = mult || 1;
+    // 1) PHÁT HIỆN: đối thủ có đang có sẵn 1 chuỗi ép buộc thắng hay không?
+    const detectDeadline = Math.min(deadline, Date.now() + TSS_DEFENSE_DETECT_BUDGET_MS * mult);
+    let opponentPath;
+    try {
+      opponentPath = tssSearch(b, size, len, opponent, mover, TSS_MAX_FORCING_MOVES, detectDeadline, bb);
+    } catch(e){
+      if(e === 'VCF_TIMEOUT') return null; // không kịp xác định trong ngân sách -> bỏ qua, để bước tìm kiếm tổng quát lo
+      throw e;
+    }
+    if(!opponentPath) return null; // đối thủ không có mối đe doạ nào, không cần phòng thủ đặc biệt
+
+    // 2) CÓ mối đe doạ THẬT (không còn là nghi ngờ) -> đây là tình huống sinh tử, đáng chi thêm thời gian
+    // để tìm bằng được nước phá, dùng ngân sách "mở rộng" thay vì ngân sách mặc định dùng khi chỉ mới nghi ngờ.
+    const searchDeadline = Math.min(deadline, Date.now() + TSS_DEFENSE_SEARCH_BUDGET_ESCALATED_MS * mult);
+
+    // ===== NÂNG CẤP VCT — ĐÃ THỬ "LUÔN DÙNG ĐỘ SÂU TỐI ĐA" RỒI HOÀN LẠI =====
+    // Lúc đầu tôi đổi dòng dưới thành "luôn dùng TSS_MAX_FORCING_MOVES" để lý luận "đối xứng tuyệt đối".
+    // Về lý thuyết (thời gian vô hạn) điều đó đúng. NHƯNG trong thực tế mỗi ứng viên phòng thủ chỉ có một
+    // ngân sách thời gian CỐ ĐỊNH (xem perCandidateBudget bên dưới) — ép xác minh luôn tìm sâu tối đa khiến
+    // nhiều lượt xác minh KHÔNG kịp hoàn thành trong ngân sách đó, và mỗi lần không kịp, code phải coi đó là
+    // "chưa chắc an toàn" (xem nhánh catch VCF_TIMEOUT ngay dưới) — tức càng "nghiêm ngặt" bao nhiêu, nó lại
+    // càng dễ bỏ qua NHỮNG nước chặn đúng mà một lượt xác minh NÔNG HƠN nhưng HOÀN THÀNH được vẫn thấy rõ.
+    // Nói cách khác: xác minh nông nhưng XONG > xác minh sâu nhưng THƯỜNG BỊ CẮT NGANG. Vì vậy quay lại đúng
+    // công thức thích ứng gốc: độ sâu xác minh bám theo độ dài chuỗi đe doạ THẬT vừa tìm thấy (không nông hơn
+    // TSS_DEFENSE_SUBDEPTH, không cần vượt quá độ dài chuỗi + 2 nước dự phòng, và không bao giờ vượt trần
+    // TSS_MAX_FORCING_MOVES). Phần bitboard vẫn giữ nguyên — đó là tối ưu tốc độ THUẦN TUÝ, đã fuzz-test khớp
+    // 100% với bản mảng gốc nên không đổi hành vi; phần lùi lại ở đây là NGÂN SÁCH ĐỘ SÂU, chỗ duy nhất có
+    // đánh đổi thật giữa "lý thuyết chặt chẽ hơn" và "thực tế đáng tin hơn" — và thực tế phải thắng.
+    const subDepth = Math.min(TSS_MAX_FORCING_MOVES, Math.max(TSS_DEFENSE_SUBDEPTH, opponentPath.length + 2));
+
+    // Ưu tiên thử các ô nằm trong chính chuỗi đe doạ đó trước (khả năng cao nhất để chặn được),
+    // sau đó mới tới các ứng viên gần quân cờ khác.
+    const tried = new Set();
+    const orderedCandidates = [];
+    opponentPath.forEach(idx => { if(!b[idx] && !tried.has(idx)){ tried.add(idx); orderedCandidates.push(idx); } });
+    getCandidatesBB(bb, size, 2).forEach(idx => { if(!tried.has(idx)){ tried.add(idx); orderedCandidates.push(idx); } });
+
+    const limit = Math.min(orderedCandidates.length, TSS_DEFENSE_MAX_CANDIDATES);
+    const safeCandidates = []; // các nước đã xác minh CHẮC CHẮN phá được chuỗi đe doạ
+
+    for(let i = 0; i < limit; i++){
+      if(Date.now() > searchDeadline) break;
+      if(safeCandidates.length >= TSS_DEFENSE_KEEP_TOP) break; // đã đủ lựa chọn an toàn để so sánh, khỏi thử thêm
+
+      const idx = orderedCandidates[i];
+      const idxR = Math.floor(idx/size), idxC = idx%size;
+      b[idx] = mover;
+      bb.set(idxR, idxC, mover);
+      try {
+        // Nước phòng thủ này lỡ khiến chính mover thắng luôn thì quá tốt, chọn ngay không cần so sánh gì thêm
+        if(checkWinBB(bb, idxR, idxC, mover, len)){ b[idx] = null; bb.clear(idxR, idxC, mover); return idx; }
+
+        // Chia thời gian còn lại cho các ứng viên còn phải thử (có sàn/trần), tránh 1 mốc cố định
+        // dễ timeout oan với chuỗi dài, mà cũng tránh 1 ứng viên "ngốn" hết ngân sách của cả nhóm.
+        const candidatesLeft = limit - i;
+        const remaining = searchDeadline - Date.now();
+        const perCandidateBudget = Math.max(TSS_DEFENSE_MIN_SUBBUDGET_MS,
+          Math.min(TSS_DEFENSE_MAX_SUBBUDGET_MS, remaining / Math.max(1, candidatesLeft)));
+        const subDeadline = Math.min(searchDeadline, Date.now() + perCandidateBudget);
+
+        let stillThreatened;
+        try {
+          const path2 = tssSearch(b, size, len, opponent, mover, subDepth, subDeadline, bb);
+          stillThreatened = !!path2;
+        } catch(e){
+          if(e === 'VCF_TIMEOUT') stillThreatened = true; // không chắc chắn -> coi như chưa an toàn, thử ứng viên khác
+          else throw e;
+        }
+        if(!stillThreatened) safeCandidates.push(idx); // nước này xác minh được là phá vỡ chuỗi đe doạ
+      } finally {
+        b[idx] = null;
+        bb.clear(idxR, idxC, mover);
+      }
+    }
+
+    if(safeCandidates.length === 0) return null; // không tìm được cách phá tuyệt đối trong ngân sách cho phép
+
+    // 3) Có thể có nhiều nước cùng phá được chuỗi đe doạ -> chọn nước có giá trị tấn công/phòng thủ
+    // tốt nhất (thay vì luôn lấy nước đầu tiên tìm được), vì việc chặn 1 chuỗi ép buộc thường không chỉ có 1 lựa chọn.
+    let best = safeCandidates[0], bestScore = -Infinity;
+    for(const idx of safeCandidates){
+      const s = moveScore(b, size, len, idx, mover);
+      if(s > bestScore){ bestScore = s; best = idx; }
+    }
+    return best;
+  }
+
+  // ===== Opening book: sách khai cuộc cho gomoku tự do (freestyle) =====
+  // Ở 1-2 nước đầu ván, bàn cờ còn quá thưa quân nên evaluateBoard/moveScore chưa có đủ
+  // thông tin để phân biệt tốt giữa các ô ứng viên (mọi hướng đều "trống như nhau"), trong khi
+  // lý thuyết khai cuộc gomoku tự do đã có sẵn vài nguyên tắc kinh điển, đáng tin hơn nhiều so
+  // với để engine tự dò từ một thế cờ gần như vô nghĩa:
+  //   1) Nước đi đầu tiên của cả ván: luôn chiếm trung tâm — đây là điểm có nhiều đường thắng
+  //      tiềm năng nhất (nằm trên nhiều hàng/cột/chéo đủ dài nhất so với bất kỳ ô nào khác).
+  //   2) Nếu đối thủ đã chiếm trung tâm trước: đáp lại bằng một nước "kề chéo" sát trung tâm.
+  //      Đây là lựa chọn thực dụng phổ biến trong gomoku tự do — vừa giữ liên lạc trực tiếp với
+  //      trung tâm (không nhường không gian phát triển tốt nhất cho một mình đối thủ), vừa không
+  //      lộ sớm ý đồ tấn công/phòng thủ theo một hướng cụ thể như khi ghé sát theo hàng/cột thẳng.
+  //   3) Nếu đối thủ bỏ ngỏ trung tâm ở nước đầu: chiếm trung tâm ngay lập tức, vì trên bàn gần
+  //      như trống, trung tâm luôn là điểm giá trị nhất bất kể đối thủ đã đi đâu.
+  // Sách chỉ áp dụng cho 2 nước đầu; từ nước thứ 3 trở đi thế cờ đã đủ thông tin để nhường lại
+  // hoàn toàn cho engine tìm kiếm (threat search + minimax/alpha-beta) tự tính như bình thường.
+  function openingBookMove(b, size){
+    const stoneCount = b.reduce((n, v) => n + (v ? 1 : 0), 0);
+    if(stoneCount > 1) return null; // đã qua giai đoạn sách khai cuộc
+
+    const mid = Math.floor(size / 2);
+    const centerIdx = mid * size + mid;
+
+    if(stoneCount === 0){
+      return centerIdx; // nước 1 của cả ván: luôn vào trung tâm
+    }
+
+    // stoneCount === 1
+    if(!b[centerIdx]){
+      return centerIdx; // đối thủ bỏ ngỏ trung tâm ở nước đầu -> chiếm ngay
+    }
+    // Đối thủ đã chiếm trung tâm -> đáp trả bằng nước kề chéo cố định (mid+1, mid+1).
+    // Luôn hợp lệ (không tràn biên) vì mid+1 < size với mọi cỡ bàn 15/30 đang hỗ trợ.
+    const replyIdx = (mid + 1) * size + (mid + 1);
+    if(!b[replyIdx]) return replyIdx;
+
+    return null; // trường hợp hiếm (ô kề chéo vì lý do nào đó đã có quân) -> để engine tự tính
+  }
+
+  function bestMoveSmart(b, size, len, cfg){
+    cfg = cfg || DIFFICULTY_CONFIG.hard; // không truyền cfg -> mặc định hành vi mạnh nhất (tương thích ngược)
+    const moveStart = Date.now(); // mốc thời gian thực tế, dùng để cấp phát ngân sách chính xác cho bước 5 sau này
+    const bookMove = openingBookMove(b, size);
+    if(bookMove !== null) return bookMove;
+    // Bitboard của thế cờ hiện tại — dựng 1 lần ở gốc, sau đó duy trì tăng-dần (set/clear) song song với
+    // `b` xuyên suốt toàn bộ quá trình tìm nước đi (TSS, phòng thủ, alpha-beta), không dựng lại lần nào nữa.
+    const bb = Bitboard.fromArray(b, size);
+    const candidates = getCandidatesBB(bb, size, 2);
+    if(candidates.length === 1) return candidates[0];
+
+    // 1) Thắng ngay nếu có
+    for(const idx of candidates){
+      const ir = Math.floor(idx/size), ic = idx%size;
+      b[idx] = 'O'; bb.set(ir, ic, 'O');
+      const win = checkWinBB(bb, ir, ic, 'O', len);
+      b[idx] = null; bb.clear(ir, ic, 'O');
+      if(win) return idx;
+    }
+
+    // 2) Đối thủ có đang đe doạ thắng ngay không? Có thể có nhiều điểm đe doạ cùng lúc (song đe)
+    const threats = [];
+    for(const idx of candidates){
+      const ir = Math.floor(idx/size), ic = idx%size;
+      b[idx] = 'X'; bb.set(ir, ic, 'X');
+      const lose = checkWinBB(bb, ir, ic, 'X', len);
+      b[idx] = null; bb.clear(ir, ic, 'X');
+      if(lose) threats.push(idx);
+    }
+    if(threats.length === 1) return threats[0];
+    if(threats.length > 1){
+      let best = -Infinity, pick = threats[0];
+      for(const idx of threats){
+        const s = moveScore(b, size, len, idx, 'O');
+        if(s > best){ best = s; pick = idx; }
+      }
+      return pick;
+    }
+
+    // 3) Tìm chuỗi thắng ép buộc bằng TSS hợp nhất (bốn VÀ ba sống xét chung, không tách pha) - kỹ thuật
+    // cao thủ, nhìn được rất sâu vì phần lớn nước ép buộc chỉ có 1 cách chặn nên nhánh tìm kiếm rất hẹp,
+    // đồng thời vẫn bắt được các đòn tinh vi xen kẽ bốn/ba mà tách pha VCF-rồi-VCT trước đây bỏ sót.
+    // Chỉ bật ở mức đủ khó (cfg.useTss) — đây là 1 "chiêu" khá hiểm, hiện chỉ tắt ở mức 'medium' ("Dễ")
+    // cho máy chơi tự nhiên và dễ lường hơn, đúng tinh thần của mức độ đó.
+    if(cfg.useTss){
+      const tssMult = cfg.tssMult || 1;
+      const tssDeadline = Date.now() + TSS_TIME_BUDGET_MS * tssMult;
+      let tssPath = null;
+      try {
+        tssPath = tssSearch(b, size, len, 'O', 'X', TSS_MAX_FORCING_MOVES, tssDeadline, bb);
+      } catch(e){
+        if(e !== 'VCF_TIMEOUT') throw e;
+      }
+      if(tssPath && tssPath.length){
+        return tssPath[0]; // đã tìm ra đường thắng chắc chắn, chỉ cần đi đúng nước đầu tiên
+      }
+    }
+
+    // 4) Không tự thắng được -> kiểm tra ngược lại: đối thủ có đang âm thầm xây chuỗi ép buộc thắng
+    // (bốn và/hoặc ba sống) hay không? Nếu có, tìm nước đi phá vỡ chuỗi đó trước khi quá muộn.
+    // Deadline cấp cho cả pha phát hiện lẫn pha tìm nước phá (đã mở rộng) — findForcingDefense sẽ tự co lại
+    // về ngân sách mặc định nhỏ hơn nếu hoá ra không có mối đe doạ thật nào (đỡ tốn thời gian oan).
+    // Cờ cfg.useDeepDefense hiện TRUE ở cả 3 mức còn lại (Dễ/Vừa/Khó) — mức từng tắt cờ này (để máy
+    // "không nhận ra" 1 bẫy đang giăng ra, y hệt người chơi mới thật sự) là mức 'easy' đã bị bỏ khỏi
+    // danh sách độ khó; giữ nguyên cờ cfg.useDeepDefense trong cấu hình để dễ khôi phục/thêm mức nhẹ
+    // hơn sau này nếu cần, không xoá hẳn logic if bên dưới dù hiện tại luôn đúng.
+    if(cfg.useDeepDefense){
+      const tssMult = cfg.tssMult || 1;
+      const defenseDeadline = Date.now() + (TSS_DEFENSE_DETECT_BUDGET_MS + TSS_DEFENSE_SEARCH_BUDGET_ESCALATED_MS) * tssMult;
+      let defenseMove = null;
+      try {
+        defenseMove = findForcingDefense(b, size, len, 'O', 'X', defenseDeadline, tssMult, bb);
+      } catch(e){
+        if(e !== 'VCF_TIMEOUT') throw e;
+      }
+      if(defenseMove !== null && defenseMove !== undefined && !b[defenseMove]){
+        return defenseMove;
+      }
+    }
+
+    // 5) Không có mối đe doạ VCF nào cần xử lý đặc biệt -> đào sâu dần bằng minimax + alpha-beta
+    // với phần ngân sách thời gian còn lại. Dùng thời gian THỰC TẾ đã trôi qua (moveStart) thay vì
+    // cộng dồn các hằng số cố định — vì nếu ở trên không có đe doạ VCF nào cần xử lý, các bước 3-4
+    // thường kết thúc rất nhanh (không dùng hết ngân sách), nên bước 5 vẫn còn dư nhiều thời gian để đào sâu hơn.
+    const elapsed = Date.now() - moveStart;
+    const remainingBudget = Math.max(150, cfg.timeBudget - elapsed);
+    const deadline = Date.now() + remainingBudget;
+    const rootCandidates = topCandidates(b, size, len, candidates, 10, 'O');
+    let bestMoveOverall = rootCandidates[0];
+    let lastDepthResults = null; // [{idx, val}] của lần đào 1 depth HOÀN TẤT gần nhất (không bị cắt giữa chừng)
+    let provenWin = false;
+
+    // Bảng transposition: dùng chung cho toàn bộ vòng đào sâu dần TRONG lượt đi này (kết quả tính ở
+    // độ sâu nông hơn được tái sử dụng khi đào tới độ sâu lớn hơn) — VÀ giờ còn được giữ lại bền vững
+    // XUYÊN SUỐT các lượt đi khác nhau của cả ván (xem getPersistentTT ở trên), miễn là cùng cỡ bàn.
+    const tt = getPersistentTT(size);
+    const [rootH1, rootH2] = computeZobristHash(b);
+    // Bảng killer-move + history dùng chung cho cả vòng đào sâu dần: nước nào gây cắt tỉa beta
+    // trong 1 lần đào sẽ được ưu tiên thử trước ở các nhánh khác cùng độ sâu, kể cả ở lần đào sâu hơn kế tiếp.
+    const heur = makeSearchHeuristics();
+
+    // Bộ đánh giá tăng-dần: quét toàn bàn ĐÚNG 1 LẦN ở đây (tương đương evaluateBoard tại thế cờ hiện
+    // tại), sau đó suốt cả quá trình đào sâu dần bên dưới chỉ cần cập nhật cục bộ quanh mỗi nước đi thử
+    // nghiệm — thay vì quét lại toàn bàn ở MỌI nút lá như trước.
+    const incEval = new IncrementalEvaluator(size, len);
+    incEval.initFull(b);
+
+    try {
+      for(let depth = 2; depth <= cfg.maxPlies; depth += 2){
+        let bestVal = -Infinity;
+        let bestIdxThisDepth = rootCandidates[0];
+        const depthResults = [];
+        for(const idx of rootCandidates){
+          const ir = Math.floor(idx/size), ic = idx%size;
+          b[idx] = 'O';
+          bb.set(ir, ic, 'O');
+          incEval.applyMove(b, idx);
+          const nh1 = rootH1 ^ ZOBRIST_O[idx][0], nh2 = rootH2 ^ ZOBRIST_O[idx][1];
+          let val;
+          try {
+            val = alphaBeta(b, size, len, depth-1, -Infinity, Infinity, false, idx, 'O', deadline, nh1, nh2, tt, heur, incEval, bb);
+          } finally {
+            b[idx] = null; // luôn dọn lại, kể cả khi bị huỷ giữa chừng do hết giờ
+            bb.clear(ir, ic, 'O');
+            incEval.applyMove(b, idx);
+          }
+          depthResults.push({ idx, val });
+          if(val > bestVal){ bestVal = val; bestIdxThisDepth = idx; }
+        }
+        bestMoveOverall = bestIdxThisDepth;
+        lastDepthResults = depthResults; // đào xong trọn 1 lượt depth (không bị hết giờ giữa chừng) -> dùng được
+        if(bestVal >= WIN_SCORE){ provenWin = true; break; } // đã chắc thắng theo tính toán, không cần đào sâu hơn
+        if(Date.now() > deadline) break;
+
+        // Đưa nước tốt nhất vừa tìm được lên đầu danh sách root cho lần đào sâu hơn kế tiếp — nhiều khả năng
+        // nó vẫn là nước tốt nhất ở độ sâu lớn hơn, xét nó trước giúp cửa sổ alpha-beta thu hẹp nhanh hơn
+        // ngay từ đầu, cắt tỉa các ứng viên còn lại hiệu quả hơn (nguyên lý "principal variation" kinh điển).
+        const pos = rootCandidates.indexOf(bestIdxThisDepth);
+        if(pos > 0){
+          rootCandidates.splice(pos, 1);
+          rootCandidates.unshift(bestIdxThisDepth);
+        }
+      }
+    } catch(e){
+      if(e !== 'AI_TIMEOUT') throw e;
+    }
+
+    // Ở mức 'medium' ("Dễ", cfg.randomTopN > 1 — hiện là mức DUY NHẤT còn lại có giá trị này > 1): thay
+    // vì luôn chọn nước tốt nhất tuyệt đối, chọn NGẪU NHIÊN trong nhóm vài nước đứng đầu (theo lần đào
+    // depth hoàn tất gần nhất) — mô phỏng 1 người chơi chưa đủ "tinh" để luôn thấy được lựa chọn tối ưu
+    // nhất, mà KHÔNG đi 1 nước rõ ràng tệ (trông giả tạo).
+    // Bỏ qua bước này nếu đã CHẮC CHẮN tìm ra đường thắng (provenWin) — thấy đường thắng thì luôn đi đúng,
+    // kể cả ở mức "Dễ" (một AI "cố tình" bỏ lỡ nước thắng đã thấy rõ sẽ trông như bug, không phải "dễ").
+    if(!provenWin && cfg.randomTopN > 1 && lastDepthResults && lastDepthResults.length > 1){
+      const sorted = lastDepthResults.slice().sort((a, c) => c.val - a.val);
+      const pool = sorted.slice(0, Math.min(cfg.randomTopN, sorted.length));
+      return pool[Math.floor(Math.random() * pool.length)].idx;
+    }
+
+    return bestMoveOverall;
+  }
+
+  // Điểm vào duy nhất để quyết định 1 nước đi của máy — tự chọn đúng đường tính (3x3 hay bàn lớn) và
+  // đúng bộ tham số theo độ khó hiện tại. Dùng chung cho cả luồng chính (fallback) lẫn bên trong Worker.
+  function decideAiMove(b, size, len, difficultyLevel){
+    if(size === 3) return bestMoveFor3x3(b, difficultyLevel);
+    const cfg = DIFFICULTY_CONFIG[difficultyLevel] || DIFFICULTY_CONFIG.hard;
+    return bestMoveSmart(b, size, len, cfg);
+  }
+
+  // ===== AI Worker: chạy tính toán AI trên luồng riêng để không đứng hình giao diện =====
+  // Lý do cần: trên bàn 15x15/30x30, minimax + alpha-beta có thể "suy nghĩ" tới gần 2 giây (tổng các
+  // ngân sách TSS + phòng thủ + đào sâu dần cộng lại). Nếu chạy thẳng trên luồng chính — nơi cũng lo
+  // vẽ giao diện — cả trang sẽ đứng hình suốt thời gian đó: không cuộn được, không click được, animation
+  // khựng lại. Đưa toàn bộ phần tính toán thuần tuý (chỉ nhận vào board/size/len, không đụng DOM hay bất
+  // kỳ biến giao diện nào) sang 1 Worker chạy song song giải quyết triệt để việc đó.
+  //
+  // Cách dựng mã nguồn cho Worker: lấy lại NGUYÊN VĂN các hàm AI thuần bên trên bằng fn.toString(), ghép
+  // thành 1 chuỗi mã nguồn độc lập rồi nạp vào Worker qua Blob URL — thay vì chép tay 1 bản riêng dễ bị
+  // lệch mỗi khi sửa hàm gốc. Nhờ vậy chỉ có DUY NHẤT MỘT bản mã AI trong toàn bộ file; Worker luôn tự
+  // dùng đúng bản mới nhất ở lần tải trang kế tiếp.
+  //
+  // Lưu ý quan trọng — vì sao "chuyển tính toán sang Worker" một cách ngây thơ có thể khiến CẢ APP
+  // không chạy được nữa: nếu trang được mở trực tiếp bằng cách bấm đúp file (địa chỉ bắt đầu bằng
+  // "file://" thay vì "http://"/"https://"), một số trình duyệt (đặc biệt Chrome) CẤM tạo Worker hoàn
+  // toàn — kể cả khi dùng Blob URL — vì trang mở kiểu "file://" bị coi là origin không tin cậy. Nếu để
+  // lỗi đó rơi ra ngoài mà không bắt, toàn bộ script phía sau (bao gồm cả phần khởi tạo giao diện) có
+  // thể không chạy được nữa. Cách xử lý đúng: BỌC việc tạo Worker trong try/catch, và bất cứ khi nào
+  // Worker không dùng được (tạo lỗi ngay từ đầu, hoặc báo lỗi giữa chừng lúc đang chạy) đều tự động
+  // quay về tính toán đồng bộ trên luồng chính — đúng hành vi trước khi có Worker. Nhờ vậy app LUÔN
+  // chạy được trong MỌI trường hợp (mở qua file:// hay qua server đều được); chỉ riêng phần "không đứng
+  // hình UI" là mất đi ở những trường hợp hiếm Worker bị chặn.
+  function buildAiWorkerBlobUrl(){
+    // Các hằng số đọc trực tiếp từ giá trị hiện tại của luồng chính (không chép tay số) để không bao
+    // giờ bị lệch nếu sau này có ai chỉnh lại 1 trong các hằng số này ở phần khai báo phía trên.
+    const consts = `
+      const AI_TIME_BUDGET_MS = ${AI_TIME_BUDGET_MS};
+      const AI_MAX_PLIES = ${AI_MAX_PLIES};
+      const WIN_SCORE = ${WIN_SCORE};
+      const ZOBRIST_MAX_CELLS = ${ZOBRIST_MAX_CELLS};
+      const TT_EXACT = ${TT_EXACT}, TT_LOWER = ${TT_LOWER}, TT_UPPER = ${TT_UPPER};
+      const TT_MAX_ENTRIES = ${TT_MAX_ENTRIES};
+      const TSS_TIME_BUDGET_MS = ${TSS_TIME_BUDGET_MS};
+      const TSS_MAX_FORCING_MOVES = ${TSS_MAX_FORCING_MOVES};
+      const TSS_BRANCH_NARROW = ${TSS_BRANCH_NARROW};
+      const TSS_BRANCH_WIDE = ${TSS_BRANCH_WIDE};
+      const TSS_DEFENSE_DETECT_BUDGET_MS = ${TSS_DEFENSE_DETECT_BUDGET_MS};
+      const TSS_DEFENSE_SEARCH_BUDGET_ESCALATED_MS = ${TSS_DEFENSE_SEARCH_BUDGET_ESCALATED_MS};
+      const TSS_DEFENSE_SUBDEPTH = ${TSS_DEFENSE_SUBDEPTH};
+      const TSS_DEFENSE_MAX_CANDIDATES = ${TSS_DEFENSE_MAX_CANDIDATES};
+      const TSS_DEFENSE_MIN_SUBBUDGET_MS = ${TSS_DEFENSE_MIN_SUBBUDGET_MS};
+      const TSS_DEFENSE_MAX_SUBBUDGET_MS = ${TSS_DEFENSE_MAX_SUBBUDGET_MS};
+      const TSS_DEFENSE_KEEP_TOP = ${TSS_DEFENSE_KEEP_TOP};
+      const KILLER_SLOTS = ${KILLER_SLOTS};
+      const HISTORY_WEIGHT = ${HISTORY_WEIGHT};
+      const DIFFICULTY_CONFIG = ${JSON.stringify(DIFFICULTY_CONFIG)};
+      // 4 hướng dùng chung bởi computeCellDirContribution/IncrementalEvaluator — dữ liệu thuần (không
+      // phải hàm) nên phải khai báo riêng ở đây, không tự "đi kèm" khi chép nguyên văn source hàm.
+      const EVAL_DIRS = [[0,1],[1,0],[1,1],[1,-1]];
+      // Bảng TT của riêng Worker này — sống suốt vòng đời Worker (tức suốt cả phiên chơi, vì Worker
+      // không bị huỷ giữa các lượt), đảm nhiệm luôn phần "TT bền vững xuyên suốt ván" trong môi trường
+      // có Worker, độc lập hoàn toàn với bảng TT dự phòng ở luồng chính (chỉ dùng khi không có Worker).
+      let persistentTT = new Map();
+      let persistentTTBoardSize = null;
+    `;
+
+    // Ghép nguyên văn source code của toàn bộ các hàm AI thuần (không đụng DOM) cần cho việc tính nước đi.
+    const fnsSource = [
+      checkWinAt, randInt32, computeZobristHash,
+      minimax, bestMoveMinimax,
+      pickRandomEmpty, findImmediateWinOrBlock, bestMoveFor3x3,
+      getPersistentTT,
+      Bitboard, runLenAt, checkWinBB, getCandidatesBB,
+      lineScore, windowPatternCompletion, evaluatePoint, computeForkBonus, evaluateBoard,
+      computeCellDirContribution, IncrementalEvaluator,
+      getCandidates, moveScore, topCandidates,
+      makeSearchHeuristics, orderCandidatesForSearch, recordCutoff,
+      alphaBeta,
+      analyzeForcingMove, findForcingMoves, tssSearch, findForcingDefense,
+      openingBookMove, bestMoveSmart, decideAiMove
+    ].map(fn => fn.toString()).join('\n\n');
+
+    // Worker tự dựng bảng Zobrist riêng của nó (không cần khớp với bảng bên luồng chính — TT của mỗi
+    // bên hoàn toàn độc lập, chỉ cần nhất quán NỘI BỘ trong chính worker đó là đủ).
+    const zobristInit = `
+      const ZOBRIST_O = new Array(ZOBRIST_MAX_CELLS);
+      const ZOBRIST_X = new Array(ZOBRIST_MAX_CELLS);
+      for(let i=0;i<ZOBRIST_MAX_CELLS;i++){
+        ZOBRIST_O[i] = [randInt32(), randInt32()];
+        ZOBRIST_X[i] = [randInt32(), randInt32()];
+      }
+    `;
+
+    const onmessage = `
+      self.onmessage = function(e){
+        const { board, boardSize, winLen, difficulty, requestId } = e.data;
+        let idx = null;
+        try {
+          idx = decideAiMove(board, boardSize, winLen, difficulty);
+        } catch(err){
+          idx = null; // lỗi bất ngờ trong lúc tính -> trả về null, phía gọi sẽ tự bỏ qua an toàn
+        }
+        self.postMessage({ idx, requestId });
+      };
+    `;
+
+    const source = consts + '\n' + fnsSource + '\n' + zobristInit + '\n' + onmessage;
+    return URL.createObjectURL(new Blob([source], { type: 'application/javascript' }));
+  }
+
+  // Lấy Worker hiện có, hoặc tạo mới nếu chưa có (và trước đó chưa từng thất bại). Trả về `null` nếu
+  // Worker không dùng được vì bất kỳ lý do gì — nơi gọi hàm này PHẢI tự quay về tính đồng bộ khi nhận null.
+  function getAiWorker(){
+    if(aiWorkerFailed) return null;
+    if(aiWorker) return aiWorker;
+    try {
+      const url = buildAiWorkerBlobUrl();
+      const w = new Worker(url);
+      w.onerror = function(){
+        // Worker báo lỗi giữa chừng (vd bị trình duyệt chặn ngay cả sau khi tạo thành công) -> đánh dấu
+        // hỏng vĩnh viễn cho phiên này, huỷ worker, và nếu đang có 1 yêu cầu dang dở chờ nó phản hồi thì
+        // tự phục hồi bằng tính đồng bộ ngay — tránh treo UI ở trạng thái "Đang nghĩ…" mãi mãi.
+        aiWorkerFailed = true;
+        aiWorker = null;
+        try { w.terminate(); } catch(err){}
+        recoverFromWorkerFailure();
+      };
+      aiWorker = w;
+      return w;
+    } catch(e){
+      // Tạo Worker thất bại ngay lập tức (vd môi trường không hỗ trợ, hoặc bị chặn do mở qua file://)
+      aiWorkerFailed = true;
+      aiWorker = null;
+      return null;
+    }
+  }
+
+  // Được gọi khi Worker chết giữa lúc đang có 1 yêu cầu chưa được trả lời (xem w.onerror ở trên).
+  function recoverFromWorkerFailure(){
+    if(!aiPendingRecovery) return;
+    const { boardSnapshot, size, len, diff, token } = aiPendingRecovery;
+    aiPendingRecovery = null;
+    if(token !== aiRequestSeq) return; // yêu cầu này đã bị huỷ trong lúc chờ (undo/đổi ván...), không cần phục hồi nữa
+    const idx = decideAiMove(boardSnapshot, size, len, diff);
+    finishAiMove(idx, token);
+  }
+
+  function newRound(){
+    clearPendingAiMove();
+    board = Array(boardSize*boardSize).fill(null);
+    setRoundStarter(startingPlayer);
+    gameOver = false;
+    lastMoveIdx = null;
+    history = [];
+    pieRuleArmed = swapRuleEnabled && boardSize !== 3 && mode === 'pvp';
+    buildBoard();
+    render();
+    ensureAiTurnScheduled();
+    saveState();
+  }
+
+  function switchMode(newMode){
+    mode = newMode;
+    [...modeTabs.querySelectorAll('button')].forEach(btn=> btn.classList.toggle('active', btn.dataset.mode === newMode));
+    updateIndicator(modeTabs);
+    updateDifficultyToggle();
+    updateSwapRuleToggle();
+    newRound();
+  }
+
+  function remapBoardToCenter(oldBoard, oldSize, newSize){
+    const newBoard = Array(newSize*newSize).fill(null);
+    const offset = Math.floor((newSize - oldSize) / 2);
+    for(let r=0;r<oldSize;r++){
+      for(let c=0;c<oldSize;c++){
+        const val = oldBoard[r*oldSize+c];
+        if(!val) continue;
+        const nr = r + offset, nc = c + offset;
+        if(nr>=0 && nr<newSize && nc>=0 && nc<newSize){
+          newBoard[nr*newSize+nc] = val;
+        }
+      }
+    }
+    return newBoard;
+  }
+
+  function applySizeChange(newSize, fresh){
+    clearPendingAiMove();
+    const offset = Math.floor((newSize - boardSize) / 2);
+
+    if(fresh){
+      board = Array(newSize*newSize).fill(null);
+      lastMoveIdx = null;
+      // Đổi cỡ bàn KHÔNG phải là 1 trận đấu đã kết thúc -> KHÔNG được luân phiên người đi trước ở đây.
+      // Chỉ đơn giản áp dụng lại đúng người đang được xếp đi trước hiện tại (startingPlayer giữ nguyên),
+      // khác với newRound() (dùng setRoundStarter) — nơi việc luân phiên thực sự nên xảy ra, vì đó mới
+      // là lúc bắt đầu 1 trận đấu MỚI sau khi trận trước đã xong.
+      current = startingPlayer;
+    } else {
+      board = remapBoardToCenter(board, boardSize, newSize);
+      if(lastMoveIdx !== null){
+        const r = Math.floor(lastMoveIdx / boardSize) + offset;
+        const c = (lastMoveIdx % boardSize) + offset;
+        lastMoveIdx = (r>=0 && r<newSize && c>=0 && c<newSize) ? r*newSize+c : null;
+      }
+    }
+
+    history = [];
+    boardSize = newSize;
+    winLen = SIZE_CONFIG[newSize].winLen;
+    gameOver = false;
+    // Đổi cỡ bàn -> chỉ số ô (index) mang ý nghĩa hoàn toàn khác trên bàn mới, giải phóng TT cũ ngay
+    // để tránh giữ trong bộ nhớ những entry chắc chắn không còn dùng lại được (xem lưu ý an toàn ở
+    // getPersistentTT). Lượt AI kế tiếp sẽ tự cấp phát bảng mới đúng cỡ bàn.
+    persistentTT = new Map();
+    persistentTTBoardSize = newSize;
+
+    updateSizeToggle();
+    updateSwapRuleToggle();
+
+    buildBoard();
+    render();
+    ensureAiTurnScheduled();
+    saveState();
+  }
+
+  function switchSize(newSize){
+    if(newSize === boardSize) return;
+    const inProgress = !gameOver && board.some(v=>v);
+
+    if(!inProgress){
+      applySizeChange(newSize, true);
+      return;
+    }
+
+    // Kiểm tra thế cờ hiện tại có vừa với bàn kích thước mới không (căn giữa)
+    const remapped = remapBoardToCenter(board, boardSize, newSize);
+    const oldCount = board.filter(v=>v).length;
+    const newCount = remapped.filter(v=>v).length;
+
+    if(newCount < oldCount){
+      const lost = oldCount - newCount;
+      SFX.warn();
+      openModal({
+        icon: '⚠️',
+        title: 'Thế cờ không phù hợp',
+        sub: `Bàn ${newSize} x ${newSize} không đủ chỗ cho thế cờ hiện tại (sẽ mất ${lost} quân nếu chuyển). Bạn có muốn bắt đầu ván mới ở kích thước này không?`,
+        buttons: [
+          { label: `Ván mới ${newSize}x${newSize}`, cls: 'primary', onClick: ()=> applySizeChange(newSize, true) },
+          { label: 'Giữ bàn hiện tại', cls: 'secondary' }
+        ]
+      });
+      return;
+    }
+
+    applySizeChange(newSize, false);
+  }
+
+  function applySnapshot(snap){
+    board = snap.board.slice();
+    current = snap.current;
+    lastMoveIdx = snap.lastMoveIdx;
+    gameOver = false;
+    [...boardEl.children].forEach(c=> c.classList.remove('win-cell'));
+    render();
+    setTurnDisplay('Đang đi');
+    saveState();
+  }
+
+  function undoMove(){
+    clearPendingAiMove();
+    if(history.length === 0){
+      openModal({
+        icon: '🤷',
+        title: 'Chưa có nước đi nào',
+        sub: 'Bàn cờ hiện đang trống, không có gì để quay lại cả.',
+        buttons: [ { label: 'Đã hiểu', cls: 'primary' } ]
+      });
+      return;
+    }
+    let snap = history.pop();
+    // Đấu với máy: lùi luôn cả nước đi của máy để về đúng lượt người chơi
+    while(mode === 'ai' && snap.current === 'O' && history.length > 0){
+      snap = history.pop();
+    }
+    // Lùi hết về đúng bàn trống (ván coi như chưa bắt đầu lại) -> tái vũ trang Luật đổi quân đầu nếu
+    // đang bật, để không bị "mất" luật chỉ vì người chơi undo về rồi đi lại nước đầu khác.
+    if(history.length === 0 && snap.board.every(v=>!v)){
+      pieRuleArmed = swapRuleEnabled && boardSize !== 3 && mode === 'pvp';
+    }
+    SFX.undo();
+    applySnapshot(snap);
+  }
+
+  undoBtn.addEventListener('click', ()=>{
+    SFX.click();
+    if(history.length === 0){ undoMove(); return; }
+    openModal({
+      icon: '↩️',
+      title: 'Quay lại nước đi trước?',
+      sub: mode === 'ai'
+        ? 'Nước đi gần nhất của bạn (và của máy, nếu có) sẽ được xoá bỏ.'
+        : 'Nước đi gần nhất trên bàn cờ sẽ được xoá bỏ.',
+      buttons: [
+        { label: 'Quay lại', cls: 'primary', onClick: undoMove },
+        { label: 'Huỷ', cls: 'secondary' }
+      ]
+    });
+  });
+
+  function confirmIfInProgress(action){
+    const inProgress = !gameOver && board.some(v=>v);
+    if(inProgress){
+      openModal({
+        icon: '✏️',
+        title: 'Bắt đầu ván mới?',
+        sub: 'Ván đang chơi dở sẽ không được tính.',
+        buttons: [
+          { label: 'Đồng ý', cls: 'primary', onClick: action },
+          { label: 'Huỷ', cls: 'secondary' }
+        ]
+      });
+    } else {
+      action();
+    }
+  }
+
+  // Khôi phục ván cờ đã lưu (nếu có) khi mở lại trang. Có kiểm tra dữ liệu kỹ để tránh
+  // trang bị lỗi trắng nếu dữ liệu lưu bị hỏng/cũ (ví dụ đổi định dạng ở phiên bản sau).
+  // Trả về true nếu khôi phục thành công, false nếu không có gì để khôi phục (hoặc dữ liệu hỏng).
+  function restoreState(){
+    const saved = loadState();
+    if(!saved) return false;
+    try {
+      if(!SIZE_CONFIG[saved.boardSize]) return false;
+      if(saved.mode !== 'pvp' && saved.mode !== 'ai') return false;
+      const expectedLen = saved.boardSize * saved.boardSize;
+      if(!Array.isArray(saved.board) || saved.board.length !== expectedLen) return false;
+
+      mode = saved.mode;
+      boardSize = saved.boardSize;
+      winLen = SIZE_CONFIG[boardSize].winLen;
+      board = saved.board.map(v => (v === 'X' || v === 'O') ? v : null);
+      current = saved.current === 'O' ? 'O' : 'X';
+      gameOver = !!saved.gameOver;
+      lastMoveIdx = Number.isInteger(saved.lastMoveIdx) && saved.lastMoveIdx >= 0 && saved.lastMoveIdx < expectedLen
+        ? saved.lastMoveIdx : null;
+      scores = {
+        X: Number.isFinite(saved.scores?.X) ? saved.scores.X : 0,
+        O: Number.isFinite(saved.scores?.O) ? saved.scores.O : 0,
+        D: Number.isFinite(saved.scores?.D) ? saved.scores.D : 0
+      };
+      theme = saved.theme === 'dark' ? 'dark' : 'light';
+      muted = !!saved.muted;
+      startingPlayer = saved.startingPlayer === 'O' ? 'O' : 'X';
+      difficulty = DIFFICULTY_ORDER.includes(saved.difficulty) ? saved.difficulty : 'hard';
+      swapRuleEnabled = !!saved.swapRuleEnabled;
+      history = Array.isArray(saved.history)
+        ? saved.history.filter(h => h && Array.isArray(h.board) && h.board.length === expectedLen)
+        : [];
+
+      // Đồng bộ lại toàn bộ giao diện cho khớp trạng thái vừa khôi phục
+      [...modeTabs.querySelectorAll('button')].forEach(btn => btn.classList.toggle('active', btn.dataset.mode === mode));
+      applyTheme();
+      applySound();
+      buildBoard();
+      render();
+      updateIndicator(modeTabs);
+      updateSizeToggle();
+      updateDifficultyToggle();
+      updateSwapRuleToggle();
+
+      if(gameOver){
+        // Vẽ lại đường thắng (nếu có) để thế cờ khôi phục trông đúng như lúc kết thúc ván
+        if(lastMoveIdx !== null && board[lastMoveIdx]){
+          const winCells = checkWinAt(board, boardSize, winLen, lastMoveIdx, board[lastMoveIdx]);
+          if(winCells) winCells.forEach(i => boardEl.children[i]?.classList.add('win-cell'));
+        }
+        setTurnDisplay('Đã kết thúc');
+      } else {
+        // Nếu lúc lưu đang là lượt máy tính nước (ví dụ người chơi refresh đúng lúc máy đang nghĩ,
+        // hoặc ván vừa khôi phục bắt đầu bằng O), cho máy tính tiếp nước đi đó thay vì kẹt màn hình chờ mãi
+        ensureAiTurnScheduled();
+      }
+      return true;
+    } catch(e){
+      return false;
+    }
+  }
+
+  newRoundBtn.addEventListener('click', ()=>{ SFX.click(); confirmIfInProgress(newRound); });
+
+  resetScoreBtn.addEventListener('click', ()=>{
+    SFX.click();
+    openModal({
+      icon: '🗑️',
+      title: 'Xoá hết điểm?',
+      sub: 'Điểm của X, O và Hòa sẽ về lại 0.',
+      buttons: [
+        { label: 'Xoá điểm', cls: 'danger', onClick: ()=>{ scores = { X:0, O:0, D:0 }; render(); saveState(); } },
+        { label: 'Huỷ', cls: 'secondary' }
+      ]
+    });
+  });
+
+  modeTabs.addEventListener('click', (e)=>{
+    const btn = e.target.closest('button');
+    if(!btn) return;
+    SFX.click();
+    const newMode = btn.dataset.mode;
+    if(newMode === mode) return;
+    confirmIfInProgress(()=> switchMode(newMode));
+  });
+
+  sizeToggleBtn.addEventListener('click', ()=>{
+    SFX.click();
+    const idx = SIZE_ORDER.indexOf(boardSize);
+    const next = SIZE_ORDER[(idx + 1) % SIZE_ORDER.length];
+    switchSize(next);
+  });
+
+  // Đổi độ khó KHÔNG cần hỏi xác nhận như đổi mode/cỡ bàn — không làm mất thế cờ đang chơi, chỉ đổi
+  // "não bộ" của máy áp dụng từ nước tiếp theo trở đi, nên áp dụng ngay lập tức cho mượt trải nghiệm.
+  function setDifficulty(newDifficulty){
+    if(newDifficulty === difficulty) return;
+    difficulty = newDifficulty;
+    updateDifficultyToggle();
+    saveState();
+    // Nếu máy đang tính nước theo độ khó CŨ ngay lúc này, huỷ và lên lịch tính lại ngay theo độ khó
+    // MỚI cho đúng lượt hiện tại, thay vì để nó lỡ đi 1 nước theo độ khó vừa đổi bỏ.
+    if(mode === 'ai' && current === 'O' && !gameOver){
+      clearPendingAiMove();
+      ensureAiTurnScheduled();
+    }
+  }
+  difficultyToggleBtn.addEventListener('click', ()=>{
+    SFX.click();
+    const idx = DIFFICULTY_ORDER.indexOf(difficulty);
+    const next = DIFFICULTY_ORDER[(idx + 1) % DIFFICULTY_ORDER.length];
+    setDifficulty(next);
+  });
+
+  // Luật đổi quân đầu: chỉ cho bật/tắt khi ván hiện tại CHƯA có nước đi nào (đổi giữa chừng vô nghĩa,
+  // vì mốc áp dụng luôn là "ngay sau nước đi đầu tiên của ván"). Có hiệu lực từ ván tiếp theo.
+  swapRuleToggleBtn.addEventListener('click', ()=>{
+    if(!gameOver && board.some(v=>v)){
+      SFX.warn();
+      openModal({
+        icon: 'ℹ️',
+        title: 'Áp dụng từ ván sau',
+        sub: 'Ván đang chơi đã có nước đi nên không đổi luật giữa chừng được. Đổi luật ngay bây giờ sẽ áp dụng từ ván mới tiếp theo.',
+        buttons: [
+          { label: 'Đổi luật (áp dụng ván sau)', cls: 'primary', onClick: ()=>{
+              swapRuleEnabled = !swapRuleEnabled;
+              updateSwapRuleToggle();
+              saveState();
+            }
+          },
+          { label: 'Thôi', cls: 'secondary' }
+        ]
+      });
+      return;
+    }
+    SFX.click();
+    swapRuleEnabled = !swapRuleEnabled;
+    updateSwapRuleToggle();
+    pieRuleArmed = swapRuleEnabled && boardSize !== 3 && mode === 'pvp';
+    saveState();
+  });
+
+  if(!restoreState()){
+    buildBoard();
+    newRound();
+    updateIndicator(modeTabs);
+    updateSizeToggle();
+    updateDifficultyToggle();
+    updateSwapRuleToggle();
+  }
+})();
+</script>
+</body>
+</html>

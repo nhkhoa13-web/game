@@ -1,0 +1,2524 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Cờ Cá Ngựa</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-1:#2a2560;
+    --bg-2:#160f38;
+    --gold:#ffb648;
+    --gold-soft:#ffd98a;
+    --cream:#f5f2ec;
+    --ink:#241c3d;
+    --ink-soft:#6b6285;
+    --red:#e5484d;
+    --red-d:#a92f33;
+    --green:#2fa875;
+    --green-d:#1f7a55;
+    --yellow:#f0b429;
+    --yellow-d:#c98d0f;
+    --blue:#3a86ff;
+    --blue-d:#255fc4;
+    --panel:#fdfbf7;
+    --dice-size: 70px;
+    --safe-area-t: env(safe-area-inset-top, 0px);
+    --safe-area-b: env(safe-area-inset-bottom, 0px);
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    font-family:'Be Vietnam Pro', sans-serif;
+    color:var(--cream);
+    background:
+      radial-gradient(65% 45% at 18% -5%, rgba(255,182,72,.13), transparent 60%),
+      radial-gradient(70% 55% at 100% 15%, rgba(120,90,255,.22), transparent 60%),
+      radial-gradient(90% 70% at 50% 115%, rgba(80,50,180,.35), transparent 60%),
+      linear-gradient(180deg, var(--bg-1) 0%, var(--bg-2) 100%);
+    min-height:100vh;
+    overflow-x:hidden;
+    touch-action:manipulation;
+  }
+  body::before{
+    content:"";
+    position:fixed; inset:0;
+    background-image:
+      radial-gradient(rgba(255,255,255,0.035) 1px, transparent 1px);
+    background-size: 3px 3px;
+    pointer-events:none;
+    mix-blend-mode:overlay;
+  }
+  body::after{
+    content:"";
+    position:fixed; inset:0;
+    background: radial-gradient(120% 65% at 50% 108%, rgba(0,0,0,.4), transparent 60%);
+    pointer-events:none;
+  }
+  .glowBlob{ display:none; }
+  h1,h2,h3, .display{font-family:'Baloo 2', sans-serif;}
+
+  #app{
+    max-width:520px;
+    margin:0 auto;
+    min-height:100vh;
+    padding: calc(14px + var(--safe-area-t)) 14px calc(18px + var(--safe-area-b));
+    display:flex; flex-direction:column;
+    position:relative;
+    z-index:1;
+  }
+
+  /* ---------- SETUP SCREEN ---------- */
+  #setupScreen{
+    display:flex; flex-direction:column;
+    flex:1;
+    justify-content:center;
+    gap:16px;
+    animation: fadeIn .5s ease;
+  }
+  .brand{
+    text-align:center;
+    position:relative;
+  }
+  .brand .horse{
+    font-size:46px;
+    display:inline-block;
+    filter: drop-shadow(0 10px 16px rgba(0,0,0,.5));
+    animation: bob 3.2s ease-in-out infinite;
+  }
+  @keyframes bob{ 0%,100%{transform:translateY(0) rotate(-3deg);} 50%{transform:translateY(-7px) rotate(3deg);} }
+  .brand h1{
+    margin:6px 0 3px;
+    font-size:34px;
+    font-weight:800;
+    letter-spacing:.3px;
+    background:linear-gradient(180deg, #fff6dc 10%, var(--gold-soft) 55%, var(--gold) 100%);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+    filter: drop-shadow(0 3px 0 rgba(0,0,0,.35));
+  }
+  .brand p{
+    margin:0;
+    color:#b3abd4;
+    font-size:13.5px;
+    letter-spacing:.4px;
+  }
+  .card{
+    background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
+    border:1px solid rgba(255,182,72,.2);
+    border-radius:18px;
+    padding:15px;
+    backdrop-filter: blur(6px);
+  }
+  .card h3{
+    margin:0 0 10px;
+    font-size:14px;
+    color:var(--gold-soft);
+    font-weight:600;
+    display:flex; align-items:center; gap:8px;
+  }
+  .seg{
+    display:flex;
+    gap:8px;
+  }
+  .seg button{
+    flex:1;
+    padding:9px 0;
+    border-radius:12px;
+    border:1px solid rgba(255,255,255,.12);
+    background:rgba(255,255,255,.03);
+    color:var(--cream);
+    font-family:'Be Vietnam Pro';
+    font-weight:600;
+    font-size:15px;
+    cursor:pointer;
+    transition:.15s;
+  }
+  .seg button.active{
+    background:linear-gradient(180deg, var(--gold-soft), var(--gold));
+    color:#3a2708;
+    border-color:transparent;
+    box-shadow:0 4px 12px rgba(255,182,72,.3);
+    transform:translateY(-1px);
+  }
+  .playerRow{
+    display:flex; align-items:center; gap:10px;
+    padding:9px 10px;
+    margin:3px 0;
+    border-radius:12px;
+    border-bottom:1px dashed rgba(255,255,255,.08);
+    border-left:4px solid var(--pc, transparent);
+    background: var(--pc-tint, transparent);
+    transition: background .2s;
+  }
+  .playerRow:last-child{border-bottom:none;}
+  .dot{
+    width:22px; height:22px; border-radius:50%;
+    flex-shrink:0;
+    box-shadow: inset 0 -3px 5px rgba(0,0,0,.35), inset 0 2px 3px rgba(255,255,255,.4),
+      0 0 0 2px rgba(255,255,255,.18), 0 0 9px var(--pc, transparent);
+  }
+  .playerRow .pname{
+    flex:1;
+    font-weight:600;
+    font-size:14.5px;
+  }
+  .toggle{
+    display:flex; background:rgba(0,0,0,.25); border-radius:20px; padding:3px; gap:2px;
+  }
+  .toggle button{
+    border:none; background:transparent; color:#cfc3ad;
+    font-size:12.5px; font-weight:600; padding:6px 11px; border-radius:16px; cursor:pointer;
+    font-family:'Be Vietnam Pro';
+  }
+  .toggle button.active{ background:var(--gold-soft); color:#3a2708; }
+
+  .bigBtn{
+    width:100%;
+    padding:16px;
+    border:none;
+    border-radius:16px;
+    background:linear-gradient(180deg, #ffd873, var(--gold));
+    color:#3a2708;
+    font-family:'Baloo 2';
+    font-weight:700;
+    font-size:18px;
+    letter-spacing:.4px;
+    cursor:pointer;
+    box-shadow:0 8px 18px rgba(255,182,72,.35), inset 0 1px 0 rgba(255,255,255,.5);
+    transition:.15s;
+  }
+  .bigBtn:active{ transform:translateY(2px) scale(.99); box-shadow:0 3px 8px rgba(255,182,72,.3);}
+
+  /* ---------- GAME SCREEN ---------- */
+  #gameScreen{ display:none; flex-direction:column; flex:1; gap:12px; }
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  .topbar .title{
+    font-family:'Baloo 2'; font-weight:700; font-size:19px; color:var(--gold-soft);
+    display:flex; align-items:center; gap:6px;
+  }
+  .iconBtn{
+    width:38px; height:38px; border-radius:12px;
+    background:linear-gradient(180deg, rgba(255,255,255,.1), rgba(255,255,255,.03));
+    border:1px solid rgba(255,182,72,.28);
+    color:var(--cream); font-size:16px;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+    transition: transform .15s, background .15s;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.15), 0 3px 6px rgba(0,0,0,.25);
+  }
+  .iconBtn:active{ transform:scale(.9); background:rgba(255,182,72,.18); }
+
+  .turnBanner{
+    display:flex; align-items:center; gap:10px;
+    background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.02));
+    border:1px solid rgba(255,182,72,.25);
+    border-left:4px solid var(--accent, var(--gold));
+    border-radius:14px;
+    padding:9px 12px;
+    min-height:46px;
+    transition: border-left-color .3s, box-shadow .3s;
+    box-shadow: -3px 0 14px -6px var(--accent, transparent);
+  }
+  .turnBanner .avatar{
+    position:relative;
+    width:28px; height:28px; border-radius:50%;
+    box-shadow: inset 0 -3px 5px rgba(0,0,0,.35), inset 0 2px 3px rgba(255,255,255,.45);
+    flex-shrink:0;
+  }
+  .turnBanner .avatar::after{
+    content:"";
+    position:absolute; inset:-4px;
+    border-radius:50%;
+    border:2px solid rgba(255,255,255,.5);
+    opacity:0;
+    transform:scale(.8);
+    animation: pulseAvatarRing 1.6s ease-in-out infinite;
+  }
+  @keyframes pulseAvatarRing{
+    0%{ opacity:.6; transform:scale(.8); }
+    70%,100%{ opacity:0; transform:scale(1.35); }
+  }
+  .turnBanner .txt{ font-size:14px; font-weight:600; flex:1; }
+  .turnBanner .txt small{ display:block; font-weight:400; color:#b3abd4; font-size:11.5px; margin-top:1px;}
+
+  .boardWrap{
+    position:relative;
+    width:100%;
+    border-radius:24px;
+    padding:12px;
+    background: linear-gradient(155deg, #443a82, #251c52);
+    box-shadow:0 20px 45px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.08);
+  }
+  .boardWrap::before{
+    content:"";
+    position:absolute; inset:6px;
+    border-radius:18px;
+    border:2px solid rgba(255,182,72,.5);
+    pointer-events:none;
+  }
+  .boardWrap::after{
+    content:"";
+    position:absolute; inset:10px;
+    border-radius:14px;
+    border:1px solid rgba(255,255,255,.08);
+    pointer-events:none;
+  }
+  .cornerOrn{
+    position:absolute;
+    width:11px; height:11px;
+    border-radius:50%;
+    background: radial-gradient(circle at 35% 28%, var(--gold-soft), var(--gold));
+    box-shadow:0 0 8px rgba(255,182,72,.55), 0 1px 2px rgba(0,0,0,.3);
+    z-index:4;
+  }
+  .cornerOrn::after{ content:none; }
+  .corner-tl{ top:9px; left:9px; }
+  .corner-tr{ top:9px; right:9px; }
+  .corner-bl{ bottom:9px; left:9px; }
+  .corner-br{ bottom:9px; right:9px; }
+
+  .board{
+    position:relative;
+    width:100%;
+    aspect-ratio:1/1;
+    display:grid;
+    grid-template-columns:repeat(15,1fr);
+    grid-template-rows:repeat(15,1fr);
+    border-radius:16px;
+    overflow:hidden;
+    background: var(--panel);
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,.05);
+  }
+  .board::after{
+    content:"";
+    position:absolute;
+    top:0; bottom:0;
+    left:-60%;
+    width:220%;
+    pointer-events:none;
+    z-index:4;
+    background: linear-gradient(115deg, transparent 44%, rgba(255,255,255,.28) 50%, transparent 56%);
+    animation: boardSweep 7s ease-in-out infinite;
+    opacity:.5;
+    will-change: transform;
+  }
+  @keyframes boardSweep{
+    0%, 60%{ transform: translateX(0%); }
+    85%, 100%{ transform: translateX(52%); }
+  }
+  .cell{ position:relative; }
+
+
+  /* yard outer ring - soft flat pastel panels */
+  .yb-R{ background: linear-gradient(160deg, #ff9ba0, var(--red)); box-shadow: inset 0 0 0 1px rgba(169,47,51,.35); }
+  .yb-G{ background: linear-gradient(160deg, #6fdba9, var(--green)); box-shadow: inset 0 0 0 1px rgba(31,122,85,.35); }
+  .yb-Y{ background: linear-gradient(160deg, #ffdd7a, var(--yellow)); box-shadow: inset 0 0 0 1px rgba(201,141,15,.35); }
+  .yb-B{ background: linear-gradient(160deg, #8fb8ff, var(--blue)); box-shadow: inset 0 0 0 1px rgba(37,95,196,.35); }
+  .yi-R,.yi-G,.yi-Y,.yi-B{ background: var(--panel); }
+
+  /* decorative rounded "tray" that sits on top of the 4x4 inner yard area */
+  .yardTray{
+    position:absolute;
+    border-radius:20%;
+    background: #ffffff;
+    box-shadow:
+      0 4px 14px -4px rgba(20,10,50,.3),
+      inset 0 0 0 2px var(--ringcolor, rgba(0,0,0,.08));
+    z-index:2;
+  }
+  .yardTray::before{
+    content:"";
+    position:absolute; inset:8%;
+    border-radius:18%;
+    border:1.5px dashed var(--ringcolor, rgba(0,0,0,.18));
+    opacity:.45;
+  }
+  .tray-R{ top:6.667%; left:6.667%; width:26.667%; height:26.667%; --ringcolor: var(--red); }
+  .tray-G{ top:6.667%; left:66.667%; width:26.667%; height:26.667%; --ringcolor: var(--green); }
+  .tray-Y{ top:66.667%; left:66.667%; width:26.667%; height:26.667%; --ringcolor: var(--yellow); }
+  .tray-B{ top:66.667%; left:6.667%; width:26.667%; height:26.667%; --ringcolor: var(--blue); }
+  .slotmark{
+    position:absolute;
+    width:38%; height:38%;
+    border-radius:50%;
+    border:1.5px dashed rgba(0,0,0,.14);
+    background: rgba(0,0,0,.02);
+  }
+
+  /* path + home column cells: clean cream tile with soft grid line */
+  .path-cell, .path-entry-R, .path-entry-G, .path-entry-Y, .path-entry-B,
+  .home-col-R, .home-col-G, .home-col-Y, .home-col-B{
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,.05);
+  }
+  .path-cell{ background: var(--panel); }
+  .path-entry-R{ background: linear-gradient(160deg, #ff9fa3, var(--red)); }
+  .path-entry-G{ background: linear-gradient(160deg, #7be3b7, var(--green)); }
+  .path-entry-Y{ background: linear-gradient(160deg, #ffdd85, var(--yellow)); }
+  .path-entry-B{ background: linear-gradient(160deg, #93bdff, var(--blue)); }
+  .home-col-R{ background: linear-gradient(160deg, #ff9ba0, var(--red)); }
+  .home-col-G{ background: linear-gradient(160deg, #6fdba9, var(--green)); }
+  .home-col-Y{ background: linear-gradient(160deg, #ffdd7a, var(--yellow)); }
+  .home-col-B{ background: linear-gradient(160deg, #8fb8ff, var(--blue)); }
+
+  .center-deco{
+    position:relative;
+    background:#0000;
+    overflow:hidden;
+  }
+  .center-deco::before, .center-deco::after{
+    content:"";
+    position:absolute; inset:0;
+  }
+  /* two safe jagged diagonal shapes, reused with different colors per corner */
+  .cd-tl::before, .cd-br::before{ clip-path:polygon(0% 0%,100% 0%,100% 100%); }
+  .cd-tl::after, .cd-br::after{ clip-path:polygon(0% 0%,0% 100%,100% 100%); }
+  .cd-tr::before, .cd-bl::before{ clip-path:polygon(100% 0%,0% 0%,0% 100%); }
+  .cd-tr::after, .cd-bl::after{ clip-path:polygon(100% 0%,100% 100%,0% 100%); }
+  .cd-tl::before{ background:var(--green); }
+  .cd-tl::after{ background:var(--red); }
+  .cd-tr::before{ background:var(--green); }
+  .cd-tr::after{ background:var(--yellow); }
+  .cd-bl::before{ background:var(--red); }
+  .cd-bl::after{ background:var(--blue); }
+  .cd-br::before{ background:var(--yellow); }
+  .cd-br::after{ background:var(--blue); }
+  .center-true{ background: transparent; }
+  .centerMedallion{
+    position:absolute;
+    left:50%; top:50%;
+    width:9%; height:9%;
+    transform:translate(-50%,-50%);
+    border-radius:50%;
+    background: radial-gradient(circle at 35% 28%, #fff6df, var(--gold) 60%, #c9840f 100%);
+    display:flex; align-items:center; justify-content:center;
+    overflow:hidden;
+    z-index:3;
+    box-shadow: 0 4px 10px -2px rgba(0,0,0,.4), inset 0 2px 2px rgba(255,255,255,.75), inset 0 -2px 3px rgba(0,0,0,.15), 0 0 0 2.5px #ffffff;
+  }
+  .medallionGlow{
+    position:absolute;
+    left:50%; top:50%;
+    width:16%; height:16%;
+    border-radius:50%;
+    transform:translate(-50%,-50%) scale(.85);
+    background: radial-gradient(circle, rgba(255,182,72,.55), transparent 70%);
+    z-index:2;
+    pointer-events:none;
+    animation: medallionGlowPulse 2.6s ease-in-out infinite;
+  }
+  @keyframes medallionGlowPulse{
+    0%,100%{ opacity:.32; transform:translate(-50%,-50%) scale(.85); }
+    50%{ opacity:.72; transform:translate(-50%,-50%) scale(1.15); }
+  }
+  .medalCore{
+    position:relative; z-index:2;
+    width:100%; height:100%;
+    display:flex; align-items:center; justify-content:center;
+    font-size:4.6vw;
+    line-height:1;
+  }
+  .medalCore span{ position:relative; z-index:2; filter:drop-shadow(0 1px 1px rgba(0,0,0,.35)); }
+  .centerMedallion::before{
+    content:"";
+    position:absolute; inset:-10%;
+    background:conic-gradient(from 0deg, transparent 0 65%, rgba(255,255,255,.55) 76%, transparent 88% 100%);
+    animation: medallionShine 3.6s linear infinite;
+    opacity:.6;
+    z-index:1;
+  }
+  @keyframes medallionShine{ to{ transform:rotate(360deg); } }
+
+
+  .star{
+    position:absolute; inset:0;
+    display:flex; align-items:center; justify-content:center;
+    color:rgba(255,255,255,.95);
+    text-shadow:0 1px 2px rgba(0,0,0,.3);
+    font-size:60%;
+    pointer-events:none;
+    animation: starTwinkle 2.4s ease-in-out infinite;
+  }
+  @keyframes starTwinkle{ 0%,100%{ opacity:.75; transform:scale(1);} 50%{ opacity:1; transform:scale(1.18);} }
+  .path-cell .star{ color:rgba(255,182,72,.85); text-shadow:0 1px 2px rgba(0,0,0,.12); }
+  .home-num{
+    position:absolute; inset:0;
+    display:flex; align-items:center; justify-content:center;
+    pointer-events:none;
+  }
+  .home-num-badge{
+    display:flex; align-items:center; justify-content:center;
+    width:100%; height:100%;
+    font-family:'Baloo 2', sans-serif;
+    font-weight:800;
+    font-size:58%;
+    line-height:1;
+    color:#ffffff;
+    text-shadow: 0 1px 3px rgba(0,0,0,.4), 0 0 2px rgba(0,0,0,.25);
+  }
+  .home-col-R .home-num-badge{ transform: rotate(90deg); }
+  .home-col-G .home-num-badge{ transform: rotate(180deg); }
+  .home-col-Y .home-num-badge{ transform: rotate(270deg); }
+
+  .pieceLayer{ position:absolute; inset:0; pointer-events:none; z-index:6; contain: paint; }
+  .pieceAnchor{
+    position:absolute;
+    inset:0;
+    transform: translate(0%,0%) translateZ(0);
+    transition: transform .32s cubic-bezier(.22,.61,.36,1);
+    pointer-events:none;
+    will-change: transform;
+  }
+  .pieceAnchor.gliding{
+    transition: transform .21s cubic-bezier(.4,0,.2,1);
+    z-index:9;
+  }
+  .piece{
+    position:absolute;
+    left:0; top:0;
+    width:4.9%;
+    height:7.6%;
+    transform:translate(-50%,-50%) scale(1);
+    transition: filter .2s, transform .28s cubic-bezier(.34,1.2,.64,1);
+    pointer-events:auto;
+    cursor:pointer;
+    z-index:5;
+    filter: drop-shadow(0 2.5px 2.5px rgba(0,0,0,.42));
+    will-change: transform;
+    backface-visibility: hidden;
+  }
+  .piece.stacked{
+    transform:translate(-50%,-50%) scale(.62);
+    z-index:6;
+  }
+  .piece.blocker{
+    filter: drop-shadow(0 0 0 rgba(0,0,0,0)) drop-shadow(0 0 5px rgba(255,182,72,.95));
+  }
+  .piece.gliding{
+    transition: filter .2s;
+    z-index:9;
+  }
+  .piece.gliding, .piece.hopA, .piece.hopB{ filter: drop-shadow(0 0 0 rgba(0,0,0,0)); }
+  .piece.hopA{ animation: pieceHop .21s cubic-bezier(.33,0,.2,1); }
+  .piece.hopB{ animation: pieceHopAlt .21s cubic-bezier(.33,0,.2,1); }
+  @keyframes pieceHop{
+    0%{ transform:translate(-50%,-50%) translateY(0) scale(1.07,.9) rotate(0deg); }
+    22%{ transform:translate(-50%,-50%) translateY(-26%) scale(.93,1.08) rotate(-4deg); }
+    52%{ transform:translate(-50%,-50%) translateY(-80%) scale(1.02,.98) rotate(0deg); }
+    80%{ transform:translate(-50%,-50%) translateY(-14%) scale(.95,1.07) rotate(4deg); }
+    100%{ transform:translate(-50%,-50%) translateY(0) scale(1,1) rotate(0deg); }
+  }
+  @keyframes pieceHopAlt{
+    0%{ transform:translate(-50%,-50%) translateY(0) scale(1.07,.9) rotate(0deg); }
+    22%{ transform:translate(-50%,-50%) translateY(-26%) scale(.93,1.08) rotate(-4deg); }
+    52%{ transform:translate(-50%,-50%) translateY(-80%) scale(1.02,.98) rotate(0deg); }
+    80%{ transform:translate(-50%,-50%) translateY(-14%) scale(.95,1.07) rotate(4deg); }
+    100%{ transform:translate(-50%,-50%) translateY(0) scale(1,1) rotate(0deg); }
+  }
+  .landRipple{
+    position:absolute;
+    width:6.2%; height:6.2%;
+    border-radius:50%;
+    border:2px solid var(--ring-color, #ffb648);
+    transform:translate(-50%,-50%) scale(.35);
+    opacity:.8;
+    pointer-events:none;
+    z-index:1;
+    will-change: transform, opacity;
+    animation: landRippleAnim .38s ease-out forwards;
+  }
+  @keyframes landRippleAnim{
+    0%{ transform:translate(-50%,-50%) scale(.35); opacity:.8; }
+    100%{ transform:translate(-50%,-50%) scale(1.6); opacity:0; }
+  }
+  .piece svg{ width:100%; height:100%; display:block; overflow:visible; }
+  .piece::before{
+    content:"";
+    position:absolute;
+    left:50%; bottom:-8%;
+    width:66%; height:15%;
+    background:radial-gradient(closest-side, rgba(0,0,0,.5), transparent 78%);
+    transform:translateX(-50%);
+    border-radius:50%;
+    z-index:-1;
+  }
+  .piece.movable{
+    z-index:8;
+  }
+  .piece.movable::after{
+    content:"";
+    position:absolute;
+    left:50%; top:50%;
+    width:78%; height:78%;
+    transform:translate(-50%,-50%) scale(.85);
+    border-radius:50%;
+    border:2px solid var(--glow-color, #ffffff);
+    box-shadow: 0 0 7px var(--glow-color, #ffffff);
+    opacity:0;
+    pointer-events:none;
+    animation: movableRing 1s ease-in-out infinite;
+  }
+  .piece.pc-R{ --glow-color: var(--red); }
+  .piece.pc-G{ --glow-color: var(--green); }
+  .piece.pc-Y{ --glow-color: var(--yellow); }
+  .piece.pc-B{ --glow-color: var(--blue); }
+  @keyframes movableRing{
+    0%{ opacity:.9; transform:translate(-50%,-50%) scale(.8); }
+    70%,100%{ opacity:0; transform:translate(-50%,-50%) scale(1.3); }
+  }
+  .piece.finished{ opacity:.001; }
+
+  /* ---------- CONTROLS ---------- */
+  .controls{
+    display:flex; align-items:flex-start; gap:14px;
+    margin-top:4px;
+  }
+  .diceZone{
+    display:flex; flex-direction:column; align-items:center; gap:2px;
+    width:98px;
+    flex-shrink:0;
+  }
+  .diceDock{
+    position:relative;
+    width:98px; height:98px;
+    display:flex; align-items:center; justify-content:center;
+    border-radius:50%;
+    background: radial-gradient(circle at 42% 32%, rgba(255,182,72,.22), rgba(255,182,72,.04) 55%, transparent 72%);
+  }
+  .diceDock::before{
+    content:"";
+    position:absolute; inset:3px;
+    border-radius:50%;
+    border:1.5px dashed rgba(255,182,72,.45);
+    animation: dockSpin 13s linear infinite;
+  }
+  .diceDock::after{
+    content:"";
+    position:absolute; inset:16px;
+    border-radius:50%;
+    background: radial-gradient(circle at 36% 26%, rgba(255,255,255,.15), transparent 70%);
+    box-shadow: inset 0 5px 11px rgba(0,0,0,.3), inset 0 -2px 6px rgba(255,255,255,.12);
+  }
+  @keyframes dockSpin{ to{ transform:rotate(360deg); } }
+  .dockGlow{
+    position:absolute; inset:-10px;
+    border-radius:50%;
+    background: radial-gradient(circle, rgba(255,182,72,.55), transparent 70%);
+    opacity:0;
+    transform:scale(.88);
+    pointer-events:none;
+    z-index:0;
+  }
+  .diceDock.ready .dockGlow{
+    animation: dockGlowPulse 1.7s ease-in-out infinite;
+  }
+  @keyframes dockGlowPulse{
+    0%,100%{ opacity:.16; transform:scale(.9); }
+    50%{ opacity:.62; transform:scale(1.1); }
+  }
+  .diceDock.rolling::after{ background: radial-gradient(circle at 36% 26%, rgba(255,255,255,.25), transparent 70%); }
+  .sparkleLayer{ position:absolute; inset:0; pointer-events:none; z-index:6; }
+  .sparkle{
+    position:absolute; left:50%; top:50%;
+    width:5px; height:5px;
+    margin:-2.5px 0 0 -2.5px;
+    background: radial-gradient(circle, #fff8de, var(--gold-soft) 55%, transparent 78%);
+    border-radius:50%;
+    opacity:1;
+    animation: sparkleBurst .62s ease-out forwards;
+    transform: rotate(var(--ang)) translateX(0);
+  }
+  @keyframes sparkleBurst{
+    0%{ opacity:1; transform: rotate(var(--ang)) translateX(4px) scale(1); }
+    100%{ opacity:0; transform: rotate(var(--ang)) translateX(var(--dist)) scale(.3); }
+  }
+  .diceStage{
+    width:var(--dice-size); height:var(--dice-size);
+    perspective:420px;
+    cursor:pointer;
+    position:relative;
+    z-index:2;
+  }
+  .cube{
+    position:relative;
+    width:100%; height:100%;
+    transform-style:preserve-3d;
+    transform: rotateX(-16deg) rotateY(26deg);
+    will-change: transform;
+  }
+  .diceStage.landedA{ animation: diceLand .42s ease-out; }
+  .diceStage.landedB{ animation: diceLandAlt .42s ease-out; }
+  @keyframes diceLand{
+    0%{ transform:scale(1);}
+    35%{ transform:scale(1.12,.86);}
+    65%{ transform:scale(.93,1.08);}
+    100%{ transform:scale(1);}
+  }
+  @keyframes diceLandAlt{
+    0%{ transform:scale(1);}
+    35%{ transform:scale(1.12,.86);}
+    65%{ transform:scale(.93,1.08);}
+    100%{ transform:scale(1);}
+  }
+  .face{
+    position:absolute; inset:0;
+    border-radius:15px;
+    background:linear-gradient(150deg, #fffdf7, #f2e2bd 55%, #dfc48c);
+    box-shadow: inset 0 3px 3px rgba(255,255,255,.95), inset 0 -5px 7px rgba(0,0,0,.18), 0 0 0 1.5px rgba(255,182,72,.4);
+    backface-visibility:hidden;
+  }
+  /* while the cube is actively spinning, swap the 3-layer inset box-shadow (expensive to
+     rasterize every frame on a rotating 3D element) for a single flat outline; the full
+     detailed shadow returns once the roll settles, so the difference isn't noticeable
+     mid-spin but keeps every frame of the animation cheap to paint */
+  .diceStage.rolling .face{
+    box-shadow: 0 0 0 1.5px rgba(255,182,72,.4);
+  }
+  .f-front{ transform:translateZ(calc(var(--dice-size) / 2)); }
+  .f-back{ transform:rotateY(180deg) translateZ(calc(var(--dice-size) / 2)); }
+  .f-right{ transform:rotateY(90deg) translateZ(calc(var(--dice-size) / 2)); }
+  .f-left{ transform:rotateY(-90deg) translateZ(calc(var(--dice-size) / 2)); }
+  .f-top{ transform:rotateX(90deg) translateZ(calc(var(--dice-size) / 2)); }
+  .f-bottom{ transform:rotateX(-90deg) translateZ(calc(var(--dice-size) / 2)); }
+  .pipgrid{
+    position:absolute; inset:13%;
+    display:grid; grid-template-columns:repeat(3,1fr); grid-template-rows:repeat(3,1fr);
+  }
+  .pipDot{ margin:auto; width:0; height:0; border-radius:50%; }
+  .pipDot.on{
+    width:64%; height:64%;
+    background:radial-gradient(circle at 32% 28%, #8a6538, #4a3319 75%);
+    box-shadow: inset 0 1px 1px rgba(255,255,255,.3), 0 1px 1px rgba(0,0,0,.25), 0 0 0 1px rgba(255,182,72,.18);
+  }
+  .diceShadow{
+    width:44px; height:9px; margin:6px auto 0;
+    border-radius:50%;
+    background:radial-gradient(closest-side, rgba(0,0,0,.5), transparent 78%);
+    transition: transform .32s ease, opacity .32s ease;
+  }
+  .diceDock.rolling ~ .diceShadow{ transform:scale(.5); opacity:.18; }
+  .diceHint{
+    font-size:11px; color:#c9c3de; text-align:center;
+    min-height:26px; margin-top:2px;
+    width:100%;
+    line-height:1.35;
+    padding:3px 9px;
+    border-radius:20px;
+    background:rgba(255,182,72,.09);
+    border:1px solid rgba(255,182,72,.2);
+  }
+  .diceHint.glow{
+    color:var(--gold-soft); font-weight:700;
+    background:rgba(255,182,72,.16);
+    border-color:rgba(255,182,72,.45);
+    animation: hintGlow 1s ease-in-out infinite;
+  }
+  @keyframes hintGlow{ 0%,100%{opacity:.75;} 50%{opacity:1;} }
+
+  .logWrap{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    min-width:0;
+  }
+  .logHeader{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 2px 5px;
+    font-size:11px;
+    font-weight:600;
+    letter-spacing:.3px;
+    color:#b3abd4;
+  }
+  .logHeader.collapsed{
+    justify-content:flex-end;
+    padding-bottom:0;
+  }
+  .logLabel{
+    overflow:hidden;
+    white-space:nowrap;
+    opacity:1;
+    transition: opacity .18s ease;
+  }
+  .logHeader.collapsed .logLabel{
+    display:none;
+  }
+  .logToggleBtn{
+    width:22px; height:22px;
+    border-radius:7px;
+    background:rgba(255,255,255,.08);
+    border:1px solid rgba(255,182,72,.28);
+    color:var(--cream);
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+    font-size:11px;
+    line-height:1;
+    flex-shrink:0;
+    transition: background .15s, transform .15s;
+  }
+  .logToggleBtn:active{ transform:scale(.88); }
+  .logToggleBtn span{ display:inline-block; transition: transform .28s ease; }
+  .logToggleBtn.collapsed span{ transform:rotate(-90deg); }
+
+  .logCard{
+    flex:1;
+    background:rgba(0,0,0,.22);
+    border:1px solid rgba(255,182,72,.2);
+    border-radius:14px;
+    padding:6px 8px;
+    font-size:12.5px;
+    line-height:1.4;
+    color:#e4e0d8;
+    min-height:64px;
+    max-height:82px;
+    overflow-y:auto;
+    scrollbar-gutter: stable;
+    transition: max-height .32s ease, min-height .32s ease, padding .32s ease, opacity .25s ease, border-color .32s ease;
+  }
+  .logEntry{
+    display:flex;
+    align-items:center;
+    gap:7px;
+    padding:4.5px 4px;
+    border-radius:8px;
+    animation: logEntryIn .3s ease;
+  }
+  .logEntry + .logEntry{ border-top:1px solid rgba(255,255,255,.06); }
+  .logEntry.latest{ animation: logEntryIn .3s ease, latestFade 1.7s ease forwards; }
+  @keyframes logEntryIn{ from{ opacity:0; transform:translateY(5px); } to{ opacity:1; transform:translateY(0); } }
+  @keyframes latestFade{ 0%{ background:rgba(255,182,72,.16); } 100%{ background:transparent; } }
+  .logIcon{
+    flex-shrink:0;
+    width:19px; height:19px;
+    border-radius:6px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:10.5px;
+    background: var(--entryColor, rgba(255,182,72,.55));
+    box-shadow: inset 0 1px 1px rgba(255,255,255,.4), inset 0 -1.5px 2px rgba(0,0,0,.28), 0 1px 2px rgba(0,0,0,.3);
+  }
+  .logText{
+    flex:1;
+    min-width:0;
+    color:#e4e0d8;
+    font-size:12px;
+  }
+  .logText b{ color:var(--gold-soft); font-weight:700; }
+  .logCard.collapsed{
+    min-height:0;
+    max-height:0;
+    padding-top:0;
+    padding-bottom:0;
+    opacity:0;
+    border-color:transparent;
+    overflow:hidden;
+  }
+
+  /* ---------- WIN OVERLAY ---------- */
+  #winOverlay{
+    display:none;
+    position:fixed; inset:0;
+    background:rgba(6,20,15,.82);
+    backdrop-filter: blur(4px);
+    z-index:50;
+    align-items:center; justify-content:center;
+    padding:20px;
+    overflow:hidden;
+  }
+  .confetti{
+    position:absolute; top:-14px;
+    width:8px; height:14px;
+    border-radius:2px;
+    opacity:.9;
+    animation: confettiFall linear forwards;
+    z-index:1;
+  }
+  @keyframes confettiFall{
+    to{ transform:translateY(115vh) rotate(760deg); opacity:.5; }
+  }
+  .winCard{
+    position:relative; z-index:2;
+    background:linear-gradient(180deg, #fffaf0, #f3e6c8);
+    color:var(--ink);
+    border-radius:22px;
+    padding:30px 26px;
+    text-align:center;
+    max-width:360px;
+    box-shadow:0 20px 50px rgba(0,0,0,.5);
+    animation: winPop .45s cubic-bezier(.34,1.4,.64,1);
+  }
+  @keyframes winPop{ from{ transform:scale(.7); opacity:0;} to{transform:scale(1); opacity:1;} }
+  .winCard .trophy{ font-size:52px; }
+  .winCard h2{ margin:8px 0 4px; font-size:26px; }
+  .winCard p{ margin:0 0 18px; color:var(--ink-soft); font-size:14px;}
+  .linkBtn{
+    display:block;
+    width:100%;
+    margin-top:10px;
+    background:none;
+    border:none;
+    color:var(--ink-soft);
+    font-family:'Be Vietnam Pro';
+    font-size:12.5px;
+    font-weight:600;
+    text-decoration:underline;
+    cursor:pointer;
+    padding:4px;
+  }
+
+  #confirmOverlay{
+    display:none;
+    position:fixed; inset:0;
+    background:rgba(6,20,15,.78);
+    backdrop-filter: blur(4px);
+    z-index:60;
+    align-items:center; justify-content:center;
+    padding:20px;
+  }
+  .confirmCard{
+    background:linear-gradient(180deg, #fffaf0, #f3e6c8);
+    color:var(--ink);
+    border-radius:20px;
+    padding:26px 24px;
+    text-align:center;
+    max-width:320px;
+    box-shadow:0 20px 50px rgba(0,0,0,.5);
+    animation: winPop .35s cubic-bezier(.34,1.4,.64,1);
+  }
+  .confirmIcon{ font-size:38px; margin-bottom:4px; }
+  .confirmCard h3{ margin:4px 0 6px; font-size:19px; }
+  .confirmCard p{ margin:0 0 18px; color:var(--ink-soft); font-size:13px; line-height:1.5; }
+  .confirmActions{ display:flex; gap:10px; }
+  .confirmActions button{
+    flex:1;
+    padding:12px 0;
+    border-radius:13px;
+    border:none;
+    font-family:'Be Vietnam Pro';
+    font-weight:700;
+    font-size:14px;
+    cursor:pointer;
+  }
+  .confirmCancel{
+    background:rgba(0,0,0,.08);
+    color:var(--ink);
+  }
+  .confirmOk{
+    background:linear-gradient(180deg, #ffd873, var(--gold));
+    color:#3a2708;
+    box-shadow:0 4px 10px rgba(255,182,72,.35);
+  }
+  .confirmActions button:active{ transform:scale(.96); }
+
+  @keyframes fadeIn{ from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);} }
+
+  ::-webkit-scrollbar{ width:6px; }
+  ::-webkit-scrollbar-thumb{ background:rgba(255,182,72,.4); border-radius:6px; }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration:.001s !important; transition-duration:.001s !important; }
+  }
+</style>
+</head>
+<body>
+<div class="glowBlob" style="width:240px;height:240px; top:-50px; left:-50px; background:#d4a94a; animation-delay:0s;"></div>
+<div id="app">
+
+  <!-- SETUP -->
+  <div id="setupScreen">
+    <div class="brand">
+      <span class="horse">🐴</span>
+      <h1>Cờ Cá Ngựa</h1>
+      <p>Chọn số người chơi và bắt đầu ván cờ</p>
+    </div>
+
+    <div class="card" id="resumeCard" style="display:none;">
+      <h3>💾 Ván đang chơi dở</h3>
+      <p id="resumeInfo" style="margin:0 0 12px; font-size:13px; color:#b3abd4; line-height:1.5;"></p>
+      <div style="display:flex; gap:10px; align-items:center;">
+        <button class="bigBtn" id="resumeBtn" style="flex:1; padding:12px;">▶️ Tiếp tục ván này</button>
+        <button class="linkBtn" id="discardBtn" style="width:auto; margin-top:0; white-space:nowrap;">Bỏ ván</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Số người chơi</h3>
+      <div class="seg" id="countSeg">
+        <button data-n="2">2</button>
+        <button data-n="3">3</button>
+        <button data-n="4" class="active">4</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Người chơi</h3>
+      <div id="playerList"></div>
+    </div>
+
+    <div class="card">
+      <div style="display:flex; gap:12px;">
+        <div style="flex:1; min-width:0;">
+          <h3 style="font-size:13.5px; margin:0 0 8px;">🧱 Chặn đường</h3>
+          <div class="toggle" id="blockRuleToggle" style="width:100%; justify-content:center;">
+            <button data-val="on" style="flex:1; padding:9px 4px;">Bật</button>
+            <button data-val="off" class="active" style="flex:1; padding:9px 4px;">Tắt</button>
+          </div>
+        </div>
+        <div style="flex:1; min-width:0; display:none;" id="teamModeCard">
+          <h3 style="font-size:13.5px; margin:0 0 8px;">🤝 Chơi đội 2vs2</h3>
+          <div class="toggle" id="teamModeToggle" style="width:100%; justify-content:center;">
+            <button data-val="on" style="flex:1; padding:9px 4px;">Bật</button>
+            <button data-val="off" class="active" style="flex:1; padding:9px 4px;">Tắt</button>
+          </div>
+        </div>
+      </div>
+      <p style="margin:10px 0 0; font-size:11.5px; color:#b3abd4; line-height:1.5;">
+        <b>Chặn đường:</b> 2 quân cùng màu chung 1 ô tạo "lô cốt" — đối phương không đi qua/dừng được, không thể bị ăn.
+        <span id="teamModeDesc"><br><b>2vs2:</b> Đỏ &amp; Vàng và Xanh Lá &amp; Xanh Dương là 2 đội, không ăn quân nhau, thắng khi cả 2 đồng đội về đích.</span>
+      </p>
+    </div>
+
+    <button class="bigBtn" id="startBtn">🎲 Bắt đầu chơi</button>
+  </div>
+
+  <!-- GAME -->
+  <div id="gameScreen">
+    <div class="topbar">
+      <div class="title">🐴 Cờ Cá Ngựa</div>
+      <div style="display:flex; gap:8px;">
+        <button class="iconBtn" id="muteBtn" title="Âm thanh">🔊</button>
+        <button class="iconBtn" id="restartBtn" title="Ván mới">↺</button>
+        <button class="iconBtn" id="homeBtn" title="Về trang chủ">🏠</button>
+      </div>
+    </div>
+
+    <div class="turnBanner">
+      <div class="avatar" id="turnAvatar"></div>
+      <div class="txt" id="turnText">—<small id="turnSub">—</small></div>
+    </div>
+
+    <div class="boardWrap">
+      <div class="cornerOrn corner-tl"></div>
+      <div class="cornerOrn corner-tr"></div>
+      <div class="cornerOrn corner-bl"></div>
+      <div class="cornerOrn corner-br"></div>
+      <div class="board" id="board"></div>
+    </div>
+
+    <div class="controls">
+      <div class="diceZone">
+        <div class="diceDock" id="diceDock">
+          <div class="dockGlow"></div>
+          <div class="diceStage" id="diceStage">
+            <div class="cube" id="cube"></div>
+          </div>
+          <div class="sparkleLayer" id="sparkleLayer"></div>
+        </div>
+        <div class="diceShadow"></div>
+        <div class="diceHint" id="diceHint">Chạm xúc xắc</div>
+      </div>
+      <div class="logWrap">
+        <div class="logHeader" id="logHeader">
+          <span class="logLabel" id="logLabel">📜 Lịch sử</span>
+          <button class="logToggleBtn" id="logToggleBtn" title="Ẩn/hiện lịch sử"><span id="logToggleIcon">▾</span></button>
+        </div>
+        <div class="logCard" id="log"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div id="winOverlay">
+  <div class="winCard">
+    <div class="trophy">🏆</div>
+    <h2 id="winTitle">Chiến thắng!</h2>
+    <p id="winSub">Chúc mừng!</p>
+    <button class="bigBtn" id="playAgainBtn">🔁 Chơi lại</button>
+    <button class="linkBtn" id="changePlayersBtn">Đổi người chơi</button>
+  </div>
+</div>
+
+<div id="confirmOverlay">
+  <div class="confirmCard">
+    <div class="confirmIcon">🔄</div>
+    <h3 id="confirmTitle">Chơi lại ván này?</h3>
+    <p id="confirmMsg">Ván đấu hiện tại sẽ được đặt lại từ đầu với cùng người chơi.</p>
+    <div class="confirmActions">
+      <button class="confirmCancel" id="confirmCancelBtn">Huỷ</button>
+      <button class="confirmOk" id="confirmOkBtn">Chơi lại</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ============== CONSTANTS ============== */
+const COLORS = ["R","G","Y","B"];
+const COLOR_NAME = {R:"Đỏ", G:"Xanh Lá", Y:"Vàng", B:"Xanh Dương"};
+const COLOR_HEX = {R:"#e5484d", G:"#2fa875", Y:"#f0b429", B:"#3a86ff"};
+
+// 52-cell shared track, row-col coords (0-indexed, 15x15 grid)
+const TRACK = [
+  [6,1],[6,2],[6,3],[6,4],[6,5],
+  [5,6],[4,6],[3,6],[2,6],[1,6],[0,6],
+  [0,7],
+  [0,8],[1,8],[2,8],[3,8],[4,8],[5,8],
+  [6,9],[6,10],[6,11],[6,12],[6,13],[6,14],
+  [7,14],
+  [8,14],[8,13],[8,12],[8,11],[8,10],[8,9],
+  [9,8],[10,8],[11,8],[12,8],[13,8],[14,8],
+  [14,7],
+  [14,6],[13,6],[12,6],[11,6],[10,6],[9,6],
+  [8,5],[8,4],[8,3],[8,2],[8,1],[8,0],
+  [7,0],
+  [6,0]
+];
+
+const ENTRY = {R:0, G:13, Y:26, B:39};
+const SAFE_IDX = new Set([0,8,13,21,26,34,39,47]);
+
+const HOME_COL = {
+  R: [[7,1],[7,2],[7,3],[7,4],[7,5],[7,6]],
+  G: [[1,7],[2,7],[3,7],[4,7],[5,7],[6,7]],
+  Y: [[7,13],[7,12],[7,11],[7,10],[7,9],[7,8]],
+  B: [[13,7],[12,7],[11,7],[10,7],[9,7],[8,7]]
+};
+
+const YARD = {
+  R:{r0:0,c0:0}, G:{r0:0,c0:9}, Y:{r0:9,c0:9}, B:{r0:9,c0:0}
+};
+const YARD_SLOTS = {
+  R:[[1,1],[1,4],[4,1],[4,4]],
+  G:[[1,10],[1,13],[4,10],[4,13]],
+  Y:[[10,10],[10,13],[13,10],[13,13]],
+  B:[[10,1],[10,4],[13,1],[13,4]]
+};
+// team mode pairs diagonal corners: Red+Yellow vs Green+Blue
+const TEAMMATE_OF = { R:"Y", Y:"R", G:"B", B:"G" };
+function teammateOf(color){ return TEAMMATE_OF[color]; }
+function isTeammate(colorA, colorB){
+  return !!(state && state.teamMode) && teammateOf(colorA)===colorB;
+}
+
+function key(r,c){ return r+"_"+c; }
+
+/* ============== GAME STATE ============== */
+let state = null; // {players:[{color,isBot,pieces:[pos,pos,pos,pos]}], current, dice, canRoll, movable:[], gameOver}
+let gameSession = 0; // bumped every startGame(); stale async callbacks compare against this and self-abort
+
+/* ============== SAVE / RESUME (localStorage) ============== */
+const SAVE_KEY = "coCaNguaSave_v1";
+function saveGame(){
+  if(!state || state.gameOver) return;
+  try{
+    const data = {
+      players: state.players.map(function(p){ return {color:p.color, isBot:p.isBot, pieces:p.pieces.slice()}; }),
+      current: state.current,
+      dice: state.dice,
+      canRoll: state.canRoll,
+      consecutiveSixes: state.consecutiveSixes || 0,
+      blockRule: (state.blockRule !== undefined) ? state.blockRule : false,
+      teamMode: (state.teamMode !== undefined) ? state.teamMode : false,
+      savedAt: Date.now()
+    };
+    localStorage.setItem(SAVE_KEY, JSON.stringify(data));
+  }catch(e){}
+}
+function loadSavedGame(){
+  try{
+    const raw = localStorage.getItem(SAVE_KEY);
+    if(!raw) return null;
+    const data = JSON.parse(raw);
+    if(!data || !Array.isArray(data.players) || !data.players.length) return null;
+    return data;
+  }catch(e){ return null; }
+}
+function clearSavedGame(){
+  try{ localStorage.removeItem(SAVE_KEY); }catch(e){}
+}
+let selectedCount = 4;
+let soundOn = true;
+let blockRuleOn = false;
+let teamModeOn = false;
+
+/* ============== AUDIO (tiny synth, no assets) ============== */
+let actx = null;
+let masterComp = null;
+function beep(freq, dur, type){
+  if(!soundOn) return;
+  try{
+    if(!actx) actx = new (window.AudioContext||window.webkitAudioContext)();
+    if(!masterComp){
+      masterComp = actx.createDynamicsCompressor();
+      masterComp.threshold.value = -18;
+      masterComp.knee.value = 24;
+      masterComp.ratio.value = 8;
+      masterComp.attack.value = 0.002;
+      masterComp.release.value = 0.15;
+      masterComp.connect(actx.destination);
+    }
+    const o = actx.createOscillator();
+    const g = actx.createGain();
+    o.type = type||"sine";
+    o.frequency.value = freq;
+    g.gain.value = 0.34;
+    o.connect(g); g.connect(masterComp);
+    o.start();
+    g.gain.exponentialRampToValueAtTime(0.0001, actx.currentTime + dur);
+    o.stop(actx.currentTime + dur + 0.02);
+  }catch(e){}
+}
+
+// short filtered-noise burst — sounds like a die knocking against a cup/table
+// rather than a musical tone, used for the shake and landing thud
+let noiseBufferCache = {};
+function getNoiseBuffer(dur, decayPow){
+  const key = dur.toFixed(4)+"_"+decayPow;
+  const cached = noiseBufferCache[key];
+  if(cached) return cached;
+  const n = Math.max(1, Math.floor(actx.sampleRate * dur));
+  const buffer = actx.createBuffer(1, n, actx.sampleRate);
+  const data = buffer.getChannelData(0);
+  for(let i=0;i<n;i++){
+    const decay = Math.pow(1 - i/n, decayPow);
+    data[i] = (Math.random()*2-1) * decay;
+  }
+  noiseBufferCache[key] = buffer;
+  return buffer;
+}
+function diceClack(volume, filterFreq, q, dur, thud){
+  if(!soundOn) return;
+  try{
+    if(!actx) actx = new (window.AudioContext||window.webkitAudioContext)();
+    if(!masterComp){
+      masterComp = actx.createDynamicsCompressor();
+      masterComp.threshold.value = -18;
+      masterComp.knee.value = 24;
+      masterComp.ratio.value = 8;
+      masterComp.attack.value = 0.002;
+      masterComp.release.value = 0.15;
+      masterComp.connect(actx.destination);
+    }
+    const d = dur || 0.055;
+    const buffer = getNoiseBuffer(d, 2.2);
+    const src = actx.createBufferSource();
+    src.buffer = buffer;
+    const filter = actx.createBiquadFilter();
+    filter.type = "bandpass";
+    filter.frequency.value = filterFreq || 1700;
+    filter.Q.value = q || 1.1;
+    const g = actx.createGain();
+    g.gain.value = volume || 0.5;
+    src.connect(filter); filter.connect(g); g.connect(masterComp);
+    src.start();
+
+    if(thud){
+      // low-frequency "thud" layered underneath for a fuller, more physical knock
+      const buffer2 = getNoiseBuffer(0.07, 2.6);
+      const src2 = actx.createBufferSource();
+      src2.buffer = buffer2;
+      const lp = actx.createBiquadFilter();
+      lp.type = "lowpass";
+      lp.frequency.value = 210;
+      const g2 = actx.createGain();
+      g2.gain.value = (volume || 0.5) * 0.85;
+      src2.connect(lp); lp.connect(g2); g2.connect(masterComp);
+      src2.start();
+    }
+  }catch(e){}
+}
+
+/* ============== SETUP SCREEN ============== */
+const countSeg = document.getElementById("countSeg");
+const playerList = document.getElementById("playerList");
+const PLAYER_COLOR_SETS = {
+  2: ["R","Y"], // opposite corners so the two factions face each other
+  3: ["R","G","Y"],
+  4: ["R","G","Y","B"]
+};
+function activeColorSet(){ return PLAYER_COLOR_SETS[selectedCount] || COLORS.slice(0, selectedCount); }
+
+function renderPlayerSetup(){
+  playerList.innerHTML = "";
+  const set = activeColorSet();
+  for(let i=0;i<selectedCount;i++){
+    const c = set[i];
+    const row = document.createElement("div");
+    row.className = "playerRow";
+    row.style.setProperty("--pc", COLOR_HEX[c]);
+    row.style.setProperty("--pc-tint", COLOR_HEX[c] + "16");
+    row.innerHTML =
+      '<div class="dot" style="background:'+COLOR_HEX[c]+'"></div>'+
+      '<div class="pname">'+COLOR_NAME[c]+'</div>'+
+      '<div class="toggle" data-color="'+c+'">'+
+        '<button data-mode="human" class="'+(i===0?'active':'')+'">Người</button>'+
+        '<button data-mode="bot" class="'+(i===0?'':'active')+'">Máy</button>'+
+      '</div>';
+    playerList.appendChild(row);
+  }
+  playerList.querySelectorAll(".toggle").forEach(function(tg){
+    tg.querySelectorAll("button").forEach(function(btn){
+      btn.addEventListener("click", function(){
+        tg.querySelectorAll("button").forEach(function(b){ b.classList.remove("active"); });
+        btn.classList.add("active");
+      });
+    });
+  });
+}
+countSeg.querySelectorAll("button").forEach(function(btn){
+  btn.addEventListener("click", function(){
+    countSeg.querySelectorAll("button").forEach(function(b){ b.classList.remove("active"); });
+    btn.classList.add("active");
+    selectedCount = parseInt(btn.dataset.n,10);
+    renderPlayerSetup();
+    updateTeamModeVisibility();
+  });
+});
+function updateTeamModeVisibility(){
+  const card = document.getElementById("teamModeCard");
+  const desc = document.getElementById("teamModeDesc");
+  const eligible = selectedCount===4;
+  card.style.display = eligible ? "" : "none";
+  desc.style.display = eligible ? "" : "none";
+  if(!eligible && teamModeOn){
+    teamModeOn = false;
+    const tg = document.getElementById("teamModeToggle");
+    tg.querySelectorAll("button").forEach(function(b){ b.classList.toggle("active", b.dataset.val==="off"); });
+  }
+}
+renderPlayerSetup();
+updateTeamModeVisibility();
+
+document.getElementById("teamModeToggle").querySelectorAll("button").forEach(function(btn){
+  btn.addEventListener("click", function(){
+    this.parentNode.querySelectorAll("button").forEach(function(b){ b.classList.remove("active"); });
+    this.classList.add("active");
+    teamModeOn = this.dataset.val === "on";
+  });
+});
+
+document.getElementById("blockRuleToggle").querySelectorAll("button").forEach(function(btn){
+  btn.addEventListener("click", function(){
+    this.parentNode.querySelectorAll("button").forEach(function(b){ b.classList.remove("active"); });
+    this.classList.add("active");
+    blockRuleOn = this.dataset.val === "on";
+  });
+});
+
+document.getElementById("startBtn").addEventListener("click", function(){
+  const players = [];
+  const set = activeColorSet();
+  const rows = playerList.querySelectorAll(".playerRow");
+  rows.forEach(function(row, i){
+    const c = set[i];
+    const active = row.querySelector(".toggle button.active");
+    const isBot = active && active.dataset.mode === "bot";
+    players.push({ color:c, isBot: !!isBot, pieces:[-1,-1,-1,-1] });
+  });
+  document.getElementById("resumeCard").style.display = "none";
+  startGame(players, blockRuleOn, teamModeOn);
+});
+
+/* ============== BOARD BUILD ============== */
+const boardEl = document.getElementById("board");
+let cellMeta = {}; // key -> meta
+
+function classifyCell(r,c){
+  // yard?
+  for(const col of COLORS){
+    const y = YARD[col];
+    if(r>=y.r0 && r<=y.r0+5 && c>=y.c0 && c<=y.c0+5){
+      const inner = r>=y.r0+1 && r<=y.r0+4 && c>=y.c0+1 && c<=y.c0+4;
+      return {type:"yard", color:col, inner:inner};
+    }
+  }
+  // center box
+  if(r>=6 && r<=8 && c>=6 && c<=8){
+    for(const col of COLORS){
+      const last = HOME_COL[col][5];
+      if(last[0]===r && last[1]===c) return {type:"homecol", color:col, idx:5};
+    }
+    if(r===7 && c===7) return {type:"centertrue"};
+    const corner = (r===6 ? "t" : "b") + (c===6 ? "l" : "r");
+    return {type:"centerdeco", corner:corner};
+  }
+  // track
+  for(let i=0;i<TRACK.length;i++){
+    if(TRACK[i][0]===r && TRACK[i][1]===c){
+      const entryColor = Object.keys(ENTRY).find(function(k){ return ENTRY[k]===i; });
+      return {type:"track", idx:i, entry: entryColor||null, safe: SAFE_IDX.has(i)};
+    }
+  }
+  // home column (non-center part)
+  for(const col of COLORS){
+    for(let i=0;i<5;i++){
+      const cell = HOME_COL[col][i];
+      if(cell[0]===r && cell[1]===c) return {type:"homecol", color:col, idx:i};
+    }
+  }
+  return {type:"unknown"};
+}
+
+function buildBoard(){
+  boardEl.innerHTML = "";
+  cellMeta = {};
+  pieceElements = {};
+  pieceAnchors = {};
+  capturingPieces = {};
+  for(let r=0;r<15;r++){
+    for(let c=0;c<15;c++){
+      const meta = classifyCell(r,c);
+      cellMeta[key(r,c)] = meta;
+      const div = document.createElement("div");
+      div.className = "cell";
+      if(meta.type==="yard"){
+        div.className += meta.inner ? " yi-"+meta.color : " yb-"+meta.color;
+      } else if(meta.type==="track"){
+        div.className += meta.entry ? " path-entry-"+meta.entry : " path-cell";
+        if(meta.safe && !meta.entry){
+          const s = document.createElement("div"); s.className="star"; s.textContent="★"; div.appendChild(s);
+        }
+        if(meta.entry){
+          const s = document.createElement("div"); s.className="star"; s.textContent="★"; s.style.color="rgba(255,255,255,.55)"; div.appendChild(s);
+        }
+      } else if(meta.type==="homecol"){
+        div.className += " home-col-"+meta.color;
+        const num = document.createElement("div");
+        num.className = "home-num" + (meta.idx===5 ? " home-num-final" : "");
+        num.innerHTML = '<span class="home-num-badge">'+(meta.idx+1)+'</span>';
+        div.appendChild(num);
+      } else if(meta.type==="centerdeco"){
+        div.className += " center-deco cd-"+meta.corner;
+      } else if(meta.type==="centertrue"){
+        div.className += " center-true";
+      }
+      boardEl.appendChild(div);
+    }
+  }
+  // decorative yard trays (rounded plate holding the 4 piece slots)
+  const traySlotPos = [[12.5,12.5],[87.5,12.5],[12.5,87.5],[87.5,87.5]];
+  COLORS.forEach(function(col){
+    const tray = document.createElement("div");
+    tray.className = "yardTray tray-"+col;
+    traySlotPos.forEach(function(p){
+      const m = document.createElement("div");
+      m.className = "slotmark";
+      m.style.position = "absolute";
+      m.style.left = p[0]+"%";
+      m.style.top = p[1]+"%";
+      m.style.transform = "translate(-50%,-50%)";
+      tray.appendChild(m);
+    });
+    boardEl.appendChild(tray);
+  });
+  // gold center medallion
+  const medallionGlow = document.createElement("div");
+  medallionGlow.className = "medallionGlow";
+  boardEl.appendChild(medallionGlow);
+  const medallion = document.createElement("div");
+  medallion.className = "centerMedallion";
+  medallion.innerHTML = '<div class="medalCore"><span>🏆</span></div>';
+  boardEl.appendChild(medallion);
+  // piece layer
+  const layer = document.createElement("div");
+  layer.className = "pieceLayer";
+  layer.id = "pieceLayer";
+  boardEl.appendChild(layer);
+}
+
+/* ============== COORD HELPERS ============== */
+function pieceCoord(color, pos){
+  if(pos===-1) return null; // handled by slot index separately
+  if(pos>=0 && pos<=50){
+    const idx = (ENTRY[color] + pos) % 52;
+    return TRACK[idx];
+  }
+  if(pos>=51 && pos<=56){
+    return HOME_COL[color][pos-51];
+  }
+  return null;
+}
+
+/* ============== RENDER PIECES ============== */
+const COLOR_DARK = {R:"#a92f33", G:"#1f7a55", Y:"#c98d0f", B:"#255fc4"};
+function buildPawnSVG(mainHex, darkHex, gradId){
+  return '<svg viewBox="0 0 100 150">'+
+    '<defs>'+
+      '<radialGradient id="'+gradId+'" cx="32%" cy="20%" r="90%">'+
+        '<stop offset="0%" stop-color="#ffffff"/>'+
+        '<stop offset="24%" stop-color="#ffffff" stop-opacity=".55"/>'+
+        '<stop offset="48%" stop-color="'+mainHex+'"/>'+
+        '<stop offset="100%" stop-color="'+darkHex+'"/>'+
+      '</radialGradient>'+
+      '<linearGradient id="'+gradId+'rim" x1="0%" y1="0%" x2="100%" y2="0%">'+
+        '<stop offset="0%" stop-color="#000000" stop-opacity="0"/>'+
+        '<stop offset="82%" stop-color="#000000" stop-opacity="0"/>'+
+        '<stop offset="100%" stop-color="#000000" stop-opacity=".32"/>'+
+      '</linearGradient>'+
+      '<linearGradient id="'+gradId+'gold" x1="20%" y1="0%" x2="85%" y2="100%">'+
+        '<stop offset="0%" stop-color="#fff6d8"/>'+
+        '<stop offset="45%" stop-color="#f0c05a"/>'+
+        '<stop offset="100%" stop-color="#b8862a"/>'+
+      '</linearGradient>'+
+    '</defs>'+
+    // base flange (two-tier disc)
+    '<ellipse cx="50" cy="139" rx="29" ry="8" fill="'+darkHex+'"/>'+
+    '<ellipse cx="50" cy="134" rx="29" ry="8" fill="url(#'+gradId+')" stroke="rgba(0,0,0,.2)" stroke-width="1"/>'+
+    // tapered body
+    '<polygon points="32,131 68,131 60,84 40,84" fill="url(#'+gradId+')" stroke="rgba(0,0,0,.2)" stroke-width="1.5"/>'+
+    '<polygon points="32,131 68,131 60,84 40,84" fill="url(#'+gradId+'rim)"/>'+
+    '<rect x="47" y="87" width="6" height="42" rx="3" fill="rgba(255,255,255,.16)"/>'+
+    // horseshoe emblem on the chest
+    '<path d="M 40 113 A 11 11 0 1 0 60 113" fill="none" stroke="rgba(255,255,255,.55)" stroke-width="3.4" stroke-linecap="round"/>'+
+    '<circle cx="40" cy="113" r="1.6" fill="rgba(255,255,255,.65)"/>'+
+    '<circle cx="60" cy="113" r="1.6" fill="rgba(255,255,255,.65)"/>'+
+    // neck collar
+    '<ellipse cx="50" cy="86" rx="14.5" ry="4" fill="'+darkHex+'"/>'+
+    '<ellipse cx="50" cy="83" rx="14.5" ry="4" fill="url(#'+gradId+')" stroke="rgba(0,0,0,.18)" stroke-width="1"/>'+
+    // neck bridge + clean glossy sphere head
+    '<polygon points="43,86 57,86 54,68 46,68" fill="url(#'+gradId+')" stroke="rgba(0,0,0,.15)" stroke-width="1"/>'+
+    '<circle cx="50" cy="57" r="20.5" fill="url(#'+gradId+')" stroke="rgba(0,0,0,.22)" stroke-width="1.5"/>'+
+    '<ellipse cx="41" cy="48" rx="7.5" ry="4.8" fill="rgba(255,255,255,.6)"/>'+
+    '<ellipse cx="37" cy="41" rx="2.6" ry="1.8" fill="rgba(255,255,255,.42)"/>'+
+    // faceted gold jewel cap
+    '<polygon points="50,15 37,29 50,38" fill="url(#'+gradId+'gold)" stroke="rgba(120,80,10,.4)" stroke-width="1"/>'+
+    '<polygon points="50,15 63,29 50,38" fill="#c9982f" stroke="rgba(120,80,10,.4)" stroke-width="1"/>'+
+    '<polygon points="37,29 50,38 63,29 50,33" fill="#e7ac3e" stroke="rgba(120,80,10,.35)" stroke-width=".8"/>'+
+    '<polygon points="47,17 50,15 44,25" fill="rgba(255,255,255,.5)"/>'+
+  '</svg>';
+}
+const PAWN_SVG = {
+  R: buildPawnSVG(COLOR_HEX.R, COLOR_DARK.R, "gradR"),
+  G: buildPawnSVG(COLOR_HEX.G, COLOR_DARK.G, "gradG"),
+  Y: buildPawnSVG(COLOR_HEX.Y, COLOR_DARK.Y, "gradY"),
+  B: buildPawnSVG(COLOR_HEX.B, COLOR_DARK.B, "gradB")
+};
+
+/* ============== RENDER PIECES ============== */
+let animatingPiece = null; // {pIdx, idx, pos} - overrides a single piece's rendered position mid-move
+let pieceElements = {}; // "pIdx_idx" -> persistent inner .piece element, reused across renders so transitions work
+let pieceAnchors = {};  // "pIdx_idx" -> persistent .pieceAnchor wrapper; carries the GPU-friendly transform-based position
+let capturingPieces = {}; // "pIdx_idx" -> true while a knockdown/flight-home capture animation owns that piece's DOM
+
+function spawnLandingEffect(row, col, colorHex){
+  const layer = document.getElementById("pieceLayer");
+  if(!layer) return;
+  const cellPct = 100/15;
+  const cx = col*cellPct + cellPct/2;
+  const cy = row*cellPct + cellPct/2;
+
+  const ring = document.createElement("div");
+  ring.className = "landRipple";
+  ring.style.left = cx+"%";
+  ring.style.top = cy+"%";
+  ring.style.setProperty("--ring-color", colorHex);
+  layer.appendChild(ring);
+  setTimeout(function(){ if(ring.parentNode) ring.parentNode.removeChild(ring); }, 400);
+}
+
+const hopToggle = {};
+function triggerHopClass(pIdx, idx){
+  const el = pieceElements[pIdx+"_"+idx];
+  if(!el) return;
+  const ekey = pIdx+"_"+idx;
+  const useA = !hopToggle[ekey];
+  hopToggle[ekey] = useA;
+  el.classList.remove(useA ? "hopB" : "hopA");
+  el.classList.add(useA ? "hopA" : "hopB");
+}
+
+function animateAlongPath(pIdx, idx, fromPos, toPos, onDone){
+  const color = state.players[pIdx].color;
+  const colorHex = COLOR_HEX[color];
+  if(fromPos === -1){
+    // entering the board: no intermediate cells, just a gentle hop onto the entry square
+    animatingPiece = {pIdx:pIdx, idx:idx, pos:0};
+    renderPieces();
+    triggerHopClass(pIdx, idx);
+    const rc0 = pieceCoord(color, 0);
+    setTimeout(function(){
+      spawnLandingEffect(rc0[0], rc0[1], colorHex); // fires exactly as the piece settles
+      beep(520,.09,"triangle");
+      animatingPiece = null;
+      onDone();
+    }, 260);
+    return;
+  }
+  let current = fromPos;
+  const stepDelay = 210;
+  function step(){
+    if(current >= toPos){
+      animatingPiece = null;
+      onDone();
+      return;
+    }
+    current++;
+    animatingPiece = {pIdx:pIdx, idx:idx, pos:current};
+    renderPieces();
+    triggerHopClass(pIdx, idx); // launches the hop arc immediately
+    const rc = pieceCoord(color, current);
+    const stepsLeft = toPos - current;
+    setTimeout(function(){
+      spawnLandingEffect(rc[0], rc[1], colorHex); // ripple only once the hop has actually landed
+      beep(440 + (toPos-fromPos-stepsLeft)*22, .08, "triangle");
+      step();
+    }, stepDelay);
+  }
+  step();
+}
+
+// Capture flight: the captured piece topples in place, then arcs (with a spin and a
+// little airborne bounce) back to its yard slot — fully independent of the normal
+// per-render transition system so it can't be interrupted or double-animated.
+function animateCapture(oIdx, oidx, color, fromRC){
+  const ekey = oIdx+"_"+oidx;
+  const layer = document.getElementById("pieceLayer");
+  const el = getOrCreatePieceEl(oIdx, oidx, color);
+  const anchor = pieceAnchors[ekey];
+  if(anchor.parentNode !== layer) layer.appendChild(anchor);
+
+  capturingPieces[ekey] = true;
+  anchor.classList.remove("gliding");
+  el.classList.remove("gliding","hopA","hopB","stacked","movable","blocker");
+  anchor.style.transition = "none";
+  el.style.transition = "none";
+  anchor.style.zIndex = 20;
+  el.style.zIndex = 20;
+
+  const cellPct = 100/15;
+  const cx0 = fromRC[1]*cellPct + cellPct/2;
+  const cy0 = fromRC[0]*cellPct + cellPct/2;
+  const yardRC = YARD_SLOTS[color][oidx];
+  const cx1 = yardRC[1]*cellPct + cellPct/2;
+  const cy1 = yardRC[0]*cellPct + cellPct/2;
+
+  anchor.style.transform = "translate("+cx0+"%,"+cy0+"%)";
+  el.style.transform = "translate(-50%,-50%) rotate(0deg) scale(1,1)";
+
+  beep(190,.17,"sawtooth");
+
+  const spin = Math.random()<0.5 ? -1 : 1;
+  const knockDur = 190;
+  const flightDur = 560;
+  const knockStart = performance.now();
+
+  function knockFrame(now){
+    if(!capturingPieces[ekey]) return; // a new game/session took over mid-animation
+    const t = Math.min(1, (now-knockStart)/knockDur);
+    const e = 1 - Math.pow(1-t, 3);
+    el.style.transform = "translate(-50%,-50%) rotate("+(spin*80*e)+"deg) scale("+(1+0.14*e)+","+(1-0.4*e)+")";
+    if(t<1){ requestAnimationFrame(knockFrame); }
+    else { requestAnimationFrame(function(now2){ flightFrame(now2, now2); }); }
+  }
+
+  function flightFrame(now, flightStart){
+    if(!capturingPieces[ekey]) return;
+    const t = Math.min(1, (now-flightStart)/flightDur);
+    const e = easeOutQuart(t);
+    const cx = cx0 + (cx1-cx0)*e;
+    const cy = cy0 + (cy1-cy0)*e;
+    const arcLift = -15 * 4*t*(1-t); // parabolic hop, peaks mid-flight
+    anchor.style.transform = "translate("+cx+"%,"+(cy+arcLift)+"%)";
+    const rot = spin*80 + spin*t*640;
+    const s = 1 + Math.sin(Math.PI*t)*0.2;
+    el.style.transform = "translate(-50%,-50%) rotate("+rot+"deg) scale("+s+","+s+")";
+    if(t<1){
+      requestAnimationFrame(function(now3){ flightFrame(now3, flightStart); });
+    } else {
+      anchor.style.transition = "";
+      el.style.transition = "";
+      anchor.style.zIndex = "";
+      el.style.zIndex = "";
+      el.style.transform = "";
+      anchor.style.transform = "translate("+cx1+"%,"+cy1+"%)";
+      spawnLandingEffect(yardRC[0], yardRC[1], COLOR_HEX[color]);
+      beep(760,.07,"sine");
+      delete capturingPieces[ekey];
+      renderPieces(); // reconcile styles/stacking now that the flight owns nothing anymore
+    }
+  }
+
+  requestAnimationFrame(knockFrame);
+}
+
+function getOrCreatePieceEl(pIdx, idx, color){
+  const ekey = pIdx+"_"+idx;
+  let el = pieceElements[ekey];
+  if(!el){
+    const anchor = document.createElement("div");
+    anchor.className = "pieceAnchor";
+    el = document.createElement("div");
+    el.className = "piece pc-"+color;
+    el.innerHTML = PAWN_SVG[color];
+    el.addEventListener("click", function(ev){
+      ev.stopPropagation();
+      onPieceTap(pIdx, idx);
+    });
+    anchor.appendChild(el);
+    pieceElements[ekey] = el;
+    pieceAnchors[ekey] = anchor;
+  }
+  return el;
+}
+
+function renderPieces(){
+  const layer = document.getElementById("pieceLayer");
+  const cellPct = 100/15;
+
+  // group settled pieces by cell so anyone sharing a cell can be arranged evenly
+  const cellMembers = {};
+  state.players.forEach(function(pl, pIdx){
+    pl.pieces.forEach(function(pos, idx){
+      const rc = pos===-1 ? YARD_SLOTS[pl.color][idx] : pieceCoord(pl.color, pos);
+      const k = key(rc[0], rc[1]);
+      if(!cellMembers[k]) cellMembers[k] = [];
+      cellMembers[k].push(pIdx+"_"+idx);
+    });
+  });
+  Object.keys(cellMembers).forEach(function(k){ cellMembers[k].sort(); });
+
+  // even, symmetric arrangements for 2/3/4 pieces sharing one cell
+  const STACK_OFFSETS = {
+    2: [[-1.7,0],[1.7,0]],
+    3: [[-1.7,-1.0],[1.7,-1.0],[0,1.4]],
+    4: [[-1.7,-1.7],[1.7,-1.7],[-1.7,1.7],[1.7,1.7]]
+  };
+
+  const visible = {};
+  state.players.forEach(function(pl, pIdx){
+    pl.pieces.forEach(function(pos, idx){
+      const ekey0 = pIdx+"_"+idx;
+      if(capturingPieces[ekey0]){ visible[ekey0] = true; return; } // a capture-flight animation is driving this piece's DOM directly
+      let effPos = pos;
+      let isAnimating = false;
+      if(animatingPiece && animatingPiece.pIdx===pIdx && animatingPiece.idx===idx){
+        effPos = animatingPiece.pos;
+        isAnimating = true;
+      }
+      const rc = effPos===-1 ? YARD_SLOTS[pl.color][idx] : pieceCoord(pl.color, effPos);
+
+      // a piece is only shrunk/offset while settled (not mid-flight) and actually
+      // sharing its settled cell with other settled pieces; the whole group is
+      // arranged evenly based on exactly how many are really there right now
+      const staticRc = pos===-1 ? YARD_SLOTS[pl.color][idx] : pieceCoord(pl.color, pos);
+      const members = cellMembers[key(staticRc[0], staticRc[1])] || [];
+      const count = Math.min(members.length, 4);
+      const stacked = !isAnimating && count > 1;
+      const rank = members.indexOf(pIdx+"_"+idx);
+      const off = stacked ? (STACK_OFFSETS[count][rank] || [0,0]) : [0,0];
+
+      const cx = rc[1]*cellPct + cellPct/2 + off[0];
+      const cy = rc[0]*cellPct + cellPct/2 + off[1];
+      const ekey = pIdx+"_"+idx;
+      const el = getOrCreatePieceEl(pIdx, idx, pl.color);
+      const anchor = pieceAnchors[ekey];
+      if(anchor.parentNode !== layer) layer.appendChild(anchor);
+      anchor.classList.toggle("gliding", isAnimating);
+      el.classList.toggle("gliding", isAnimating);
+      el.classList.toggle("stacked", stacked);
+      const isBlocker = !!(state.blockRule) && stacked && pos>=0 && pos<=50 &&
+        members.every(function(mk){
+          const parts = mk.split("_");
+          return state.players[parseInt(parts[0],10)].color === pl.color;
+        });
+      el.classList.toggle("blocker", isBlocker);
+      const isMovable = state.movable && state.movable.some(function(m){ return m.pIdx===pIdx && m.idx===idx; });
+      el.classList.toggle("movable", !!isMovable);
+      anchor.style.transform = "translate("+cx+"%,"+cy+"%)";
+      visible[ekey] = true;
+    });
+  });
+
+  // detach elements for pieces that are no longer on the board (finished)
+  Object.keys(pieceAnchors).forEach(function(ekey){
+    if(!visible[ekey]){
+      const anchor = pieceAnchors[ekey];
+      if(anchor.parentNode) anchor.parentNode.removeChild(anchor);
+    }
+  });
+}
+
+/* ============== GAME LOGIC ============== */
+let lastPlayersConfig = null;
+
+let lastBlockRule = false;
+let lastTeamMode = false;
+
+function startGame(players, blockRule, teamMode){
+  gameSession++;
+  animatingPiece = null;
+  if(blockRule===undefined) blockRule = lastBlockRule;
+  if(teamMode===undefined) teamMode = lastTeamMode;
+  teamMode = !!teamMode && players.length===4; // team mode only makes sense for 4 players
+  lastBlockRule = blockRule;
+  lastTeamMode = teamMode;
+  lastPlayersConfig = players.map(function(p){ return {color:p.color, isBot:p.isBot}; });
+  state = {
+    players: players,
+    current: 0,
+    dice: 1,
+    canRoll: true,
+    movable: [],
+    gameOver: false,
+    consecutiveSixes: 0,
+    blockRule: !!blockRule,
+    teamMode: teamMode
+  };
+  document.getElementById("setupScreen").style.display = "none";
+  document.getElementById("gameScreen").style.display = "flex";
+  document.getElementById("winOverlay").style.display = "none";
+  document.getElementById("log").innerHTML = "";
+  buildBoard();
+  renderPieces();
+  updateTurnUI();
+  let startMsg = "Ván mới bắt đầu. Luật chặn đường: "+(state.blockRule?"BẬT 🧱":"TẮT");
+  if(state.teamMode) startMsg += ". Chơi theo đội: Đỏ+Vàng 🆚 Xanh Lá+Xanh Dương 🤝";
+  logMsg(startMsg+". Chúc may mắn!", null, "🎉");
+  saveGame();
+  maybeAutoBot();
+}
+
+function rematchSameSettings(){
+  if(!lastPlayersConfig) return;
+  const players = lastPlayersConfig.map(function(p){
+    return {color:p.color, isBot:p.isBot, pieces:[-1,-1,-1,-1]};
+  });
+  startGame(players, lastBlockRule, lastTeamMode);
+}
+
+function resumeSavedGame(data){
+  const players = data.players.map(function(p){
+    return {color:p.color, isBot:p.isBot, pieces:p.pieces.slice()};
+  });
+  gameSession++;
+  animatingPiece = null;
+  lastPlayersConfig = players.map(function(p){ return {color:p.color, isBot:p.isBot}; });
+  lastBlockRule = (data.blockRule !== undefined) ? !!data.blockRule : false;
+  lastTeamMode = (data.teamMode !== undefined) ? (!!data.teamMode && players.length===4) : false;
+  state = {
+    players: players,
+    current: data.current || 0,
+    dice: data.dice || 1,
+    canRoll: (data.canRoll !== undefined) ? data.canRoll : true,
+    movable: [],
+    gameOver: false,
+    consecutiveSixes: data.consecutiveSixes || 0,
+    blockRule: lastBlockRule,
+    teamMode: lastTeamMode
+  };
+  document.getElementById("setupScreen").style.display = "none";
+  document.getElementById("gameScreen").style.display = "flex";
+  document.getElementById("winOverlay").style.display = "none";
+  document.getElementById("log").innerHTML = "";
+  buildBoard();
+  renderPieces();
+  updateTurnUI();
+  logMsg("Đã khôi phục ván đấu trước đó.", null, "💾");
+  maybeAutoBot();
+}
+
+function activePlayers(){ return state.players; }
+
+function currentPlayer(){ return state.players[state.current]; }
+
+function logMsg(html, colorHex, icon){
+  const log = document.getElementById("log");
+  const prevLatest = log.querySelector(".logEntry.latest");
+  if(prevLatest) prevLatest.classList.remove("latest");
+  const p = document.createElement("div");
+  p.className = "logEntry latest";
+  p.style.setProperty("--entryColor", colorHex || "rgba(255,182,72,.6)");
+  p.innerHTML =
+    '<span class="logIcon">'+(icon || "•")+'</span>'+
+    '<span class="logText">'+html+'</span>';
+  log.appendChild(p);
+  while(log.children.length > 40) log.removeChild(log.firstChild);
+  requestAnimationFrame(function(){ log.scrollTop = log.scrollHeight; });
+}
+
+function updateTurnUI(){
+  const pl = currentPlayer();
+  document.querySelector(".turnBanner").style.setProperty("--accent", COLOR_HEX[pl.color]);
+  document.getElementById("turnAvatar").style.background = COLOR_HEX[pl.color];
+  document.getElementById("turnText").innerHTML = "Lượt của "+COLOR_NAME[pl.color]+(pl.isBot?" 🤖":" 🧑")+
+    '<small id="turnSub"></small>';
+  let subTxt = pl.isBot ? "Máy đang suy nghĩ..." : "Chạm xúc xắc để đổ";
+  if(state.teamMode) subTxt += " · Đội với "+COLOR_NAME[teammateOf(pl.color)]+" 🤝";
+  document.getElementById("turnSub").textContent = subTxt;
+  const hint = document.getElementById("diceHint");
+  hint.classList.toggle("glow", !pl.isBot && state.canRoll);
+  hint.textContent = pl.isBot ? "Máy đang chơi..." : (state.canRoll ? "Chạm xúc xắc để đổ" : "Chọn quân để đi");
+  document.getElementById("diceDock").classList.toggle("ready", !pl.isBot && state.canRoll);
+}
+
+/* ---- 3D cube dice ---- */
+const PIP_MAP = {1:[5],2:[1,9],3:[1,5,9],4:[1,3,7,9],5:[1,3,5,7,9],6:[1,3,4,6,7,9]};
+function pipHTML(value){
+  const on = new Set(PIP_MAP[value]);
+  let html = "";
+  for(let i=1;i<=9;i++){ html += '<span class="pipDot'+(on.has(i)?' on':'')+'"></span>'; }
+  return '<div class="pipgrid">'+html+'</div>';
+}
+function buildCubeFaces(){
+  const cube = document.getElementById("cube");
+  const faces = [
+    {cls:"f-front", val:1}, {cls:"f-back", val:6},
+    {cls:"f-right", val:2}, {cls:"f-left", val:5},
+    {cls:"f-top", val:3}, {cls:"f-bottom", val:4}
+  ];
+  cube.innerHTML = faces.map(function(f){
+    return '<div class="face '+f.cls+'">'+pipHTML(f.val)+'</div>';
+  }).join("");
+}
+buildCubeFaces();
+
+// rotation needed to bring each face value to the front, facing the viewer
+const FACE_ROT = {1:{x:0,y:0}, 6:{x:0,y:180}, 2:{x:0,y:-90}, 5:{x:0,y:90}, 3:{x:-90,y:0}, 4:{x:90,y:0}};
+
+let currentRotX = 0, currentRotY = 0;
+
+function setDiceFaceInstant(n){ /* set instantly, no spin (used at load) */
+  const cube = document.getElementById("cube");
+  const base = FACE_ROT[n];
+  currentRotX = base.x - 16;
+  currentRotY = base.y + 26;
+  cube.style.transform = "rotateX("+currentRotX+"deg) rotateY("+currentRotY+"deg)";
+}
+setDiceFaceInstant(1);
+
+function easeOutQuart(t){ return 1 - Math.pow(1-t, 4); }
+
+let diceRollToken = 0;
+function animateCubeRoll(v, duration, onDone){
+  const cube = document.getElementById("cube");
+  const base = FACE_ROT[v];
+  const sign = function(){ return Math.random()<0.5 ? -1 : 1; };
+  const spinX = sign() * (360 * (1 + Math.floor(Math.random()*2))); // 1-2 extra full turns
+  const spinY = sign() * (360 * (1 + Math.floor(Math.random()*2)));
+  const targetX = base.x + spinX;
+  const targetY = base.y + spinY;
+  const startX = currentRotX;
+  const startY = currentRotY;
+  const startTime = performance.now();
+  const myToken = ++diceRollToken;
+  function frame(now){
+    if(myToken !== diceRollToken) return; // a newer roll took over the cube mid-animation
+    const t = Math.min(1, (now-startTime)/duration);
+    const e = easeOutQuart(t);
+    const x = startX + (targetX-startX)*e;
+    const y = startY + (targetY-startY)*e;
+    cube.style.transform = "rotateX("+x+"deg) rotateY("+y+"deg)";
+    if(t<1){
+      requestAnimationFrame(frame);
+    } else {
+      currentRotX = targetX;
+      currentRotY = targetY;
+      if(onDone) onDone();
+    }
+  }
+  requestAnimationFrame(frame);
+}
+
+function getMovable(pl, roll){
+  const list = [];
+  const blockOn = !!(state && state.blockRule);
+  pl.pieces.forEach(function(pos, idx){
+    if(pos===-1){
+      if(roll===6 && !pathBlockedOn(state.players, blockOn, pl.color, -1, 0)) list.push({idx:idx, kind:"enter"});
+    } else if(pos>=0 && pos<56){
+      if(pos+roll<=56 && !pathBlockedOn(state.players, blockOn, pl.color, pos, pos+roll)) list.push({idx:idx, kind:"move"});
+    }
+  });
+  return list.map(function(m){ return {pIdx: state.current, idx:m.idx, kind:m.kind}; });
+}
+
+let landedToggle = false;
+function rollDice(){
+  if(!state || state.gameOver || !state.canRoll) return;
+  const pl = currentPlayer();
+  const mySession = gameSession;
+  state.canRoll = false;
+  const stage = document.getElementById("diceStage");
+  const dock = document.getElementById("diceDock");
+  stage.classList.remove("landedA", "landedB");
+  stage.classList.add("rolling");
+  dock.classList.remove("landed", "ready");
+  dock.classList.add("rolling");
+  document.getElementById("diceHint").classList.remove("glow");
+  document.getElementById("diceHint").textContent = "Đang đổ...";
+  // rattling shake sound: irregular little knocks, higher/tighter early, looser as it settles
+  const shakeHits = 9;
+  for(let i=0;i<shakeHits;i++){
+    const t = i===0 ? 0 : 60 + i*70 + Math.random()*40;
+    (function(hitIdx){
+      setTimeout(function(){
+        if(mySession!==gameSession) return;
+        const vol = 0.5 - hitIdx*0.02;
+        const freq = 1500 + Math.random()*900;
+        const heavier = hitIdx>0 && Math.random()<0.3;
+        diceClack(vol, freq, 1.3, 0.045, heavier);
+      }, t);
+    })(i);
+  }
+
+  const roll = 1+Math.floor(Math.random()*6);
+
+  animateCubeRoll(roll, 900, function(){
+    if(mySession !== gameSession) return; // a new game started while the dice was still rolling
+    stage.classList.remove("rolling");
+    dock.classList.remove("rolling");
+    landedToggle = !landedToggle;
+    stage.classList.remove(landedToggle ? "landedB" : "landedA");
+    stage.classList.add(landedToggle ? "landedA" : "landedB");
+    dock.classList.add("landed");
+    spawnDiceSparkles();
+
+    state.dice = roll;
+    diceClack(0.75, 450, 0.8, 0.09, true);
+    setTimeout(function(){ if(mySession===gameSession) diceClack(0.32, 950, 1.0, 0.05); }, 60);
+    setTimeout(function(){ if(mySession===gameSession) diceClack(0.16, 1350, 1.1, 0.04); }, 115);
+    beep(500,.16,"sine");
+    logMsg("<b>"+COLOR_NAME[pl.color]+"</b> đổ được <b>"+roll+"</b>", COLOR_HEX[pl.color], "🎲");
+
+    state.consecutiveSixes = (roll===6) ? (state.consecutiveSixes||0) + 1 : 0;
+    if(state.consecutiveSixes >= 3){
+      logMsg("<b>"+COLOR_NAME[pl.color]+"</b> đổ 6 liên tiếp 3 lần — mất lượt!", COLOR_HEX[pl.color], "🚫");
+      state.consecutiveSixes = 0;
+      state.movable = [];
+      document.getElementById("diceHint").textContent = "Mất lượt vì đổ 6 liên tiếp!";
+      document.getElementById("diceHint").classList.remove("glow");
+      setTimeout(function(){ if(mySession===gameSession) endTurn(false); }, 700);
+      return;
+    }
+
+    const movable = getMovable(pl, roll);
+    state.movable = movable;
+    saveGame();
+    if(movable.length===0){
+      document.getElementById("diceHint").textContent = "Không có nước đi hợp lệ";
+      document.getElementById("diceHint").classList.remove("glow");
+      setTimeout(function(){ if(mySession===gameSession) endTurn(false); }, 650);
+      return;
+    }
+    if(pl.isBot){
+      setTimeout(function(){ if(mySession===gameSession) botMove(pl, roll, movable); }, 500);
+    } else {
+      // if every legal option starts from the same position (e.g. 2 pieces sharing
+      // a cell), the outcome is identical no matter which one moves — just go
+      const distinctStarts = new Set(movable.map(function(m){ return pl.pieces[m.idx]; }));
+      if(distinctStarts.size===1){
+        setTimeout(function(){ if(mySession===gameSession) performMove(state.current, movable[0].idx, roll); }, 300);
+      } else {
+        renderPieces();
+        document.getElementById("diceHint").textContent = "Chọn quân để đi";
+        document.getElementById("diceHint").classList.add("glow");
+      }
+    }
+  });
+}
+
+function spawnDiceSparkles(){
+  const layer = document.getElementById("sparkleLayer");
+  if(!layer) return;
+  layer.innerHTML = "";
+  const n = 10;
+  for(let i=0;i<n;i++){
+    const s = document.createElement("div");
+    s.className = "sparkle";
+    const angle = (360/n)*i + (Math.random()*18-9);
+    const dist = 34 + Math.random()*14;
+    s.style.setProperty("--ang", angle+"deg");
+    s.style.setProperty("--dist", dist+"px");
+    s.style.animationDelay = (Math.random()*0.06)+"s";
+    layer.appendChild(s);
+  }
+  setTimeout(function(){ layer.innerHTML = ""; }, 700);
+}
+
+function onPieceTap(pIdx, idx){
+  if(!state || state.gameOver) return;
+  if(pIdx!==state.current) return;
+  const isMov = state.movable.some(function(m){ return m.pIdx===pIdx && m.idx===idx; });
+  if(!isMov) return;
+  performMove(pIdx, idx, state.dice);
+}
+
+function performMove(pIdx, idx, roll){
+  const pl = state.players[pIdx];
+  const mySession = gameSession;
+  const before = pl.pieces[idx];
+  let after;
+  let entered = false;
+  if(before===-1){ after = 0; entered = true; }
+  else after = before + roll;
+
+  state.movable = [];
+  renderPieces(); // drop the movable glow immediately; piece still shown at its old spot
+
+  animateAlongPath(pIdx, idx, before, after, function(){
+    if(mySession !== gameSession) return; // game was reset mid-move; abandon this move entirely
+    pl.pieces[idx] = after;
+
+    let captured = false;
+    let finished = false;
+    let capturedList = [];
+
+    if(after===56){
+      finished = true;
+      beep(700,.25,"sine");
+      logMsg("<b>"+COLOR_NAME[pl.color]+"</b> đưa 1 quân về nhà!", COLOR_HEX[pl.color], "🏁");
+    } else {
+      const rc = pieceCoord(pl.color, after);
+      const idxOnTrack = (after>=0 && after<=50) ? (ENTRY[pl.color]+after)%52 : -1;
+      const isSafe = idxOnTrack>=0 && SAFE_IDX.has(idxOnTrack);
+      if(!isSafe && idxOnTrack>=0){
+        state.players.forEach(function(other, oi){
+          if(other.color===pl.color) return;
+          if(isTeammate(pl.color, other.color)) return; // teammates never capture each other
+          other.pieces.forEach(function(opos, oidx){
+            if(opos<0 || opos>=51) return; // only shared-track pieces can be captured
+            const orc = pieceCoord(other.color, opos);
+            if(orc[0]===rc[0] && orc[1]===rc[1]){
+              capturedList.push({oi:oi, oidx:oidx, color:other.color, fromRC:orc});
+              other.pieces[oidx] = -1;
+              captured = true;
+            }
+          });
+        });
+      }
+      if(captured){
+        beep(200,.2,"sawtooth");
+        logMsg("<b>"+COLOR_NAME[pl.color]+"</b> bắt được quân đối phương!", COLOR_HEX[pl.color], "⚔️");
+      } else if(entered){
+        logMsg(COLOR_NAME[pl.color]+" đưa quân mới ra sân.", COLOR_HEX[pl.color], "➕");
+      }
+    }
+
+    // freeze captured pieces' DOM *before* this render, so the normal render pass
+    // skips them entirely and leaves them exactly where the flight animation expects
+    capturedList.forEach(function(cap){ capturingPieces[cap.oi+"_"+cap.oidx] = true; });
+
+    renderPieces();
+    capturedList.forEach(function(cap){ animateCapture(cap.oi, cap.oidx, cap.color, cap.fromRC); });
+    setTimeout(function(){
+      if(mySession !== gameSession) return;
+      if(checkWin(pl)) return;
+      const extra = (roll===6) || captured || finished;
+      endTurn(extra);
+    }, 320);
+  });
+}
+
+function checkWin(pl){
+  const allHome = pl.pieces.every(function(p){ return p===56; });
+  if(!allHome) return false;
+
+  if(state.teamMode){
+    const mateColor = teammateOf(pl.color);
+    const mate = state.players.find(function(p){ return p.color===mateColor; });
+    const mateHome = !mate || mate.pieces.every(function(p){ return p===56; });
+    if(!mateHome){
+      if(!pl.teamDoneAnnounced){
+        pl.teamDoneAnnounced = true;
+        logMsg("<b>"+COLOR_NAME[pl.color]+"</b> đã về đích hết! Đang chờ đồng đội <b>"+COLOR_NAME[mateColor]+"</b>...", COLOR_HEX[pl.color], "🙌");
+      }
+      return false;
+    }
+    state.gameOver = true;
+    clearSavedGame();
+    showWin(pl, mate);
+    return true;
+  }
+
+  state.gameOver = true;
+  clearSavedGame();
+  showWin(pl);
+  return true;
+}
+
+function spawnConfetti(){
+  const overlay = document.getElementById("winOverlay");
+  overlay.querySelectorAll(".confetti").forEach(function(el){ el.remove(); });
+  const colors = [COLOR_HEX.R, COLOR_HEX.G, COLOR_HEX.Y, COLOR_HEX.B, "#ffb648", "#ffffff"];
+  for(let i=0;i<60;i++){
+    const el = document.createElement("div");
+    el.className = "confetti";
+    el.style.left = (Math.random()*100)+"%";
+    el.style.background = colors[Math.floor(Math.random()*colors.length)];
+    el.style.animationDuration = (2.2 + Math.random()*1.6)+"s";
+    el.style.animationDelay = (Math.random()*0.5)+"s";
+    el.style.borderRadius = Math.random()<0.5 ? "50%" : "2px";
+    overlay.appendChild(el);
+  }
+  setTimeout(function(){
+    overlay.querySelectorAll(".confetti").forEach(function(el){ el.remove(); });
+  }, 4500);
+}
+
+function showWin(pl, mate){
+  if(mate){
+    document.getElementById("winTitle").textContent = "Đội "+COLOR_NAME[pl.color]+" & "+COLOR_NAME[mate.color]+" chiến thắng!";
+    document.getElementById("winSub").textContent = "Cả 2 đồng đội đã đưa hết quân về nhà. Ăn ý tuyệt vời!";
+  } else {
+    document.getElementById("winTitle").textContent = COLOR_NAME[pl.color]+" chiến thắng!";
+    document.getElementById("winSub").textContent = pl.isBot ? "Máy đã đưa cả 4 quân về nhà." : "Bạn đã đưa cả 4 quân về nhà. Xuất sắc!";
+  }
+  document.getElementById("winOverlay").style.display = "flex";
+  spawnConfetti();
+  beep(600,.15,"sine");
+  setTimeout(function(){ beep(800,.2,"sine"); }, 180);
+  setTimeout(function(){ beep(1000,.3,"sine"); }, 380);
+}
+
+function endTurn(extraTurn){
+  state.movable = [];
+  if(!extraTurn){
+    let next = state.current;
+    for(let i=0;i<state.players.length;i++){
+      next = (next+1)%state.players.length;
+      if(!state.players[next].pieces.every(function(p){return p===56;})) break;
+    }
+    state.current = next;
+  } else {
+    logMsg(COLOR_NAME[currentPlayer().color]+" được đi thêm lượt!", COLOR_HEX[currentPlayer().color], "🔁");
+  }
+  state.canRoll = true;
+  updateTurnUI();
+  renderPieces();
+  saveGame();
+  maybeAutoBot();
+}
+
+function maybeAutoBot(){
+  if(state.gameOver) return;
+  const pl = currentPlayer();
+  if(pl.isBot){
+    setTimeout(function(){ if(!state.gameOver && state.canRoll) rollDice(); }, 700);
+  }
+}
+
+// absolute shared-track index (0-51) for a piece's relative position (0-50); -1 if not on shared track
+function trackAbsIdx(color, pos){
+  if(pos<0 || pos>50) return -1;
+  return (ENTRY[color]+pos) % 52;
+}
+
+// "Luật chặn đường" (lô cốt): 2+ quân CÙNG MÀU của một đối thủ đứng chung 1 ô trên
+// đường chung tạo thành khối chặn — không ai khác được phép đi qua hoặc dừng ở đó.
+function isEnemyBlockOn(playersArr, myColor, absIdx){
+  if(absIdx<0) return false;
+  for(let i=0;i<playersArr.length;i++){
+    const p = playersArr[i];
+    if(p.color===myColor) continue;
+    let count = 0;
+    for(let j=0;j<p.pieces.length;j++){
+      const pos = p.pieces[j];
+      if(pos<0 || pos>50) continue;
+      if(trackAbsIdx(p.color, pos)===absIdx) count++;
+    }
+    if(count>=2) return true;
+  }
+  return false;
+}
+// true if moving `color` from relative position `before` to `after` would pass
+// through or land on a cell blocked by an opponent's lô cốt
+function pathBlockedOn(playersArr, blockRuleActive, color, before, after){
+  if(!blockRuleActive) return false;
+  if(before===-1) return isEnemyBlockOn(playersArr, color, trackAbsIdx(color, 0));
+  const end = Math.min(after, 50);
+  for(let pos=before+1; pos<=end; pos++){
+    if(isEnemyBlockOn(playersArr, color, trackAbsIdx(color, pos))) return true;
+  }
+  return false;
+}
+
+// how many of the 6 possible dice values (1-6) would let SOME opponent piece capture
+// something sitting at shared-track index `landIdx` on their very next turn
+function dangerRollsAt(myColor, landIdx){
+  if(landIdx<0 || SAFE_IDX.has(landIdx)) return 0;
+  const blockOn = !!(state && state.blockRule);
+  const dangerRolls = new Set();
+  state.players.forEach(function(other){
+    if(other.color===myColor) return;
+    if(isTeammate(myColor, other.color)) return; // a teammate is never a threat
+    other.pieces.forEach(function(opos){
+      if(opos<0 || opos>50) return;
+      const oIdx = (ENTRY[other.color]+opos) % 52;
+      for(let r=1;r<=6;r++){
+        if(opos+r>50) continue; // would enter their own home column, can't land on a shared cell
+        if((oIdx+r)%52 === landIdx && !pathBlockedOn(state.players, blockOn, other.color, opos, opos+r)) dangerRolls.add(r);
+      }
+    });
+  });
+  return dangerRolls.size;
+}
+
+// #5 shallow lookahead: clone the board, apply a candidate move, then simulate the
+// immediate next opponent's best response across all 6 possible dice values and
+// return the expected "damage" (progress lost to captures) they'd inflict on `myColor`
+function cloneBoardPieces(){
+  return state.players.map(function(p){ return {color:p.color, pieces:p.pieces.slice()}; });
+}
+function applyToCloneAndCapture(clonedPlayers, moverColor, idx, roll){
+  const mover = clonedPlayers.find(function(p){ return p.color===moverColor; });
+  const before = mover.pieces[idx];
+  const after = before===-1 ? 0 : before+roll;
+  mover.pieces[idx] = after;
+  if(after>=0 && after<=50){
+    const landIdx = trackAbsIdx(moverColor, after);
+    if(!SAFE_IDX.has(landIdx)){
+      clonedPlayers.forEach(function(other){
+        if(other.color===moverColor) return;
+        if(isTeammate(moverColor, other.color)) return; // never capture a teammate in simulation either
+        other.pieces.forEach(function(opos, oi){
+          if(opos<0||opos>=51) return;
+          if(trackAbsIdx(other.color, opos)===landIdx) other.pieces[oi] = -1;
+        });
+      });
+    }
+  }
+  return after;
+}
+// #2 how "expensive" it is to lose a piece at relative position `pos` (0-50) — weighted
+// quadratically so a piece that has travelled far is protected much more fiercely than
+// a piece freshly out of the yard, matching how a real player would value it
+function pieceValue(pos){
+  const progress = pos + 1; // 1..51
+  return (progress*progress) / 45; // roughly 0.02 .. 58
+}
+
+// #1 shallow lookahead across ALL remaining opponents (not just the very next one),
+// weighted by how soon they'll actually get to act — the immediate next opponent's
+// threat matters most, further-out opponents matter progressively less since the
+// board will keep changing before their turn actually arrives
+function opponentDamagePotential(clonedPlayers, myColor, opp){
+  if(isTeammate(myColor, opp.color)) return 0; // a teammate never threatens my pieces
+  let totalDamage = 0;
+  for(let r=1;r<=6;r++){
+    let bestDamage = 0;
+    opp.pieces.forEach(function(pos, idx){
+      let valid=false, after;
+      if(pos===-1 && r===6){ valid=true; after=0; }
+      else if(pos>=0 && pos<56 && pos+r<=56){ valid=true; after=pos+r; }
+      if(!valid) return;
+      if(pathBlockedOn(clonedPlayers, !!(state && state.blockRule), opp.color, pos, after)) return;
+      let damage = 0;
+      if(after>=0 && after<=50){
+        const landIdx = trackAbsIdx(opp.color, after);
+        if(!SAFE_IDX.has(landIdx)){
+          clonedPlayers.forEach(function(other){
+            if(other.color!==myColor) return;
+            other.pieces.forEach(function(mypos){
+              if(mypos<0||mypos>=51) return;
+              if(trackAbsIdx(other.color, mypos)===landIdx) damage += pieceValue(mypos);
+            });
+          });
+        }
+      }
+      if(damage>bestDamage) bestDamage = damage; // assume opponent takes their most damaging option
+    });
+    totalDamage += bestDamage;
+  }
+  return totalDamage/6; // expected damage, averaged over that opponent's 6 possible rolls
+}
+function expectedAllOpponentsDamage(clonedPlayers, myColor){
+  const myIdx = state.players.findIndex(function(p){ return p.color===myColor; });
+  let total = 0, weight = 1, idx = myIdx;
+  for(let i=0;i<state.players.length-1;i++){
+    idx = (idx+1) % state.players.length;
+    const opp = clonedPlayers[idx];
+    if(opp.color===myColor) continue;
+    if(opp.pieces.every(function(p){ return p===56; })){ weight *= 0.55; continue; }
+    total += opponentDamagePotential(clonedPlayers, myColor, opp) * weight;
+    weight *= 0.55; // opponents further down the turn order matter progressively less
+  }
+  return total;
+}
+
+function botMove(pl, roll, movable){
+  // AI priority: capture > finish > escape threats > avoid new risk > safe cells > enter > furthest piece
+  // #3 game-phase awareness: early on, favor spreading pieces out of the yard; once
+  // several pieces are close to home, play markedly more cautiously
+  const outCount = pl.pieces.filter(function(p){ return p>-1; }).length;
+  const advancedCount = pl.pieces.filter(function(p){ return p>=45; }).length;
+  const isEarlyGame = outCount<=2;
+  const isLateGame = advancedCount>=2;
+  const riskMultiplier = isLateGame ? 1.6 : 1.0;
+
+  let best = null, bestScore = -Infinity;
+  movable.forEach(function(m){
+    const before = pl.pieces[m.idx];
+    const after = before===-1 ? 0 : before+roll;
+    let score = after; // prefer furthest advance baseline
+
+    if(after===56) score += 1000;
+
+    // capture bonus: does this move capture an opponent right now? (weighted by their progress)
+    let captures = false;
+    if(after>=0 && after<=50){
+      const rc = pieceCoord(pl.color, after);
+      const landIdx = trackAbsIdx(pl.color, after);
+      if(!SAFE_IDX.has(landIdx)){
+        state.players.forEach(function(other){
+          if(other.color===pl.color) return;
+          if(isTeammate(pl.color, other.color)) return; // never target a teammate's pieces
+          other.pieces.forEach(function(opos){
+            if(opos<0||opos>=51) return;
+            const orc = pieceCoord(other.color, opos);
+            if(orc[0]===rc[0] && orc[1]===rc[1]){ score += 350 + pieceValue(opos)*8; captures = true; }
+          });
+        });
+      }
+
+      // #1 risk assessment: penalize landing somewhere an opponent could capture next turn
+      const danger = dangerRollsAt(pl.color, landIdx);
+      score -= danger * 70 * riskMultiplier; // up to -420 (or more late-game) across all 6 rolls being dangerous
+
+      // #3 reward tucking into a safe (★) cell
+      if(SAFE_IDX.has(landIdx)) score += 90;
+
+      // #4 "luật chặn đường": joining a teammate piece here forms a 2-piece lô cốt,
+      // which the block rule makes fully immune to capture — cancel the danger
+      // penalty above and reward the tactic
+      if(state.blockRule){
+        const teammatesHere = pl.pieces.filter(function(p2, i2){
+          return i2!==m.idx && p2>=0 && p2<=50 && trackAbsIdx(pl.color, p2)===landIdx;
+        }).length;
+        if(teammatesHere>=1){
+          score += danger * 70 * riskMultiplier;
+          score += 80;
+        }
+      }
+    }
+
+    // reaching the private, uncapturable home column is extra valuable late in the game
+    if(after>=51 && isLateGame) score += 70;
+
+    // #2 reward pulling an already-threatened piece to safety
+    if(before>=0 && before<=50){
+      const beforeIdx = trackAbsIdx(pl.color, before);
+      const wasDanger = dangerRollsAt(pl.color, beforeIdx);
+      if(wasDanger>0){
+        const afterIdx = (after>=0 && after<=50) ? trackAbsIdx(pl.color, after) : -1;
+        const stillDanger = (afterIdx>=0) ? dangerRollsAt(pl.color, afterIdx) : 0;
+        if(stillDanger < wasDanger) score += (60 + (wasDanger-stillDanger)*45) * riskMultiplier;
+      }
+    }
+
+    if(before===-1) score += isEarlyGame ? 120 : 50; // #3 push harder to spread out early on
+
+    // #1 shallow lookahead: simulate the move, then ALL remaining opponents' best
+    // responses (weighted by turn order), penalizing by their expected damage to us
+    const clone = cloneBoardPieces();
+    applyToCloneAndCapture(clone, pl.color, m.idx, roll);
+    const expectedDamage = expectedAllOpponentsDamage(clone, pl.color);
+    score -= expectedDamage * 3.2 * riskMultiplier;
+
+    if(score>bestScore){ bestScore = score; best = m; }
+  });
+  if(best) performMove(state.current, best.idx, roll);
+}
+
+/* ============== CONTROLS ============== */
+document.getElementById("diceStage").addEventListener("click", rollDice);
+
+let confirmCallback = null;
+(function initConfirmModal(){
+  const overlay = document.getElementById("confirmOverlay");
+  const okBtn = document.getElementById("confirmOkBtn");
+  const cancelBtn = document.getElementById("confirmCancelBtn");
+  function hide(){ overlay.style.display = "none"; confirmCallback = null; }
+  okBtn.addEventListener("click", function(){
+    const cb = confirmCallback;
+    hide();
+    if(cb) cb();
+  });
+  cancelBtn.addEventListener("click", hide);
+  overlay.addEventListener("click", function(ev){
+    if(ev.target === overlay) hide(); // tap outside the card to cancel
+  });
+})();
+
+function showConfirm(title, msg, onConfirm){
+  document.getElementById("confirmTitle").textContent = title;
+  document.getElementById("confirmMsg").textContent = msg;
+  confirmCallback = onConfirm;
+  document.getElementById("confirmOverlay").style.display = "flex";
+}
+
+document.getElementById("restartBtn").addEventListener("click", function(){
+  showConfirm(
+    "Chơi lại ván này?",
+    "Ván đấu hiện tại sẽ được đặt lại từ đầu với cùng người chơi.",
+    function(){ rematchSameSettings(); }
+  );
+});
+document.getElementById("homeBtn").addEventListener("click", function(){
+  showConfirm(
+    "Về trang chủ?",
+    "Ván đấu hiện tại sẽ bị huỷ để bạn thiết lập một phòng chơi mới.",
+    function(){
+      if(state) state.gameOver = true;
+      clearSavedGame();
+      document.getElementById("gameScreen").style.display = "none";
+      document.getElementById("winOverlay").style.display = "none";
+      document.getElementById("setupScreen").style.display = "flex";
+    }
+  );
+});
+document.getElementById("playAgainBtn").addEventListener("click", function(){
+  document.getElementById("winOverlay").style.display = "none";
+  rematchSameSettings();
+});
+document.getElementById("changePlayersBtn").addEventListener("click", function(){
+  document.getElementById("winOverlay").style.display = "none";
+  document.getElementById("gameScreen").style.display = "none";
+  document.getElementById("setupScreen").style.display = "flex";
+});
+document.getElementById("muteBtn").addEventListener("click", function(){
+  soundOn = !soundOn;
+  this.textContent = soundOn ? "🔊" : "🔇";
+});
+
+let logCollapsed = false;
+document.getElementById("logToggleBtn").addEventListener("click", function(){
+  logCollapsed = !logCollapsed;
+  document.getElementById("log").classList.toggle("collapsed", logCollapsed);
+  document.getElementById("logHeader").classList.toggle("collapsed", logCollapsed);
+  this.classList.toggle("collapsed", logCollapsed);
+  this.title = logCollapsed ? "Hiện lịch sử" : "Ẩn lịch sử";
+});
+
+document.getElementById("resumeBtn").addEventListener("click", function(){
+  const data = loadSavedGame();
+  if(data) resumeSavedGame(data);
+});
+document.getElementById("discardBtn").addEventListener("click", function(){
+  clearSavedGame();
+  document.getElementById("resumeCard").style.display = "none";
+});
+
+(function checkForSavedGame(){
+  const data = loadSavedGame();
+  if(!data) return;
+  const card = document.getElementById("resumeCard");
+  const info = document.getElementById("resumeInfo");
+  const cur = data.players[data.current || 0];
+  const botCount = data.players.filter(function(p){ return p.isBot; }).length;
+  const brOn = (data.blockRule !== undefined) ? !!data.blockRule : false;
+  const tmOn = (data.teamMode !== undefined) ? !!data.teamMode : false;
+  info.textContent = data.players.length + " người chơi ("+(data.players.length-botCount)+" người, "+botCount+" máy) • đang là lượt của "+(cur ? COLOR_NAME[cur.color] : "?")+" • Luật chặn: "+(brOn?"Bật":"Tắt")+(tmOn?" • Đội: Đỏ+Vàng 🆚 Xanh Lá+Xanh Dương":"");
+  card.style.display = "block";
+})();
+
+})();
+</script>
+</body>
+</html>

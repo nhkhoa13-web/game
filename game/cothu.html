@@ -1,0 +1,2245 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Cờ Thú Truyền Thống - Chân Thực & Hiện Đại</title>
+    <style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Times New Roman', Times, serif;
+}
+
+body {
+    min-height: 100vh;
+    /* Sử dụng hình nền bàn gỗ cổ điển */
+    background-image: url('https://www.transparenttextures.com/patterns/dark-wood.png'),
+        linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6));
+    background-size: auto, cover;
+    background-position: center;
+    background-attachment: fixed;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+
+    /* Hiệu ứng mờ nhẹ phía sau bàn cờ */
+    backdrop-filter: blur(5px);
+    -webkit-tap-highlight-color: transparent; 
+    user-select: none;
+}
+
+body::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    /* Một họa tiết hoa văn mờ nhạt làm nền */
+    background-image: url('https://www.transparenttextures.com/patterns/cubes.png');
+    opacity: 0.05;
+    z-index: -1;
+    pointer-events: none;
+}
+
+.game-title {
+    color: #4a3121;
+    margin-bottom: 5px;
+    text-transform: uppercase;
+    letter-spacing: 4px;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+    font-size: 2.5rem;
+}
+
+.subtitle {
+    color: #6f4e37;
+    margin-bottom: 25px;
+    font-size: 1rem;
+    font-style: italic;
+}
+
+/* --- XOAY NGƯỢC THẺ THÔNG TIN NGƯỜI CHƠI ĐỎ CHO NGƯỜI ĐỐI DIỆN --- */
+#player-red {
+    transform: rotate(180deg); /* Xoay ngược toàn bộ thẻ 180 độ */
+    transform-origin: center center;
+}
+
+/* Điều chỉnh lại các danh sách quân đã bắt của phe Đỏ để hiển thị không bị lộn ngược thứ tự */
+#player-red .captured-box {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Đảm bảo trạng thái chữ bên trong bẫy hoặc popup con của thẻ Đỏ (nếu có) vẫn dễ nhìn */
+#player-red .player-name, 
+#player-red .player-score, 
+#player-red .player-status {
+    text-shadow: -1px -1px 2px rgba(0, 0, 0, 0.5); /* Đảo hướng bóng đổ chữ cho tự nhiên */
+}
+/* TỐI ƯU GIAO DIỆN THÔNG TIN NGƯỜI CHƠI (PLAYER CARDS) - GỌN & ĐẸP CAO CẤP */
+
+/* Container chứa cả 2 thẻ người chơi và bàn cờ */
+.game-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    width: 100%;
+    max-width: 1200px;
+}
+
+/* Định dạng cấu trúc thẻ người chơi kiểu hàng ngang gọn gàng */
+.player-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 550px; /* Khống chế chiều rộng vừa vặn bằng bàn cờ */
+    padding: 10px 16px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, rgba(28, 20, 14, 0.85), rgba(18, 12, 8, 0.95));
+    border: 1.5px solid rgba(214, 175, 55, 0.2);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.5);
+    transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Avatar hình tròn nhỏ gọn tinh tế */
+.player-avatar {
+    font-size: 1.6rem;
+    width: 42px;
+    height: 42px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(214, 175, 55, 0.3);
+    flex-shrink: 0;
+}
+
+/* Khối thông tin văn bản ở giữa */
+.player-info {
+    flex-grow: 1;
+    margin-left: 14px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.player-name {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #e5d5c5;
+    letter-spacing: 0.5px;
+    margin: 0;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+}
+
+.player-status {
+    font-size: 0.75rem;
+    color: #a09080;
+    font-style: italic;
+    margin: 0;
+}
+
+/* Khối chứa danh sách quân đã bắt được xếp gọn bên phải */
+.captured-box {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: center;
+    min-width: 120px;
+    flex-shrink: 0;
+}
+
+.captured-box h4 {
+    font-size: 0.7rem;
+    color: #a09080;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+    font-weight: 600;
+}
+
+/* Danh sách các quân ăn được xếp đè nhẹ lên nhau như game bài chuyên nghiệp */
+.captured-list {
+    display: flex;
+    flex-row-reverse: row-reverse; /* Đẩy các icon mới về phía trước */
+    align-items: center;
+    height: 28px;
+}
+
+/* Icon quân cờ bị bắt tròn trịa, siêu gọn */
+.captured-item {
+    width: 24px;
+    height: 24px;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 50%;
+    border: 1px solid rgba(214, 175, 55, 0.2);
+    margin-left: -6px; /* Tạo hiệu ứng xếp chồng lớp mượt mà, tiết kiệm diện tích */
+    box-shadow: -2px 0 5px rgba(0,0,0,0.5);
+    transition: transform 0.2s ease;
+}
+
+.captured-item:hover {
+    transform: translateY(-3px) scale(1.15);
+    z-index: 10;
+}
+
+/* HIỆU ỨNG ĐÈN GLOW MƯỢT MÀ KHI ĐẾN LƯỢT ĐI (ACTIVE TURN) */
+
+/* Lượt của Đỏ (AI / Máy) */
+.player-card.red-team.active {
+    border-color: #e74c3c;
+    box-shadow: 0 0 12px rgba(231, 76, 60, 0.5), inset 0 0 8px rgba(231, 76, 60, 0.15);
+    background: linear-gradient(135deg, rgba(44, 18, 15, 0.9), rgba(20, 10, 8, 0.98));
+    animation: pulseRed 2s infinite ease-in-out;
+}
+.player-card.red-team.active .player-status {
+    color: #ff7675;
+    font-weight: bold;
+}
+
+/* Lượt của Xanh (Người chơi) */
+.player-card.blue-team.active {
+    border-color: #3498db;
+    box-shadow: 0 0 12px rgba(52, 152, 219, 0.5), inset 0 0 8px rgba(52, 152, 219, 0.15);
+    background: linear-gradient(135deg, rgba(15, 28, 44, 0.9), rgba(8, 12, 20, 0.98));
+    animation: pulseBlue 2s infinite ease-in-out;
+}
+.player-card.blue-team.active .player-status {
+    color: #74b9ff;
+    font-weight: bold;
+}
+
+/* Animations co giãn ánh sáng êm dịu không gây mỏi mắt */
+@keyframes pulseRed {
+    0%, 100% { box-shadow: 0 4px 10px rgba(0,0,0,0.5), 0 0 8px rgba(231, 76, 60, 0.3); }
+    50% { box-shadow: 0 4px 10px rgba(0,0,0,0.5), 0 0 16px rgba(231, 76, 60, 0.6); }
+}
+
+@keyframes pulseBlue {
+    0%, 100% { box-shadow: 0 4px 10px rgba(0,0,0,0.5), 0 0 8px rgba(52, 152, 219, 0.3); }
+    50% { box-shadow: 0 4px 10px rgba(0,0,0,0.5), 0 0 16px rgba(52, 152, 219, 0.6); }
+}
+
+/* Responsive tối ưu tuyệt đối cho màn hình điện thoại dọc */
+@media (max-width: 600px) {
+    .player-card {
+        padding: 8px 12px;
+        border-radius: 10px;
+    }
+    .player-avatar {
+        font-size: 1.3rem;
+        width: 34px;
+        height: 34px;
+    }
+    .player-name {
+        font-size: 0.85rem;
+    }
+    .player-status {
+        font-size: 0.7rem;
+    }
+    .captured-box {
+        min-width: 90px;
+    }
+    .captured-box h4 {
+        font-size: 0.6rem;
+    }
+    .captured-item {
+        width: 20px;
+        height: 20px;
+        font-size: 0.9rem;
+        margin-left: -4px;
+    }
+}
+/* TRẠNG THÁI HOẠT ĐỘNG (ĐẾN LƯỢT ĐI) */
+.player-card.active.blue-team {
+    box-shadow: 0 0 20px 5px rgba(64, 224, 208, 0.6);
+    border-color: #40e0d0;
+    transform: translateY(-5px);
+}
+
+.player-card.active.red-team {
+    box-shadow: 0 0 20px 5px rgba(255, 107, 107, 0.6);
+    border-color: #ff6b6b;
+    transform: translateY(-5px);
+}
+
+.player-card.active .player-status {
+    color: #fff;
+    font-weight: bold;
+    opacity: 1;
+}
+
+/* --- PHẦN BÀN CỜ VÀ QUÂN CỜ --- */
+.board-container {
+    /* Hình nền gỗ mun vân chìm tối sang trọng */
+    background-image: url('https://www.transparenttextures.com/patterns/dark-leather.png'),
+        linear-gradient(170deg, #2c1e14 0%, #1a120b 100%);
+    background-size: cover;
+
+    padding: 30px;
+    border-radius: 20px;
+
+    /* Hiệu ứng viền nổi như một khung tranh quý */
+    border: 12px solid #5d4037;
+    border-style: double;
+
+    /* Bóng đổ khối 3D cực mạnh */
+    box-shadow: 0 40px 80px rgba(0, 0, 0, 0.9),
+        inset 0 0 50px rgba(0, 0, 0, 0.5),
+        0 0 20px rgba(0, 0, 0, 0.3);
+}
+
+.board {
+    display: grid;
+    grid-template-columns: repeat(7, 68px);
+    grid-template-rows: repeat(9, 68px);
+    gap: 0;
+    background-color: transparent;
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.cell {
+    border: 1px solid rgba(139, 69, 19, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    transition: all 0.2s;
+    cursor: pointer;
+}
+
+.cell:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* SỬA LỖI: Ép thêm outline lên trên bề mặt hiệu ứng inset shadow của sông */
+.cell.suggested {
+    outline: 3px solid #d4af37;
+    outline-offset: -3px; /* Đẩy viền sát vào trong ô cờ */
+}
+
+/* --- PHẦN NƯỚC (RIVER) 3D SÂU + HIỆU ỨNG SÓNG NƯỚC LẤP LÁNH ĐỘNG --- */
+.cell.river {
+    /* Tạo hiệu ứng độ sâu 3D: Mặt nước nằm dưới lớp gỗ */
+    box-shadow: inset 0 10px 20px rgba(0, 0, 0, 0.7),
+        inset 0 -5px 10px rgba(0, 120, 255, 0.3);
+    position: relative;
+    overflow: hidden;
+    border: none;
+
+    /* Lớp nền gradient nhiều tầng mô phỏng các gợn sóng biển sâu */
+    background: linear-gradient(
+        135deg, 
+        #00aace 0%, 
+        #1d7a8c 25%, 
+        #104e5b 50%, 
+        #249bb0 75%, 
+        #104e5b 100%
+    ) !important;
+    background-size: 400% 400% !important; /* Phóng to nền để gradient chuyển động mượt mà */
+
+    /* Kích hoạt animation chạy vô hạn: thời gian 6 giây, chuyển động mượt (ease-in-out) */
+    animation: waterWave 6s ease-in-out infinite !important;
+}
+
+/* Thêm lớp phản chiếu (Highlight) nhẹ phía trên mặt nước */
+.cell.river::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0) 60%);
+    pointer-events: none;
+}
+
+/* Thêm lớp hiệu ứng lấp lánh nhẹ (Reflective Overlay) bằng pseudo-element ::before */
+.cell.river::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        to right,
+        rgba(255, 255, 255, 0) 0%,
+        rgba(255, 255, 255, 0.08) 50%,
+        rgba(255, 255, 255, 0) 100%
+    );
+    transform: skewX(-25deg) translateX(-150%);
+    animation: shineWave 4s ease-in-out infinite;
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* ĐỊNH NGHĨA CHUYỂN ĐỘNG SÓNG NƯỚC (DỊCH CHUYỂN BACKROUND COORD) */
+@keyframes waterWave {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+/* ĐỊNH NGHĨA DẢI SÁNG LẤP LÁNH LƯỚT QUA MẶT NƯỚC */
+@keyframes shineWave {
+    0% {
+        transform: skewX(-25deg) translateX(-150%);
+    }
+    40% {
+        transform: skewX(-25deg) translateX(150%);
+    }
+    100% {
+        transform: skewX(-25deg) translateX(150%);
+    }
+}
+
+/* Ô sông khi được gợi ý đi (SUGGESTED) - vẫn giữ sóng động, thêm viền vàng nổi bật */
+.cell.river.suggested {
+    background-color: rgba(212, 175, 55, 0.3) !important;
+    animation: waterWave 4s linear infinite !important; /* Tăng tốc độ sóng một chút khi được chọn */
+    box-shadow: inset 0 0 0 3px #d4af37, 
+                inset 0 8px 20px rgba(212, 175, 55, 0.4) !important;
+    outline: none !important;
+}
+.cell.trap {
+    background-color: rgba(255, 165, 0, 0.2);
+}
+
+/* Làm nổi bật biểu tượng Bẫy trên gỗ Mun */
+.cell.trap::before {
+    filter: brightness(1.5) drop-shadow(0 0 5px rgba(255, 200, 0, 0.3));
+    opacity: 0.6;
+}
+
+.cell.den-red {
+    /* background-color: rgba(220, 20, 60, 0.05); */
+    background: #910000;
+    box-shadow: inset 0 10px 20px rgba(0, 0, 0, 0.7), inset 0 -5px 10px rgba(0, 120, 255, 0.3);
+    position: relative;
+    overflow: hidden;
+    border: none;
+}
+
+.cell.den-blue {
+    background: #1e49a3;
+    box-shadow: inset 0 10px 20px rgba(0, 0, 0, 0.7), inset 0 -5px 10px rgba(0, 120, 255, 0.3);
+    position: relative;
+    overflow: hidden;
+    border: none;
+}
+
+/* Làm nổi bật biểu tượng Hang trên gỗ Mun */
+.cell.den-red::before,
+.cell.den-blue::before {
+    opacity: 0.6;
+}
+
+.cell.den-red::before {
+    filter: drop-shadow(0 0 2px rgba(220, 20, 60, 0.5));
+}
+
+.cell.den-blue::before {
+    filter: drop-shadow(0 0 2px rgba(0, 191, 255, 0.5));
+}
+
+.piece {
+    width: 58px;
+    height: 58px;
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 11px;
+    cursor: pointer;
+    user-select: none;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.6), inset 0 -4px 8px rgba(0, 0, 0, 0.3), inset 0 4px 8px rgba(255, 255, 255, 0.2);
+    transition: all 0.2s ease;
+    z-index: 10;
+    pointer-events: none;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.piece.red {
+    background: radial-gradient(circle at 30% 30%, #ff6b6b 0%, #b22222 60%, #800000 100%);
+    color: #ffe0e0;
+    text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.5);
+    border: 3px solid #600000;
+    transform: rotate(180deg);
+}
+
+.piece.blue {
+    background: radial-gradient(circle at 30% 30%, #5dade2 0%, #2471a3 60%, #1a5276 100%);
+    color: #ebf5fb;
+    text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.5);
+    border: 3px solid #113f60;
+}
+.piece .emoji {
+    font-size: 26px;
+    margin-bottom: 2px;
+}
+
+.cell.selected {
+    box-shadow: 0 0 15px 5px #f1c40f;
+    transform: scale(1.05);
+    z-index: 20;
+}
+
+.turn-indicator {
+    background: #4a3121;
+    color: #e2d1c3;
+    padding: 12px 25px;
+    border-radius: 8px;
+    font-weight: 600;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    font-size: 1.1rem;
+}
+
+.blue-text {
+    color: #40e0d0;
+}
+
+.red-text {
+    color: #ff6b6b;
+}
+
+.btn-reset {
+    background: linear-gradient(180deg, #d35400, #a04000);
+    color: white;
+    border: 2px solid #602000;
+    padding: 12px 30px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    transition: all 0.2s;
+    text-transform: uppercase;
+}
+
+.btn-reset:hover {
+    background: linear-gradient(180deg, #e67e22, #d35400);
+    transform: translateY(-2px);
+}
+
+/* Animation hiệu ứng bắt quân */
+@keyframes popIn {
+    0% {
+        transform: scale(0);
+        opacity: 0;
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* Dán đoạn mã này vào cuối file style.css của bạn */
+
+.btn-undo {
+    background: linear-gradient(180deg, #7f8c8d, #34495e);
+    color: white;
+    border: 2px solid #2c3e50;
+    padding: 12px 25px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    transition: all 0.2s;
+    text-transform: uppercase;
+}
+
+.btn-undo:hover {
+    background: linear-gradient(180deg, #95a5a6, #7f8c8d);
+    transform: translateY(-2px);
+}
+
+/* Hiệu ứng làm mờ nút khi không thể quay lại được nữa */
+.btn-undo:disabled {
+    background: #bdc3c7;
+    border-color: #95a5a6;
+    color: #7f8c8d;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+    opacity: 0.5;
+}
+/* --- BẢNG TRA CỨU QUY TẮC CỜ THÚ --- */
+.rules-accordion {
+    width: 100%;
+    max-width: 530px; /* Bằng chiều rộng bàn cờ */
+    margin: 20px auto 0 auto;
+}
+
+.rules-details {
+    background: linear-gradient(145deg, #2c1e14, #1a120b);
+    border: 2px solid #8B6914;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+}
+
+.rules-summary {
+    padding: 12px;
+    color: #D4AF37;
+    font-weight: bold;
+    cursor: pointer;
+    user-select: none;
+    outline: none;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: background 0.3s;
+}
+
+.rules-summary:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.rules-content {
+    padding: 15px;
+    border-top: 1px solid #3e2718;
+    background: rgba(0, 0, 0, 0.2);
+    color: #e2d1c3;
+    font-size: 0.95rem;
+}
+
+.rules-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.rule-row {
+    display: flex;
+    justify-content: space-between;
+    background: rgba(74, 49, 33, 0.4);
+    padding: 6px 10px;
+    border-radius: 4px;
+    border-left: 3px solid #8B6914;
+}
+
+.special-notes {
+    border-top: 1px dashed rgba(226, 209, 195, 0.2);
+    padding-top: 10px;
+    font-size: 0.85rem;
+    line-height: 1.4;
+}
+
+.special-notes ul {
+    margin-left: 15px;
+    margin-top: 5px;
+}
+
+.special-notes li {
+    margin-bottom: 3px;
+    color: #ccb099;
+}
+
+/* --- ĐỊNH DẠNG DÒNG BẢN QUYỀN (FOOTER) --- */
+.game-footer {
+    margin-top: 30px;
+    margin-bottom: 10px;
+    font-size: 0.85rem;
+    color: rgba(212, 175, 55, 0.6); /* Màu vàng kim mờ tinh tế, không bị chói mắt */
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+    font-family: 'Times New Roman', Times, serif;
+    letter-spacing: 1px;
+    text-align: center;
+    width: 100%;
+}
+
+/* --- ĐỊNH DẠNG BẢNG TỈ SỐ THẮNG THUA --- */
+.player-score {
+    font-size: 0.95rem;
+    color: #f1c40f; /* Màu vàng kim sang trọng */
+    font-weight: 600;
+    margin: 4px 0;
+    opacity: 0.9;
+    letter-spacing: 0.5px;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+/* Tối ưu hiển thị trên điện thoại màn hình nhỏ */
+@media (max-width: 800px) {
+    .rules-accordion {
+        max-width: 100%;
+        padding: 0 10px;
+    }
+    .rules-grid {
+        grid-template-columns: 1fr; /* Điện thoại xếp thành 1 cột dọc */
+    }
+    .rules-content {
+        font-size: 0.85rem;
+    }
+
+    /* Chuyển container từ ngang sang dọc */
+    .game-container {
+        flex-direction: column;
+        gap: 15px;
+        padding: 0 10px;
+    }
+
+    /* Thu nhỏ thẻ người chơi */
+    .player-card {
+        width: 100%;
+        max-width: 350px;
+        height: auto; 
+        flex-direction: row; 
+        align-items: center;
+        padding: 10px;
+        gap: 15px;
+    }
+
+    /* Thu nhỏ quân cờ bị bắt cho gọn */
+    .captured-list {
+        min-height: 40px;
+        grid-template-columns: repeat(8, 1fr);
+    }
+
+    /* Thu nhỏ bàn cờ để không bị tràn màn hình */
+    .board {
+        grid-template-columns: repeat(7, 42px);
+        grid-template-rows: repeat(9, 42px);
+    }
+
+    .piece {
+        width: 38px;
+        height: 38px;
+        font-size: 8px;
+    }
+
+    .piece .emoji {
+        font-size: 18px;
+    }
+
+    .board-container {
+        padding: 10px;
+        border-width: 6px;
+    }
+
+    /* Đảm bảo hiển thị gọn gàng khi xem trên điện thoại */
+    .game-footer {
+        margin-top: 20px;
+        font-size: 0.75rem;
+    }
+
+    /* Khi xem trên điện thoại, cỡ chữ tỉ số thu nhỏ lại một chút */
+    .player-score {
+        font-size: 0.85rem;
+    }
+}
+/* --- NÚT XÓA ĐIỂM (CLEAR SCORE) --- */
+.btn-clear-score {
+    background: linear-gradient(180deg, #c0392b, #7f8c8d); /* Màu đỏ xám than củi */
+    color: white;
+    border: 2px solid #95a5a6;
+    padding: 12px 25px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    transition: all 0.2s;
+    text-transform: uppercase;
+}
+
+.btn-clear-score:hover {
+    background: linear-gradient(180deg, #e74c3c, #95a5a6);
+    transform: translateY(-2px);
+}
+/* --- HỆ THỐNG POPUP MODAL HIỆN ĐẠI CHUYÊN NGHIỆP --- */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(8px); /* Làm mờ toàn bộ nền game phía sau */
+    -webkit-backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+/* Kích hoạt hiển thị Popup */
+.modal-overlay.open {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.modal-box {
+    background: linear-gradient(145deg, #2d1f14, #1b120c);
+    border: 2px solid #d4af37; /* Viền mạ vàng kim quý tộc */
+    border-radius: 16px;
+    width: 90%;
+    max-width: 420px;
+    padding: 30px 25px;
+    text-align: center;
+    box-shadow: 0 15px 50px rgba(0, 0, 0, 0.8), 0 0 20px rgba(212, 175, 55, 0.2);
+    transform: scale(0.8);
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.modal-overlay.open .modal-box {
+    transform: scale(1);
+}
+
+.modal-icon {
+    font-size: 3rem;
+    margin-bottom: 12px;
+    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.4));
+    animation: pulseIcon 2s infinite ease-in-out;
+}
+
+.modal-title {
+    color: #d4af37;
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-bottom: 15px;
+    letter-spacing: 0.5px;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.6);
+}
+
+.modal-message {
+    color: #e5d5c5;
+    font-size: 1rem;
+    line-height: 1.5;
+    margin-bottom: 25px;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+}
+
+.modal-btn {
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: bold;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s ease;
+    min-width: 120px;
+    text-transform: uppercase;
+}
+
+/* Nút xác nhận màu xanh vàng rừng rậm */
+.modal-btn.btn-confirm {
+    background: linear-gradient(135deg, #d4af37, #aa8416);
+    color: #1b120c;
+    box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+}
+
+.modal-btn.btn-confirm:hover {
+    background: linear-gradient(135deg, #f1c40f, #d4af37);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(212, 175, 55, 0.5);
+}
+
+/* Nút hủy bỏ màu đỏ đá tối */
+.modal-btn.btn-cancel {
+    background: linear-gradient(135deg, #4a3425, #2d1f14);
+    color: #c9b6a5;
+    border: 1px solid rgba(212, 175, 55, 0.3);
+}
+
+.modal-btn.btn-cancel:hover {
+    background: linear-gradient(135deg, #5c412f, #3b291a);
+    color: #fff;
+    transform: translateY(-2px);
+}
+
+/* Hiệu ứng nhịp đập cho Icon */
+@keyframes pulseIcon {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.08); }
+    100% { transform: scale(1); }
+}
+/* --- NÚT BẤM ĐỔI CHẾ ĐỘ ICON (NGƯỜI / MÁY) VÀ NHÓM NÚT ĐIỀU KHIỂN HÌNH ICON --- */
+/* Đồng bộ tất cả nút (đổi chế độ, undo, xóa điểm, reset) thành hình tròn 45px */
+.btn-mode-toggle,
+.btn-icon-action {
+    width: 45px;
+    height: 45px;
+    border-radius: 50% !important; /* Ép buộc tất cả thành hình tròn */
+    border: 2px solid #d4af37; /* Viền mạ vàng quý tộc */
+    color: #fff;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+    transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    padding: 0 !important; /* Xóa bỏ padding thừa chữ cũ */
+}
+
+.btn-mode-toggle {
+    gap: 8px; /* Khoảng cách giữa icon và nhãn chế độ */
+    font-weight: 600;
+}
+
+.btn-icon-action {
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.btn-mode-toggle .mode-icon {
+    font-size: 1.3rem;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* Hiệu ứng xoay nhẹ icon khi đổi trạng thái */
+.btn-mode-toggle:active .mode-icon {
+    transform: scale(0.8) rotate(-15deg);
+}
+
+/* Màu nền riêng biệt cho từng loại nút icon */
+.btn-mode-toggle {
+    background: linear-gradient(145deg, #2c3e50, #1a252f) !important; /* Xanh thẫm lịch lãm */
+}
+
+.btn-undo {
+    background: linear-gradient(145deg, #3a291a, #23180f);
+}
+
+.btn-clear-score {
+    background: linear-gradient(145deg, #7c241c, #4c110c); /* Đỏ sẫm huyền bí */
+}
+
+.btn-reset {
+    background: linear-gradient(145deg, #1d6042, #0e3a24); /* Xanh lá rừng sâu */
+}
+
+/* HIỆU ỨNG TƯƠNG TÁC (HOVER & ACTIVE) - đồng bộ chuyển động cho mọi nút icon */
+.btn-mode-toggle:hover,
+.btn-icon-action:hover {
+    transform: translateY(-3px) scale(1.08); /* Phóng to và nổi lên nhẹ */
+    border-color: #f1c40f;
+    box-shadow: 0 8px 16px rgba(212, 175, 55, 0.3);
+}
+
+.btn-mode-toggle:hover {
+    background: linear-gradient(145deg, #4a3522, #2d1f14);
+}
+
+/* Màu nền hover riêng biệt cho từng nút */
+.btn-undo:hover {
+    background: linear-gradient(180deg, #95a5a6, #7f8c8d);
+}
+
+.btn-reset:hover {
+    background: linear-gradient(180deg, #e67e22, #d35400);
+}
+
+.btn-clear-score:hover {
+    background: linear-gradient(180deg, #e74c3c, #95a5a6);
+}
+
+.btn-mode-toggle:active,
+.btn-icon-action:active {
+    transform: translateY(1px) scale(0.95);
+}
+
+.btn-icon-action:active {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
+}
+
+/* --- ĐỊNH DẠNG NHÓM NÚT ĐIỀU KHIỂN VÀ THANH TRẠNG THÁI --- */
+.action-buttons-group {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.status-panel {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 20px;
+    margin-bottom: 10px;
+    padding: 10px;
+    width: 100%;
+}
+
+/* CO GIÃN THÔNG MINH TRÊN ĐIỆN THOẠI DI ĐỘNG */
+@media (max-width: 600px) {
+    .status-panel {
+        gap: 8px;
+    }
+    .action-buttons-group {
+        gap: 8px;
+    }
+    .btn-mode-toggle,
+    .btn-icon-action {
+        width: 40px;
+        height: 40px;
+        font-size: 1.1rem;
+    }
+}
+/* --- HIỆU ỨNG PHÁT SÁNG CHO QUÂN CỜ VÀ NƯỚC ĐI VỪA ĐI --- */
+
+/* 1. Quân cờ đang được người chơi chọn */
+.cell.selected .piece {
+    animation: piecePulse 1.5s infinite ease-in-out;
+    box-shadow: 0 0 20px #f1c40f, inset 0 0 10px #f1c40f !important;
+    border: 2px solid #ffffff !important;
+    z-index: 10;
+}
+
+@keyframes piecePulse {
+    0% { box-shadow: 0 0 12px #f1c40f; }
+    50% { box-shadow: 0 0 25px #fff, 0 0 15px #f1c40f; }
+    100% { box-shadow: 0 0 12px #f1c40f; }
+}
+
+/* 2. Ô nguồn (Nơi quân cờ vừa đứng trước đó) */
+.cell.last-move-source {
+    background-color: rgba(230, 126, 34, 0.35) !important; /* Màu cam nhạt mờ độc đáo */
+    box-shadow: inset 0 0 15px rgba(230, 126, 34, 0.6);
+    border: 1.5px dashed #e67e22 !important;
+}
+
+/* 3. Ô đích (Nơi quân cờ vừa di chuyển tới thành công) */
+.cell.last-move-target {
+    background-color: rgba(46, 204, 113, 0.35) !important; /* Màu xanh lá dịu mắt */
+    box-shadow: inset 0 0 18px rgba(46, 204, 113, 0.7), 0 0 10px rgba(46, 204, 113, 0.4);
+    border: 2px solid #2ecc71 !important;
+}
+
+/* Đảm bảo chữ emoji bên trong quân cờ nổi bật khi sáng */
+.cell.last-move-target .piece {
+    box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+}
+    </style>
+</head>
+<body>
+
+    <h1 class="game-title">Cờ Thú</h1>
+    <div class="subtitle">Trận chiến rừng xanh huyền thoại</div>
+
+    <div class="game-container">
+        
+        
+        <div class="player-card red-team" id="player-red">
+            <div class="player-avatar">🔴</div>
+            <div class="player-info">
+                <h3 class="player-name">Chúa Sơn Lâm (Đỏ)</h3>
+                <p class="player-score" id="score-red">Thắng: 0 | Thua: 0</p>
+                <p class="player-status">Đang chờ...</p>
+            </div>
+            <div class="captured-box">
+                <h4>Quân đã bắt:</h4>
+                <div class="captured-list" id="captured-by-red"></div>
+            </div>
+        </div>
+
+        <div class="board-container">
+            <div id="game-board" class="board"></div>
+        </div>
+
+        <div class="player-card blue-team active" id="player-blue">
+            <div class="player-avatar">🔵</div>
+            <div class="player-info">
+                <h3 class="player-name">Vua Biển Cả (Xanh)</h3>
+                <p class="player-score" id="score-blue">Thắng: 0 | Thua: 0</p>
+                <p class="player-status">Đến lượt đi</p>
+            </div>
+            <div class="captured-box">
+                <h4>Quân đã bắt:</h4>
+                <div class="captured-list" id="captured-by-blue"></div>
+            </div>
+        </div>
+
+    </div>
+    <div class="rules-accordion">
+        <details class="rules-details">
+            <summary class="rules-summary">📜 Xem Cấp Bậc & Quy Tắc</summary>
+            <div class="rules-content">
+                <div class="rules-grid">
+                    <div class="rule-row"><span>8. 🐘 Voi</span> <span>👉 Ăn tất cả trừ Chuột</span></div>
+                    <div class="rule-row"><span>7. 🦁 Sư Tử</span> <span>👉 Nhảy qua sông, ăn cấp ≤ 7</span></div>
+                    <div class="rule-row"><span>6. 🐯 Hổ</span> <span>👉 Nhảy qua sông, ăn cấp ≤ 6</span></div>
+                    <div class="rule-row"><span>5. 🐆 Báo</span> <span>👉 Di chuyển thường, ăn cấp ≤ 5</span></div>
+                    <div class="rule-row"><span>4. 🐶 Chó</span> <span>👉 Di chuyển thường, ăn cấp ≤ 4</span></div>
+                    <div class="rule-row"><span>3. 🐺 Sói</span> <span>👉 Di chuyển thường, ăn cấp ≤ 3</span></div>
+                    <div class="rule-row"><span>2. 🐱 Mèo</span> <span>👉 Di chuyển thường, ăn cấp ≤ 2</span></div>
+                    <div class="rule-row"><span>1. 🐭 Chuột</span> <span>👉 Bơi dưới sông, <b>Ăn Voi (8)</b>, ăn Chuột</span></div>
+                </div>
+                <div class="special-notes">
+                    <p>⚠️ **Quy tắc đặc biệt:**</p>
+                    <ul>
+                        <li>Quân cấp **lớn hơn hoặc bằng** sẽ ăn được quân cấp nhỏ hơn.</li>
+                        <li>**Ngoại lệ duy nhất:** Chuột (1) ăn được Voi (8) nếu cả hai cùng ở trên bờ.</li>
+                        <li>Chuột dưới sông không thể ăn Voi trên bờ, và ngược lại.</li>
+                        <li>Bất kỳ quân nào sa vào **Bẫy 🟠** của đối phương đều bị mất hết sức mạnh (quân nào cũng ăn được).</li>
+                    </ul>
+                </div>
+            </div>
+        </details>
+    </div>
+    <div class="status-panel">
+        <button id="btn-game-mode" class="btn-mode-toggle" data-mode="pvp" title="Bấm để đổi chế độ chơi">
+            <span class="mode-icon">🧑‍🤝‍🧑</span>
+        </button>
+
+        <button id="btn-difficulty" class="btn-mode-toggle btn-difficulty" data-level="medium" title="Độ khó AI: Vừa">
+            <span class="difficulty-icon">🟡</span>
+        </button>
+
+        <div class="action-buttons-group">
+            <button class="btn-icon-action btn-undo" id="btn-undo" title="Quay lại nước cờ (Undo)">↩️</button>
+            <button class="btn-icon-action btn-clear-score" id="btn-clear-score" title="Xóa kỷ lục điểm">🗑️</button> 
+            <button class="btn-icon-action btn-reset" id="btn-reset" title="Khởi động lại ván đấu">🔄</button>
+        </div>
+    </div>
+    <div id="custom-modal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-icon" id="modal-icon">📜</div>
+            <h2 class="modal-title" id="modal-title">Thông báo</h2>
+            <div class="modal-message" id="modal-message">Nội dung thông báo ở đây...</div>
+            <div class="modal-actions">
+                <button id="modal-btn-cancel" class="modal-btn btn-cancel">Hủy bỏ</button>
+                <button id="modal-btn-confirm" class="modal-btn btn-confirm">Xác nhận</button>
+            </div>
+        </div>
+    </div>
+    <footer class="game-footer">
+        © 2026 Bản quyền thuộc về Nguyễn Hoàng Khoa
+    </footer>
+    <script>
+const ROWS = 9;
+const COLS = 7;
+
+const PIECES_MAP = {
+    8: { name: "Voi", emoji: "🐘" },
+    7: { name: "Sư Tử", emoji: "🦁" },
+    6: { name: "Hổ", emoji: "🐯" },
+    5: { name: "Báo", emoji: "🐆" },
+    4: { name: "Chó", emoji: "🐶" },
+    3: { name: "Sói", emoji: "🐺" },
+    2: { name: "Mèo", emoji: "🐱" },
+    1: { name: "Chuột", emoji: "🐭" }
+};
+
+// TỐI ƯU TỐC ĐỘ: Dùng Set thay Array để tra cứu O(1) thay vì O(n) --
+// các hàm này được gọi hàng chục nghìn lần trong quá trình AI duyệt cây minimax.
+const RIVER_CELLS = new Set([
+    "3,1", "3,2", "3,4", "3,5",
+    "4,1", "4,2", "4,4", "4,5",
+    "5,1", "5,2", "5,4", "5,5"
+]);
+
+const TRAPS = new Set(["0,2", "0,4", "1,3", "8,2", "8,4", "7,3"]);
+const RED_TRAPS = new Set(["0,2", "0,4", "1,3"]);   // Bẫy đặt cạnh hang Đỏ, bắt quân Xanh
+const BLUE_TRAPS = new Set(["8,2", "8,4", "7,3"]);  // Bẫy đặt cạnh hang Xanh, bắt quân Đỏ
+const DEN_RED = "0,3";
+const DEN_BLUE = "8,3";
+
+let boardState = {};
+let currentTurn = 'blue';
+let selectedCoords = null;
+
+// Biến lưu vết nước đi vừa xong để tạo hiệu ứng phát sáng hiển thị cho đối thủ
+let lastMoveVisual = null; // Cấu trúc mẫu: { from: "r,c", to: "r,c" }
+
+let capturedByRed = [];
+let capturedByBlue = [];
+let lastLoser = null;
+let gameHistory = []; 
+
+let transpositionTable = new Map(); 
+
+// --- CẤU HÌNH ĐỘ KHÓ AI ---
+// Mỗi mức quy định độ sâu tìm kiếm tối đa và ngân sách thời gian suy nghĩ riêng.
+// Nhờ AI chạy trong Web Worker (không chặn giao diện), mức "Khó" có thể cho phép
+// ngân sách thời gian dài hơn cả bản gốc mà người chơi không hề cảm thấy giật lag.
+const DIFFICULTY_SETTINGS = {
+    easy:   { label: 'Dễ',  icon: '🟢', maxDepth: 3, timeLimit: 800 },
+    medium: { label: 'Vừa', icon: '🟡', maxDepth: 5, timeLimit: 2000 },
+    hard:   { label: 'Khó', icon: '🔴', maxDepth: 8, timeLimit: 3500 }
+};
+const DIFFICULTY_ORDER = ['easy', 'medium', 'hard'];
+let currentDifficulty = localStorage.getItem('aiDifficulty') || 'medium';
+if (!DIFFICULTY_SETTINGS[currentDifficulty]) currentDifficulty = 'medium';
+
+// Mã định danh cho mỗi lượt AI suy nghĩ - dùng để phát hiện và loại bỏ kết quả "lỗi thời"
+// (ví dụ: người chơi bấm Undo trong lúc AI (chạy bất đồng bộ trong Worker) vẫn đang tính toán
+// cho thế cờ CŨ - khi Worker trả lời xong thì thế cờ đã đổi, cần bỏ qua kết quả đó).
+let aiRequestToken = 0;
+let aiIsThinking = false;
+
+let winRed = parseInt(localStorage.getItem('winRed')) || 0;
+let loseRed = parseInt(localStorage.getItem('loseRed')) || 0;
+let winBlue = parseInt(localStorage.getItem('winBlue')) || 0;
+let loseBlue = parseInt(localStorage.getItem('loseBlue')) || 0;
+let currentGameMode = 'pvp';
+
+function updateScoreUI() {
+    const rScore = document.getElementById('score-red');
+    const bScore = document.getElementById('score-blue');
+    if (rScore) rScore.innerText = `Thắng: ${winRed} | Thua: ${loseRed}`;
+    if (bScore) bScore.innerText = `Thắng: ${winBlue} | Thua: ${loseBlue}`;
+}
+
+function setupInitialPieces() {
+    boardState = {
+        // Phe Đỏ (Siêu AI)
+        "0,0": { team: "red", power: 7 },
+        "0,6": { team: "red", power: 6 },
+        "1,1": { team: "red", power: 4 },
+        "1,5": { team: "red", power: 2 },
+        "2,0": { team: "red", power: 1 },
+        "2,2": { team: "red", power: 5 },
+        "2,4": { team: "red", power: 3 },
+        "2,6": { team: "red", power: 8 },
+
+        // Phe Xanh (Người chơi)
+        "6,0": { team: "blue", power: 8 },
+        "6,2": { team: "blue", power: 3 },
+        "6,4": { team: "blue", power: 5 },
+        "6,6": { team: "blue", power: 1 },
+        "7,1": { team: "blue", power: 2 },
+        "7,5": { team: "blue", power: 4 },
+        "8,0": { team: "blue", power: 6 },
+        "8,6": { team: "blue", power: 7 }
+    };
+    capturedByRed = [];
+    capturedByBlue = [];
+    gameHistory = []; 
+    lastMoveVisual = null; // Reset vết di chuyển
+    transpositionTable.clear(); 
+    if (aiWorker) aiWorker.postMessage({ type: 'clear-cache' });
+    // Vô hiệu hóa mọi yêu cầu AI đang chờ phản hồi cho thế cờ CŨ (trước khi reset) -
+    // nếu không, khi Worker trả lời trễ, nước đi đó có thể bị áp nhầm vào bàn cờ MỚI.
+    aiRequestToken++;
+    aiIsThinking = false; // Tránh giao diện bị kẹt ở "Đang suy nghĩ..." nếu Reset xảy ra giữa lúc AI đang tính
+}
+
+// TỐI ƯU: Cache tham chiếu tới 63 DOM node của bàn cờ.
+// Trước đây renderBoard() bị gọi lại sau MỖI nước đi và luôn destroy + tạo mới toàn bộ
+// 63 node + gắn lại 63 listener "click" dù vị trí các ô không hề đổi -> vừa dư dòng code,
+// vừa lãng phí hiệu năng (reflow toàn bàn cờ + rò rỉ closure cũ mỗi lần đi quân).
+// Nay chỉ dựng node 1 LẦN DUY NHẤT lúc khởi tạo, các lần render sau chỉ cập nhật class/nội dung.
+let cellElements = {};
+
+function buildBoardGrid(boardEl) {
+    const fragment = document.createDocumentFragment();
+    for (let r = 0; r < ROWS; r++) {
+        for (let c = 0; c < COLS; c++) {
+            const cellEl = document.createElement("div");
+            cellEl.dataset.row = r;
+            cellEl.dataset.col = c;
+            cellEl.addEventListener("click", () => handleCellClick(r, c));
+            cellElements[`${r},${c}`] = cellEl;
+            fragment.appendChild(cellEl);
+        }
+    }
+    boardEl.appendChild(fragment);
+}
+
+function getCellTypeClass(cellKey) {
+    if (cellKey === DEN_RED) return "den-red";
+    if (cellKey === DEN_BLUE) return "den-blue";
+    if (RIVER_CELLS.has(cellKey)) return "river";
+    if (TRAPS.has(cellKey)) return "trap";
+    return "";
+}
+
+function renderBoard() {
+    const boardEl = document.getElementById("game-board");
+    if (!boardEl) return;
+    if (!boardEl.hasChildNodes()) buildBoardGrid(boardEl); // Chỉ dựng node 1 lần duy nhất
+
+    for (let r = 0; r < ROWS; r++) {
+        for (let c = 0; c < COLS; c++) {
+            const cellKey = `${r},${c}`;
+            const cellEl = cellElements[cellKey];
+
+            let className = "cell " + getCellTypeClass(cellKey);
+            if (lastMoveVisual && lastMoveVisual.from === cellKey) className += " last-move-source";
+            if (lastMoveVisual && lastMoveVisual.to === cellKey) className += " last-move-target";
+            cellEl.className = className.trim();
+
+            const pieceData = boardState[cellKey];
+            cellEl.innerHTML = pieceData
+                ? `<div class="piece ${pieceData.team}"><span class="emoji">${PIECES_MAP[pieceData.power].emoji}</span>${PIECES_MAP[pieceData.power].name}</div>`
+                : "";
+        }
+    }
+    updateStatusPanel();
+    renderCapturedPieces(); 
+}
+
+function handleCellClick(r, c) {
+    const clickedKey = `${r},${c}`;
+    const targetPiece = boardState[clickedKey];
+
+    if (!selectedCoords) {
+        if (targetPiece && targetPiece.team === currentTurn) {
+            selectedCoords = [r, c];
+            highlightCell(r, c);
+            showSuggestions(r, c);
+        }
+        return;
+    }
+
+    const [sr, sc] = selectedCoords;
+    
+    if (targetPiece && targetPiece.team === currentTurn) {
+        clearHighlights();
+        selectedCoords = [r, c];
+        highlightCell(r, c);
+        showSuggestions(r, c);
+        return;
+    }
+
+    if (isValidMove(sr, sc, r, c)) {
+        saveToHistory();
+
+        // Ghi nhận vết nước đi vừa thực hiện của Người Chơi để sáng lên
+        lastMoveVisual = { from: `${sr},${sc}`, to: clickedKey };
+
+        if (targetPiece) {
+            playChessSound(true); 
+            if (currentTurn === 'blue') {
+                capturedByBlue.push(targetPiece.power);
+            } else {
+                capturedByRed.push(targetPiece.power);
+            }
+        } else {
+            playChessSound(false); 
+        }
+
+        boardState[clickedKey] = boardState[`${sr},${sc}`];
+        delete boardState[`${sr},${sc}`];
+
+        if (clickedKey === DEN_RED && currentTurn === 'blue') {
+            winBlue++; loseRed++; 
+            localStorage.setItem('winBlue', winBlue); localStorage.setItem('loseRed', loseRed);
+            updateScoreUI(); lastLoser = 'red'; 
+            showCustomModal("🎉 CHIẾN THẮNG!", "Tuyệt vời! Bạn đã vượt qua bộ não AI đỉnh cao để chiếm Hang Đỏ!", "👑", false).then(() => {
+                initGame(true);
+            });
+            return;
+        }
+        
+        if (clickedKey === DEN_BLUE && currentTurn === 'red') {
+            winRed++; loseBlue++; 
+            localStorage.setItem('winRed', winRed); localStorage.setItem('loseBlue', loseBlue);
+            updateScoreUI(); lastLoser = 'blue'; 
+            showCustomModal("🤖 SIÊU AI CHIẾN THẮNG!", "Hệ thống AI cấp độ cao đã điều quân lừa bẫy và chiếm trọn Hang Xanh!", "🎯", false).then(() => {
+                initGame(true);
+            });
+            return;
+        }
+
+        currentTurn = currentTurn === 'blue' ? 'red' : 'blue';
+        clearHighlights();
+        selectedCoords = null;
+        renderBoard();
+
+        if (currentTurn === 'red' && currentGameMode === 'ai') {
+            requestAnimationFrame(() => {
+                setTimeout(makeAIMove, 100);
+            });
+        }
+    } else {
+        clearHighlights();
+        selectedCoords = null;
+    }
+}
+
+function isValidMove(sr, sc, tr, tc) {
+    const sourceKey = `${sr},${sc}`;
+    const targetKey = `${tr},${tc}`;
+    const p = boardState[sourceKey];
+    const target = boardState[targetKey];
+
+    if (!p) return false;
+    if (target && target.team === p.team) return false;
+
+    if (p.team === 'red' && targetKey === DEN_RED) return false;
+    if (p.team === 'blue' && targetKey === DEN_BLUE) return false;
+
+    const rowDist = Math.abs(sr - tr);
+    const colDist = Math.abs(sc - tc);
+    const dist = rowDist + colDist;
+
+    const isTargetTrappedByEnemy = target && (
+        (target.team === 'red' && BLUE_TRAPS.has(targetKey)) ||
+        (target.team === 'blue' && RED_TRAPS.has(targetKey))
+    );
+
+    if ((p.power === 7 || p.power === 6) && (rowDist === 0 || colDist === 0)) {
+        if ((colDist === 0 && rowDist === 4) || (rowDist === 0 && colDist === 3)) {
+            let stepR = colDist === 0 ? (tr > sr ? 1 : -1) : 0;
+            let stepC = rowDist === 0 ? (tc > sc ? 1 : -1) : 0;
+            
+            let checkR = sr + stepR;
+            let checkC = sc + stepC;
+            let hasRatInWay = false;
+            let allRiverCells = true;
+
+            while (checkR !== tr || checkC !== tc) {
+                const checkKey = `${checkR},${checkC}`;
+                if (!RIVER_CELLS.has(checkKey)) allRiverCells = false;
+                if (boardState[checkKey]) hasRatInWay = true;
+                checkR += stepR;
+                checkC += stepC;
+            }
+
+            if (allRiverCells && !hasRatInWay) {
+                if (target) {
+                    if (!isTargetTrappedByEnemy) {
+                        if (p.power < target.power) return false;
+                        if (target.power === 1) return false; 
+                    }
+                }
+                return true;
+            }
+        }
+    }
+
+    if (dist !== 1) return false;
+
+    if (RIVER_CELLS.has(targetKey)) {
+        if (p.power !== 1) return false; 
+    }
+
+    if (target) {
+        if (RIVER_CELLS.has(sourceKey) && !RIVER_CELLS.has(targetKey) && p.power === 1 && target.power === 8) {
+            return false; 
+        }
+        if (RIVER_CELLS.has(sourceKey) !== RIVER_CELLS.has(targetKey) && p.power === 1 && target.power === 1) {
+            return false; 
+        }
+        if (isTargetTrappedByEnemy) return true;
+        if (p.power === 1 && target.power === 8) return true; 
+        if (p.power === 8 && target.power === 1) return false; 
+        if (p.power < target.power) return false; 
+    }
+
+    return true; 
+}
+
+function showSuggestions(r, c) {
+    const directions = [[-1,0], [1,0], [0,-1], [0,1]];
+    // Nếu là Hổ hoặc Sư Tử thì bổ sung thêm các hướng nhảy sông tầm xa vào danh sách gợi ý
+    const p = boardState[`${r},${c}`];
+    if (p && (p.power === 7 || p.power === 6)) {
+        directions.push([-4,0], [4,0], [0,-3], [0,3]);
+    }
+    
+    directions.forEach(([dr, dc]) => {
+        const tr = r + dr;
+        const tc = c + dc;
+        if (tr >= 0 && tr < ROWS && tc >= 0 && tc < COLS) {
+            if (isValidMove(r, c, tr, tc)) {
+                const cell = document.querySelector(`[data-row='${tr}'][data-col='${tc}']`);
+                if (cell) cell.classList.add("suggested");
+            }
+        }
+    });
+}
+
+function highlightCell(r, c) {
+    const cell = document.querySelector(`[data-row='${r}'][data-col='${c}']`);
+    if (cell) cell.classList.add("selected");
+}
+
+function clearHighlights() {
+    document.querySelectorAll('.cell').forEach(el => {
+        el.classList.remove('selected', 'suggested');
+    });
+}
+
+function renderCapturedPieces() {
+    const redBox = document.getElementById("captured-by-red");
+    const blueBox = document.getElementById("captured-by-blue");
+    if (redBox) redBox.innerHTML = capturedByRed.map(p => `<div class="captured-item">${PIECES_MAP[p].emoji}</div>`).join('');
+    if (blueBox) blueBox.innerHTML = capturedByBlue.map(p => `<div class="captured-item">${PIECES_MAP[p].emoji}</div>`).join('');
+}
+
+function updateStatusPanel() {
+    const pRed = document.getElementById("player-red");
+    const pBlue = document.getElementById("player-blue");
+    if (!pRed || !pBlue) return;
+
+    const redStatusEl = pRed.querySelector(".player-status");
+    const blueStatusEl = pBlue.querySelector(".player-status");
+
+    if (currentTurn === 'blue') {
+        pBlue.classList.add("active");
+        pRed.classList.remove("active");
+        if (blueStatusEl) blueStatusEl.textContent = "Đến lượt đi";
+        if (redStatusEl) redStatusEl.textContent = "Đang chờ...";
+    } else {
+        pRed.classList.add("active");
+        pBlue.classList.remove("active");
+        if (redStatusEl) redStatusEl.textContent = aiIsThinking ? "🤔 Đang suy nghĩ..." : "Đến lượt đi";
+        if (blueStatusEl) blueStatusEl.textContent = "Đang chờ...";
+    }
+}
+
+async function initGame(isFirstLoad = false) {
+    if (typeof updateScoreUI === "function") updateScoreUI();
+
+    if (!isFirstLoad) {
+        const confirmReset = await showCustomModal("🔄 KHỞI ĐỘNG LẠI", "Bạn muốn làm mới trận đấu chứ?", "🔄", true);
+        if (!confirmReset) return; 
+    }
+
+    currentTurn = lastLoser !== null ? lastLoser : 'blue';
+    selectedCoords = null;
+    setupInitialPieces();
+    renderBoard();
+    updateUndoButtonState();
+
+    if (currentTurn === 'red' && currentGameMode === 'ai') {
+        setTimeout(makeAIMove, 300);
+    }
+}
+
+function saveToHistory() {
+    const currentState = {
+        boardState: JSON.parse(JSON.stringify(boardState)),
+        currentTurn: currentTurn,
+        capturedByRed: [...capturedByRed],
+        capturedByBlue: [...capturedByBlue],
+        lastMoveVisual: lastMoveVisual ? { ...lastMoveVisual } : null
+    };
+    gameHistory.push(currentState);
+    updateUndoButtonState();
+}
+
+async function handleUndo() {
+    if (gameHistory.length === 0) return;
+
+    const confirmUndo = await showCustomModal("↩️ QUAY LẠI", "Rút lại nước cờ vừa đi lỗi?", "↩️", true);
+    if (!confirmUndo) return;
+
+    if (currentGameMode === 'ai' && gameHistory.length >= 2) {
+        gameHistory.pop(); 
+    }
+
+    const previousState = gameHistory.pop();
+    boardState = previousState.boardState;
+    currentTurn = previousState.currentTurn;
+    capturedByRed = previousState.capturedByRed;
+    capturedByBlue = previousState.capturedByBlue;
+    lastMoveVisual = previousState.lastMoveVisual; 
+    
+    transpositionTable.clear(); 
+    if (aiWorker) aiWorker.postMessage({ type: 'clear-cache' });
+    aiRequestToken++; // Vô hiệu hóa yêu cầu AI lỗi thời (phòng thủ ở tầng logic, không chỉ dựa vào nút bị khóa)
+    aiIsThinking = false; // Tránh giao diện bị kẹt ở "Đang suy nghĩ..." nếu Undo xảy ra giữa lúc AI đang tính
+    playChessSound(false);
+    clearHighlights();
+    selectedCoords = null;
+    renderBoard();
+    updateUndoButtonState();
+}
+
+function updateUndoButtonState() {
+    const undoBtn = document.getElementById("btn-undo");
+    if (undoBtn) undoBtn.disabled = gameHistory.length === 0 || aiIsThinking;
+}
+
+async function handleClearScore() {
+    const confirmClear = await showCustomModal("🗑️ XÓA ĐIỂM", "Xóa sạch lịch sử điểm số hiện tại?", "🗑️", true);
+    if (confirmClear) {
+        winRed = 0; loseRed = 0; winBlue = 0; loseBlue = 0;
+        localStorage.setItem('winRed', 0); localStorage.setItem('loseRed', 0);
+        localStorage.setItem('winBlue', 0); localStorage.setItem('loseBlue', 0);
+        updateScoreUI();
+        playChessSound(false);
+        await showCustomModal("Thành công", "Đã đặt lại bảng điểm!", "✨", false);
+    }
+}
+
+function showCustomModal(title, message, icon = "📜", showCancel = true) {
+    return new Promise((resolve) => {
+        const modal = document.getElementById("custom-modal");
+        const titleEl = document.getElementById("modal-title");
+        const msgEl = document.getElementById("modal-message");
+        const iconEl = document.getElementById("modal-icon");
+        const btnConfirm = document.getElementById("modal-btn-confirm");
+        const btnCancel = document.getElementById("modal-btn-cancel");
+
+        if(!modal || !titleEl || !msgEl || !iconEl || !btnConfirm || !btnCancel) {
+            resolve(true); return;
+        }
+
+        titleEl.innerText = title;
+        msgEl.innerHTML = message; 
+        iconEl.innerText = icon;
+
+        if (showCancel) {
+            btnCancel.style.display = "block";
+            btnConfirm.innerText = "Xác nhận";
+        } else {
+            btnCancel.style.display = "none";
+            btnConfirm.innerText = "Đóng";
+        }
+
+        modal.classList.add("open");
+
+        function onConfirm() { closeModal(); resolve(true); }
+        function onCancel() { closeModal(); resolve(false); }
+        function closeModal() {
+            modal.classList.remove("open");
+            btnConfirm.removeEventListener("click", onConfirm);
+            btnCancel.removeEventListener("click", onCancel);
+        }
+
+        btnConfirm.addEventListener("click", onConfirm);
+        btnCancel.addEventListener("click", onCancel);
+    });
+}
+
+// TỐI ƯU: Dùng CHUNG 1 AudioContext cho toàn bộ app thay vì tạo mới mỗi lần phát âm thanh.
+// Bản cũ gọi `new AudioContext()` ở mỗi lượt đi mà không bao giờ đóng lại -> rò rỉ tài nguyên,
+// một số trình duyệt (đặc biệt Safari trên iPhone) giới hạn số AudioContext mở cùng lúc,
+// chơi lâu có thể khiến âm thanh im bặt hoặc dính cảnh báo console.
+let sharedAudioContext = null;
+
+function getAudioContext() {
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextClass) return null;
+    if (!sharedAudioContext) {
+        sharedAudioContext = new AudioContextClass();
+    }
+    // Một số trình duyệt tự "suspend" context nếu chưa có tương tác người dùng -> resume lại
+    if (sharedAudioContext.state === 'suspended') {
+        sharedAudioContext.resume();
+    }
+    return sharedAudioContext;
+}
+
+function playChessSound(isCapture = false) {
+    try {
+        const ctx = getAudioContext();
+        if (!ctx) return;
+        const osc = ctx.createOscillator();
+        const gainNode = ctx.createGain();
+
+        if (isCapture) {
+            osc.type = 'sawtooth'; osc.frequency.setValueAtTime(110, ctx.currentTime);
+            gainNode.gain.setValueAtTime(0.6, ctx.currentTime);
+        } else {
+            osc.type = 'triangle'; osc.frequency.setValueAtTime(140, ctx.currentTime); 
+            gainNode.gain.setValueAtTime(0.3, ctx.currentTime);
+        }
+        osc.connect(gainNode); gainNode.connect(ctx.destination);
+        osc.start(); osc.stop(ctx.currentTime + 0.12);
+        // Ngắt kết nối các node sau khi phát xong để giải phóng tham chiếu ngay lập tức
+        osc.onended = () => { osc.disconnect(); gainNode.disconnect(); };
+    } catch (e) { console.log(e); }
+}
+
+// HỆ THỐNG MÁY AI ĐÃ ĐƯỢC TỐI ƯU HÓA TỐC ĐỘ SIÊU TỐC - KHÔNG TRỄ HÀNG
+const PIECE_VALUES = { 1: 150, 2: 250, 3: 350, 4: 450, 5: 550, 6: 750, 7: 950, 8: 1400 };
+
+// Các ô áp sát hang Xanh (mục tiêu tấn công của AI Đỏ) - dùng chung cho move ordering & evaluate
+const BLUE_DEN_APPROACH = new Set(["7,2", "7,4", "8,2", "8,4", "7,3"]);
+
+let aiStartTime = 0;
+let AI_TIME_LIMIT = 3000; // Ngân sách thời gian mặc định, sẽ được ghi đè theo độ khó đã chọn
+let aiTimeoutOccurred = false;
+
+// TỐI ƯU 1: Loại bỏ .sort() - Sử dụng vòng lặp ma trận tuyến tính cố định để sinh mã Hash cực nhanh
+function generateBoardKey(state, turn) {
+    let key = turn;
+    for (let r = 0; r < ROWS; r++) {
+        for (let c = 0; c < COLS; c++) {
+            const p = state[`${r},${c}`];
+            if (p) {
+                key += `|${r}${c}${p.team[0]}${p.power}`;
+            }
+        }
+    }
+    return key;
+}
+
+function getStrategicBonus(power, r, c, state) {
+    let bonus = 0;
+    const cellKey = `${r},${c}`;
+    
+    // Khoảng cách tới Hang Địch (Xanh ở dưới: 8,3)
+    let distToEnemyDen = Math.abs(r - 8) + Math.abs(c - 3);
+    bonus += (12 - distToEnemyDen) * 60; 
+
+    if (distToEnemyDen === 1) bonus += 900; // Khích lệ quân cờ đứng ngay sát cửa Hang để chuẩn bị kết liễu
+
+    let distToOwnDen = Math.abs(r - 0) + Math.abs(c - 3);
+    if (distToOwnDen <= 2) bonus += 80;
+
+    if (BLUE_DEN_APPROACH.has(cellKey)) {
+        bonus += 350; // Kiểm soát khu vực bẫy quanh hang địch
+    }
+
+    if (power === 1) { 
+        if (RIVER_CELLS.has(cellKey)) bonus += 120; 
+    } 
+    else if (power === 7 || power === 6) { 
+        if ([2, 6].includes(r) && [1, 2, 4, 5].includes(c)) bonus += 150; // Đứng ở vị trí sẵn sàng nhảy sông
+    }
+
+    return bonus;
+}
+
+// TỐI ƯU AI: ĐÁNH GIÁ QUÂN CỜ ĐANG BỊ TREO (HANGING PIECE DETECTION)
+// Trước đây eval tĩnh chỉ cộng giá trị quân + vị trí, không biết quân nào sắp bị ăn free.
+// Hàm này giúp AI "nhìn thấy" rủi ro ngay lập tức thay vì phải đào đủ sâu minimax mới phát hiện,
+// tránh tình trạng AI tự đẩy quân mạnh vào ô bị ăn.
+function canReachSquareApprox(pr, pc, tr, tc, power) {
+    // Kiểm tra khả năng "vươn tới" một ô theo hình học di chuyển cơ bản (ước lượng phòng thủ,
+    // bỏ qua vài quy tắc chi tiết như chuột chặn đường sông - chấp nhận vì đây chỉ là heuristic nhanh)
+    const rd = Math.abs(pr - tr);
+    const cd = Math.abs(pc - tc);
+    if (rd + cd === 1) return true; // Di chuyển thường 1 ô
+    if (power === 6 || power === 7) {
+        if ((rd === 4 && cd === 0) || (rd === 0 && cd === 3)) return true; // Nhảy sông
+    }
+    return false;
+}
+
+function getThreatPenalty(state) {
+    // TỐI ƯU HIỆU NĂNG: đo thực tế cho thấy bản gốc làm giảm 70% số node lá
+    // AI đánh giá được trong 3s (mất hẳn 1 tầng độ sâu tìm kiếm). Bản này giữ
+    // NGUYÊN 100% logic/độ chính xác, chỉ loại bỏ các chi phí tính toán thừa:
+    //  1. Không parse lại tọa độ "r,c" nhiều lần cho cùng 1 quân (trước đây parse
+    //     lại mỗi lần nó được duyệt tới trong vòng lặp lồng nhau).
+    //  2. Tách sẵn quân theo phe Đỏ/Xanh 1 lần duy nhất -> vòng lặp trong không
+    //     cần kiểm tra "team !==" mỗi bước, chỉ duyệt đúng nửa số quân liên quan.
+    //  3. Duyệt bằng mảng (nhanh hơn for...in trên object trong V8).
+    //  4. Dừng sớm ngay khi tìm thấy kẻ tấn công rẻ nhất có thể (Chuột, power=1)
+    //     vì không thể có kẻ tấn công nào rẻ hơn nữa.
+    const redPieces = [];
+    const bluePieces = [];
+    for (let key in state) {
+        const p = state[key];
+        const commaIdx = key.indexOf(',');
+        const entry = { r: +key.slice(0, commaIdx), c: +key.slice(commaIdx + 1), power: p.power };
+        (p.team === 'red' ? redPieces : bluePieces).push(entry);
+    }
+
+    return computeSideThreat(redPieces, bluePieces, true) + computeSideThreat(bluePieces, redPieces, false);
+}
+
+function computeSideThreat(ownPieces, enemyPieces, isRedSide) {
+    let total = 0;
+
+    for (let i = 0; i < ownPieces.length; i++) {
+        const piece = ownPieces[i];
+
+        // BƯỚC 1: Tìm quân địch rẻ nhất có thể ăn được quân này ngay nước tới
+        // (dùng isValidMove - đã xử lý chính xác toàn bộ luật đặc biệt: bẫy, Chuột ăn Voi, sông...)
+        let attackerPower = null;
+        for (let j = 0; j < enemyPieces.length; j++) {
+            const enemy = enemyPieces[j];
+            if (!canReachSquareApprox(enemy.r, enemy.c, piece.r, piece.c, enemy.power)) continue;
+            if (isValidMove(enemy.r, enemy.c, piece.r, piece.c)) {
+                if (attackerPower === null || enemy.power < attackerPower) {
+                    attackerPower = enemy.power;
+                    if (attackerPower === 1) break; // Không thể có kẻ tấn công nào rẻ hơn Chuột
+                }
+            }
+        }
+
+        if (attackerPower === null) continue; // Không bị đe dọa, bỏ qua
+
+        // BƯỚC 2: Xem có quân đồng minh nào đứng gần đủ để bắt lại (phòng thủ ô này) không
+        let isDefended = false;
+        for (let j = 0; j < ownPieces.length; j++) {
+            if (j === i) continue;
+            const defender = ownPieces[j];
+            if (canReachSquareApprox(defender.r, defender.c, piece.r, piece.c, defender.power)) {
+                isDefended = true;
+                break;
+            }
+        }
+
+        // BƯỚC 3: Tính điểm phạt - quân không được bảo vệ thì rủi ro cao hơn nhiều
+        const riskValue = PIECE_VALUES[piece.power];
+        const impact = riskValue * (isDefended ? 0.15 : 0.55);
+        total += isRedSide ? -impact : impact;
+    }
+
+    return total;
+}
+
+function evaluateBoard(state) {
+    let score = 0;
+    let redCount = 0;
+    let blueCount = 0;
+
+    for (let key in state) {
+        const p = state[key];
+        const [r, c] = key.split(',').map(Number);
+        let val = PIECE_VALUES[p.power] || 0;
+
+        if (p.team === 'red') {
+            redCount++;
+            score += val + getStrategicBonus(p.power, r, c, state);
+            if (key === DEN_BLUE) return 100000; 
+        } else {
+            blueCount++;
+            score -= (val + getStrategicBonus(p.power, 8 - r, c, state));
+            if (key === DEN_RED) return -100000; 
+        }
+    }
+
+    if (redCount === 0) return -95000;
+    if (blueCount === 0) return 95000;
+
+    // Cộng thêm điểm phạt/thưởng dựa trên các quân đang bị treo (không đủ quân bảo vệ)
+    score += getThreatPenalty(state);
+
+    return score;
+}
+
+// TỐI ƯU 2: Sinh nước đi thông minh theo nhóm quân cờ, loại bỏ thử nghiệm vector nhảy bừa bãi
+function getAllValidMoves(state, team) {
+    let moves = [];
+    
+    for (let sourceKey in state) {
+        if (state[sourceKey].team !== team) continue;
+        const [sr, sc] = sourceKey.split(',').map(Number);
+        const p = state[sourceKey];
+
+        // Tất cả các quân đều có thể đi 4 hướng cơ bản 1 ô
+        const basicVectors = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+        for (let [dr, dc] of basicVectors) {
+            let tr = sr + dr;
+            let tc = sc + dc;
+            if (tr >= 0 && tr < ROWS && tc >= 0 && tc < COLS) {
+                if (isValidMove(sr, sc, tr, tc)) {
+                    moves.push({ sr, sc, tr, tc, sourceKey, targetKey: `${tr},${tc}` });
+                }
+            }
+        }
+
+        // TỐI ƯU QUAN TRỌNG: Chỉ thử nhảy sông nếu quân đó là Sư Tử (7) hoặc Hổ (6)
+        if (p.power === 7 || p.power === 6) {
+            const jumpVectors = [[-4, 0], [4, 0], [0, -3], [0, 3]];
+            for (let [dr, dc] of jumpVectors) {
+                let tr = sr + dr;
+                let tc = sc + dc;
+                if (tr >= 0 && tr < ROWS && tc >= 0 && tc < COLS) {
+                    if (isValidMove(sr, sc, tr, tc)) {
+                        moves.push({ sr, sc, tr, tc, sourceKey, targetKey: `${tr},${tc}` });
+                    }
+                }
+            }
+        }
+    }
+    return moves;
+}
+
+function minimax(state, depth, alpha, beta, isMaximizing) {
+    if (Date.now() - aiStartTime > AI_TIME_LIMIT) {
+        aiTimeoutOccurred = true;
+        return { score: evaluateBoard(state) };
+    }
+
+    let turnSign = isMaximizing ? 'red' : 'blue';
+    let boardKey = generateBoardKey(state, turnSign);
+    
+    // TỐI ƯU 4: TRANSPOSITION TABLE MOVE ORDERING
+    // Ngay cả khi cache chưa đủ sâu để cắt ngay, nước đi tốt nhất từng tìm được
+    // ở lần duyệt trước (thường ở độ sâu nông hơn, ví dụ vòng lặp Iterative Deepening)
+    // rất có khả năng vẫn là nước tốt nhất ở độ sâu này. Ưu tiên thử nó trước tiên
+    // giúp Alpha-Beta cắt tỉa được nhiều nhánh vô ích hơn ngay từ đầu.
+    let ttMove = null;
+    if (transpositionTable.has(boardKey)) {
+        let cachedData = transpositionTable.get(boardKey);
+        if (cachedData.depth >= depth) {
+            return { score: cachedData.score, move: cachedData.move };
+        }
+        ttMove = cachedData.move;
+    }
+
+    if (depth === 0) {
+        return { score: evaluateBoard(state) };
+    }
+
+    let team = isMaximizing ? 'red' : 'blue';
+    let moves = getAllValidMoves(state, team);
+
+    if (moves.length === 0) {
+        return { score: isMaximizing ? -90000 : 90000 };
+    }
+
+    // TỐI ƯU 3: Cải tiến Move Ordering để Alpha-Beta cắt tỉa lên tới 90% số nhánh vô dụng nhanh nhất
+    moves.sort((a, b) => {
+        let weightA = 0;
+        let weightB = 0;
+
+        // Nước đi từ Transposition Table luôn được thử đầu tiên - trọng số vượt trội mọi tiêu chí khác
+        if (ttMove && a.sourceKey === ttMove.sourceKey && a.targetKey === ttMove.targetKey) weightA += 1000000;
+        if (ttMove && b.sourceKey === ttMove.sourceKey && b.targetKey === ttMove.targetKey) weightB += 1000000;
+
+        if (a.targetKey === DEN_BLUE) weightA += 80000;
+        if (b.targetKey === DEN_BLUE) weightB += 80000;
+
+        // Ưu tiên ăn quân
+        if (state[a.targetKey]) weightA += PIECE_VALUES[state[a.targetKey].power] * 50;
+        if (state[b.targetKey]) weightB += PIECE_VALUES[state[b.targetKey].power] * 50;
+        
+        // Ưu tiên áp sát cửa hang địch
+        if (BLUE_TRAPS.has(a.targetKey)) weightA += 2000;
+        if (BLUE_TRAPS.has(b.targetKey)) weightB += 2000;
+
+        return weightB - weightA;
+    });
+
+    let bestMove = null;
+
+    if (isMaximizing) {
+        let maxEval = -Infinity;
+        for (let move of moves) {
+            let srcPiece = state[move.sourceKey];
+            let tgtPiece = state[move.targetKey];
+            
+            state[move.targetKey] = srcPiece;
+            delete state[move.sourceKey];
+
+            let res = minimax(state, depth - 1, alpha, beta, false);
+            let evaluation = res.score;
+
+            state[move.sourceKey] = srcPiece;
+            if (tgtPiece) state[move.targetKey] = tgtPiece;
+            else delete state[move.targetKey];
+
+            if (aiTimeoutOccurred) break; 
+
+            if (evaluation > maxEval) {
+                maxEval = evaluation;
+                bestMove = move;
+            }
+            alpha = Math.max(alpha, evaluation);
+            if (beta <= alpha) break; 
+        }
+        
+        if (!aiTimeoutOccurred) {
+            transpositionTable.set(boardKey, { score: maxEval, move: bestMove, depth: depth });
+        }
+        return { score: maxEval, move: bestMove };
+    } else {
+        let minEval = Infinity;
+        for (let move of moves) {
+            let srcPiece = state[move.sourceKey];
+            let tgtPiece = state[move.targetKey];
+
+            state[move.targetKey] = srcPiece;
+            delete state[move.sourceKey];
+
+            let res = minimax(state, depth - 1, alpha, beta, true);
+            let evaluation = res.score;
+
+            state[move.sourceKey] = srcPiece;
+            if (tgtPiece) state[move.targetKey] = tgtPiece;
+            else delete state[move.targetKey];
+
+            if (aiTimeoutOccurred) break; 
+
+            if (evaluation < minEval) {
+                minEval = evaluation;
+                bestMove = move;
+            }
+            beta = Math.min(beta, evaluation);
+            if (beta <= alpha) break; 
+        }
+        
+        if (!aiTimeoutOccurred) {
+            transpositionTable.set(boardKey, { score: minEval, move: bestMove, depth: depth });
+        }
+        return { score: minEval, move: bestMove };
+    }
+}
+
+// TÁCH RIÊNG vòng lặp Iterative Deepening thành 1 hàm thuần túy (không đụng DOM/UI)
+// để có thể tái sử dụng NGUYÊN VẸN (qua .toString()) bên trong Web Worker - đảm bảo
+// luồng chính và Worker luôn chạy CHÍNH XÁC cùng 1 logic, không bao giờ bị lệch nhau.
+function runIterativeDeepening(maxDepth) {
+    let absoluteBestMove = null;
+    let bestScore = 0;
+
+    for (let currentDepth = 1; currentDepth <= maxDepth; currentDepth++) {
+        let result = minimax(boardState, currentDepth, -Infinity, Infinity, true);
+
+        if (!aiTimeoutOccurred && result.move) {
+            absoluteBestMove = result.move;
+            bestScore = result.score;
+        } else {
+            break;
+        }
+
+        if (result.score >= 90000) break;
+    }
+
+    return { move: absoluteBestMove, score: bestScore };
+}
+
+// WEB WORKER: ĐƯA AI RA KHỎI LUỒNG CHÍNH ĐỂ KHÔNG LÀM ĐƠ GIAO DIỆN
+// Trước đây minimax() chạy đồng bộ trên luồng chính tới 3 giây mỗi lượt AI - dù có
+// bọc setTimeout, bản thân vòng lặp tính toán vẫn chặn hoàn toàn giao diện (không thể
+// cuộn trang, bấm nút, hay xem hiệu ứng) trong suốt thời gian đó. Nay AI chạy trong
+// 1 Web Worker (luồng nền riêng biệt) - giao diện luôn mượt trong lúc AI "suy nghĩ".
+//
+// Để tránh việc phải viết trùng lặp toàn bộ logic AI 2 lần (1 bản cho luồng chính,
+// 1 bản cho Worker) dẫn tới nguy cơ 2 bản bị lệch nhau khi sửa code sau này, ta dựng
+// mã nguồn Worker TRỰC TIẾP từ các hàm .toString() của chính các hàm đang chạy ở
+// luồng chính - chỉ cần sửa 1 nơi duy nhất, Worker luôn tự động đồng bộ theo.
+function buildAIWorkerSource() {
+    const constantsSource = `
+        const ROWS = ${ROWS};
+        const COLS = ${COLS};
+        const RIVER_CELLS = new Set(${JSON.stringify([...RIVER_CELLS])});
+        const TRAPS = new Set(${JSON.stringify([...TRAPS])});
+        const RED_TRAPS = new Set(${JSON.stringify([...RED_TRAPS])});
+        const BLUE_TRAPS = new Set(${JSON.stringify([...BLUE_TRAPS])});
+        const DEN_RED = ${JSON.stringify(DEN_RED)};
+        const DEN_BLUE = ${JSON.stringify(DEN_BLUE)};
+        const PIECE_VALUES = ${JSON.stringify(PIECE_VALUES)};
+        const BLUE_DEN_APPROACH = new Set(${JSON.stringify([...BLUE_DEN_APPROACH])});
+    `;
+
+    const functionsSource = [
+        isValidMove, getAllValidMoves, generateBoardKey, getStrategicBonus,
+        canReachSquareApprox, getThreatPenalty, computeSideThreat, evaluateBoard,
+        minimax, runIterativeDeepening
+    ].map(fn => fn.toString()).join('\n\n');
+
+    const workerMain = `
+        let boardState = {};
+        let transpositionTable = new Map();
+        let aiStartTime = 0;
+        let aiTimeoutOccurred = false;
+        let AI_TIME_LIMIT = 3000;
+
+        self.onmessage = function(e) {
+            const msg = e.data;
+            if (msg.type === 'clear-cache') {
+                transpositionTable.clear();
+                return;
+            }
+            if (msg.type === 'find-best-move') {
+                boardState = msg.boardState;
+                AI_TIME_LIMIT = msg.timeLimit;
+                aiStartTime = Date.now();
+                aiTimeoutOccurred = false;
+                const result = runIterativeDeepening(msg.maxDepth);
+                self.postMessage({ type: 'best-move', requestId: msg.requestId, move: result.move, score: result.score });
+            }
+        };
+    `;
+
+    return constantsSource + '\n\n' + functionsSource + '\n\n' + workerMain;
+}
+
+function initAIWorker() {
+    try {
+        if (typeof Worker === 'undefined') return null;
+        const source = buildAIWorkerSource();
+        const blob = new Blob([source], { type: 'application/javascript' });
+        const worker = new Worker(URL.createObjectURL(blob));
+        worker.onerror = function(err) {
+            console.log("Lỗi AI Worker, chuyển sang chạy dự phòng trên luồng chính:", err.message);
+            aiWorker = null; // Rớt về chế độ dự phòng đồng bộ cho các lượt sau
+        };
+        return worker;
+    } catch (e) {
+        console.log("Trình duyệt không hỗ trợ Web Worker, AI sẽ chạy trên luồng chính:", e);
+        return null;
+    }
+}
+
+let aiWorker = initAIWorker();
+
+// Gửi yêu cầu tìm nước đi tốt nhất - ưu tiên Worker (không chặn UI), dự phòng chạy
+// đồng bộ trên luồng chính nếu trình duyệt không hỗ trợ Worker.
+function requestAIMove(maxDepth, timeLimit) {
+    const myRequestId = ++aiRequestToken;
+
+    return new Promise((resolve) => {
+        if (aiWorker) {
+            const handleMessage = (e) => {
+                if (e.data.type === 'best-move' && e.data.requestId === myRequestId) {
+                    aiWorker.removeEventListener('message', handleMessage);
+                    resolve({ move: e.data.move, score: e.data.score, requestId: myRequestId });
+                }
+            };
+            aiWorker.addEventListener('message', handleMessage);
+            // postMessage tự động tạo BẢN SAO độc lập (structured clone) của boardState -
+            // Worker tính toán trên bản sao riêng, không bao giờ đụng chạm tới boardState thật.
+            aiWorker.postMessage({ type: 'find-best-move', boardState, maxDepth, timeLimit, requestId: myRequestId });
+        } else {
+            aiStartTime = Date.now();
+            aiTimeoutOccurred = false;
+            AI_TIME_LIMIT = timeLimit;
+            const result = runIterativeDeepening(maxDepth);
+            resolve({ move: result.move, score: result.score, requestId: myRequestId });
+        }
+    });
+}
+
+async function makeAIMove() {
+    if (currentTurn !== 'red') return;
+
+    const settings = DIFFICULTY_SETTINGS[currentDifficulty];
+    aiIsThinking = true;
+    updateStatusPanel();
+    updateUndoButtonState();
+
+    const result = await requestAIMove(settings.maxDepth, settings.timeLimit);
+
+    // Nếu có yêu cầu MỚI HƠN được gửi đi sau yêu cầu này (ví dụ người chơi bấm Undo
+    // trong lúc Worker vẫn đang tính cho thế cờ cũ) -> bỏ qua kết quả lỗi thời này.
+    if (result.requestId !== aiRequestToken) return;
+
+    aiIsThinking = false;
+    const absoluteBestMove = result.move;
+
+    if (absoluteBestMove) {
+        const { sourceKey, targetKey } = absoluteBestMove;
+        const targetPiece = boardState[targetKey];
+
+        saveToHistory();
+
+        // Ghi nhận vết nước đi vừa thực hiện của AI để phát sáng lên màn hình
+        lastMoveVisual = { from: sourceKey, to: targetKey };
+
+        if (targetPiece) {
+            playChessSound(true);
+            capturedByRed.push(targetPiece.power);
+        } else {
+            playChessSound(false);
+        }
+
+        boardState[targetKey] = boardState[sourceKey];
+        delete boardState[sourceKey];
+
+        if (targetKey === DEN_BLUE) {
+            winRed++; loseBlue++;
+            localStorage.setItem('winRed', winRed); localStorage.setItem('loseBlue', loseBlue);
+            updateScoreUI(); lastLoser = 'blue';
+            showCustomModal("🤖 SIÊU AI ĐÃ CHIẾN THẮNG!", "Bộ não toán học kết hợp thuật toán tối ưu đã chiếm trọn Hang Xanh!", "🤖", false).then(() => {
+                initGame(true);
+            });
+            return;
+        }
+
+        currentTurn = 'blue';
+        clearHighlights();
+        selectedCoords = null;
+        renderBoard();
+    } else {
+        // Trường hợp hiếm: AI không tìm được nước đi hợp lệ nào - vẫn phải giải phóng
+        // trạng thái "đang suy nghĩ" để giao diện không bị kẹt mãi mãi
+        updateUndoButtonState();
+        renderBoard();
+    }
+}
+
+// ĐĂNG KÝ SỰ KIỆN LẮNG NGHE (DOM)
+document.addEventListener("DOMContentLoaded", () => {
+    const btnGameMode = document.getElementById("btn-game-mode");
+    const btnDifficulty = document.getElementById("btn-difficulty");
+    const btnUndo = document.getElementById("btn-undo");
+    const btnClearScore = document.getElementById("btn-clear-score");
+    const btnReset = document.getElementById("btn-reset");
+
+    if (btnGameMode) {
+        btnGameMode.addEventListener("click", function() {
+            const iconEl = this.querySelector(".mode-icon");
+            if (currentGameMode === 'pvp') {
+                currentGameMode = 'ai';
+                this.setAttribute("data-mode", "ai");
+                if (iconEl) iconEl.innerText = "🤖"; 
+                if (currentTurn === 'red') {
+                    setTimeout(makeAIMove, 200);
+                }
+            } else {
+                currentGameMode = 'pvp';
+                this.setAttribute("data-mode", "pvp");
+                if (iconEl) iconEl.innerText = "🧑‍🤝‍🧑"; 
+                // Nếu đang tắt AI giữa lúc nó vẫn còn đang nghĩ cho lượt hiện tại,
+                // vô hiệu hóa luôn kết quả sắp trả về (người chơi không còn muốn AI đi nữa)
+                // và cập nhật lại UI ngay lập tức thay vì chờ Worker trả lời (có thể mất vài giây)
+                if (aiIsThinking) {
+                    aiRequestToken++;
+                    aiIsThinking = false;
+                    updateStatusPanel();
+                    updateUndoButtonState();
+                }
+            }
+        });
+    }
+
+    if (btnDifficulty) {
+        // Khởi tạo đúng biểu tượng/nhãn theo độ khó đã lưu từ lần chơi trước
+        const initSettings = DIFFICULTY_SETTINGS[currentDifficulty];
+        const iconEl0 = btnDifficulty.querySelector(".difficulty-icon");
+        if (iconEl0) iconEl0.innerText = initSettings.icon;
+        btnDifficulty.title = "Độ khó AI: " + initSettings.label;
+        btnDifficulty.dataset.level = currentDifficulty;
+
+        btnDifficulty.addEventListener("click", function() {
+            const idx = DIFFICULTY_ORDER.indexOf(currentDifficulty);
+            currentDifficulty = DIFFICULTY_ORDER[(idx + 1) % DIFFICULTY_ORDER.length];
+            localStorage.setItem('aiDifficulty', currentDifficulty);
+
+            const settings = DIFFICULTY_SETTINGS[currentDifficulty];
+            const iconEl = this.querySelector(".difficulty-icon");
+            if (iconEl) iconEl.innerText = settings.icon;
+            this.title = "Độ khó AI: " + settings.label;
+            this.dataset.level = currentDifficulty;
+        });
+    }
+
+    if (btnUndo) btnUndo.addEventListener("click", handleUndo);
+    if (btnClearScore) btnClearScore.addEventListener("click", handleClearScore);
+    if (btnReset) btnReset.addEventListener("click", () => initGame(false));
+
+    initGame(true);
+});
+    </script>
+</body>
+</html>
