@@ -6,7 +6,7 @@
     <title>Cờ Tướng — Triện Ấn Đường</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=Inter:wght@300;400;500;600;700&family=Noto+Serif+SC:wght@700;900&display=swap" rel="stylesheet">
 
     <style>
 /* ==========================================================
@@ -263,8 +263,13 @@ body {
     width: 22px; height: 22px;
     border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
-    font-size: 11px; font-weight: 700;
+    font-size: 11px; font-weight: 900;
+    font-family: 'Noto Serif SC', 'Songti SC', 'STSong', serif;
     color: var(--paper);
+    border: 1px solid var(--brass-dim);
+    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.5);
+    box-sizing: border-box;
+    opacity: 0.88;
 }
 .mini-piece.red {
     background: radial-gradient(circle at 34% 28%, #C24D39, var(--vermillion) 60%, #6E241A);
@@ -337,6 +342,77 @@ body {
     stroke-width: 1.2;
 }
 
+/* ========== HIỆU ỨNG TIA SÁNG CHIẾU TƯỚNG ==========
+   Một tia sáng rực rỡ nối từ quân đang chiếu tới vị trí Tướng bị chiếu,
+   mô phỏng luồng "sát khí" tỏa ra — gồm 3 lớp: tia mờ phát quang phía dưới
+   (blur rộng), lõi tia sáng rõ nét chạy hoa văn "chảy" phía trên, đốm lửa
+   nhỏ tại quân vừa chiếu (nguồn phát), và vầng hào quang bùng nổ nhẹ quanh
+   Tướng đang bị chiếu (điểm va chạm). Dùng mix-blend-mode: screen để tia
+   sáng luôn hòa vào nền mà không che khuất quân cờ bên dưới. */
+.check-beam-layer {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 12;
+    overflow: visible;
+    mix-blend-mode: screen;
+}
+
+.check-beam-glow {
+    stroke-width: 11;
+    stroke-linecap: round;
+    filter: blur(4.5px);
+    opacity: 0.7;
+    animation: checkBeamAppear 0.3s ease-out;
+}
+
+.check-beam-core {
+    stroke-width: 2.4;
+    stroke-linecap: round;
+    stroke-dasharray: 11 9;
+    filter: drop-shadow(0 0 5px rgba(255, 140, 90, 0.95));
+    animation: checkBeamAppear 0.3s ease-out, checkBeamFlow 0.7s linear infinite;
+}
+
+.check-beam-origin {
+    fill: #FFDCA8;
+    filter: drop-shadow(0 0 7px #FF6A45);
+    animation: checkBeamAppear 0.3s ease-out, checkBeamPulseSmall 1.1s ease-in-out infinite;
+    transform-box: fill-box;
+    transform-origin: center;
+}
+
+.check-beam-impact {
+    fill: url(#beamImpact);
+    animation: checkBeamAppear 0.3s ease-out, checkBeamPulseBig 1.1s ease-in-out infinite;
+    transform-box: fill-box;
+    transform-origin: center;
+}
+
+@keyframes checkBeamAppear {
+    from { opacity: 0; }
+}
+
+@keyframes checkBeamFlow {
+    from { stroke-dashoffset: 40; }
+    to   { stroke-dashoffset: 0; }
+}
+
+@keyframes checkBeamPulseSmall {
+    0%, 100% { transform: scale(0.85); opacity: 0.85; }
+    50%      { transform: scale(1.25); opacity: 1; }
+}
+
+@keyframes checkBeamPulseBig {
+    0%, 100% { transform: scale(0.88); opacity: 0.55; }
+    50%      { transform: scale(1.15); opacity: 0.95; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .check-beam-core, .check-beam-origin, .check-beam-impact { animation: checkBeamAppear 0.3s ease-out !important; }
+}
+
 .river-zone {
     position: absolute;
     top: 252px; left: 24px;
@@ -398,12 +474,25 @@ body {
     border-radius: 50%;
     background: radial-gradient(circle, var(--brass) 0%, var(--brass) 42%, transparent 78%);
     box-shadow: 0 0 14px var(--brass-glow);
-    animation: targetPulse 0.9s ease-in-out infinite alternate;
+    opacity: 0.9;
 }
 
-@keyframes targetPulse {
-    from { opacity: 0.55; transform: translate(-50%, -50%) scale(0.8); }
-    to   { opacity: 1; transform: translate(-50%, -50%) scale(1.08); }
+/* ========== ĐÁNH DẤU Ô "NƯỚC ĐI CUỐI CÙNG" (cả ô xuất phát & ô đến) ========== */
+.intersection.last-move::before {
+    content: '';
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 40px; height: 40px;
+    border-radius: 7px;
+    border: 2px solid var(--brass);
+    background: rgba(201, 161, 92, 0.08);
+    box-shadow: 0 0 9px var(--brass-glow), inset 0 0 7px var(--brass-glow);
+    pointer-events: none;
+}
+.intersection.last-move.last-move-from::before {
+    opacity: 0.55;
+    border-style: dashed;
 }
 
 .piece-container {
@@ -416,48 +505,110 @@ body {
 
 .chess-piece {
     position: absolute;
-    width: 44px; height: 44px;
+    top: 0; left: 0;
+    width: 46px; height: 46px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 20px;
-    font-weight: 700;
-    font-family: 'Noto Serif SC', 'Songti SC', 'STSong', serif;
     cursor: pointer;
     pointer-events: auto;
-    transform: translate(-50%, -50%);
-    transition: left 0.2s cubic-bezier(0.25, 1, 0.5, 1),
-                top 0.2s cubic-bezier(0.25, 1, 0.5, 1),
-                box-shadow 0.2s ease, scale 0.2s ease;
-    color: #F3E6CA;
-    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.55);
-    border: 2px solid var(--brass-dim);
-    box-shadow: inset 0 2px 3px rgba(255, 255, 255, 0.28), inset 0 -3px 6px rgba(0, 0, 0, 0.5), 0 4px 9px rgba(0, 0, 0, 0.5);
+    /* Vị trí trên bàn cờ được đưa vào qua 2 biến CSS --tx/--ty */
+    transform: translate(var(--tx, 0px), var(--ty, 0px)) translate(-50%, -50%);
+    box-sizing: border-box;
+    border: 2px solid var(--brass);
+    /* Nhiều lớp đổ bóng chồng nhau để mô phỏng một đĩa gỗ sơn mài chạm nổi:
+       viền sẫm tách quân khỏi nền gỗ bàn cờ, rãnh khắc mảnh sát mép trong,
+       ánh sáng hắt từ trên (inset sáng) và bóng đổ dưới đáy (inset tối),
+       cùng bóng đổ ra ngoài để quân "nổi" lên khỏi mặt bàn cờ. */
+    box-shadow:
+        0 0 0 1px rgba(18, 10, 5, 0.65),
+        inset 0 0 0 1.5px rgba(0, 0, 0, 0.22),
+        inset 0 3px 4px rgba(255, 255, 255, 0.32),
+        inset 0 -5px 8px rgba(0, 0, 0, 0.5),
+        0 2px 2px rgba(0, 0, 0, 0.3),
+        0 7px 11px -3px rgba(0, 0, 0, 0.6);
+}
+
+/* Vòng trang trí mảnh phía trong — mô phỏng đường khắc quanh chữ trên quân cờ tướng thật */
+.chess-piece::before {
+    content: '';
+    position: absolute;
+    inset: 4px;
+    border-radius: 50%;
+    border: 1px solid rgba(243, 230, 202, 0.24);
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.25);
+    pointer-events: none;
+}
+
+/* Ánh bóng loáng phía trên — cảm giác lớp sơn mài phủ bóng, ánh sáng hắt từ góc trên-trái */
+.chess-piece::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: radial-gradient(ellipse 60% 38% at 38% 20%, rgba(255, 255, 255, 0.38), transparent 70%);
+    mix-blend-mode: soft-light;
+    pointer-events: none;
+}
+
+.chess-piece .glyph {
+    position: relative;
+    z-index: 1;
+    font-size: 21px;
+    font-weight: 900;
+    font-family: 'Noto Serif SC', 'Songti SC', 'STSong', serif;
+    line-height: 1;
+    /* Chữ "dát vàng" bằng gradient thay vì màu phẳng, đồng bộ tông đồng thau của cả bàn cờ */
+    background: linear-gradient(180deg, #FFF6DF 0%, #F3E6CA 40%, #D8B26E 75%, #B4864A 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    filter: drop-shadow(0 1px 0.5px rgba(0, 0, 0, 0.55));
 }
 
 .chess-piece.red {
-    background: radial-gradient(circle at 34% 26%, #D6604A 0%, var(--vermillion) 55%, #6E241A 100%);
+    background: radial-gradient(circle at 34% 24%, #DE6C54 0%, var(--vermillion) 52%, #5F1F16 100%);
 }
 .chess-piece.black {
-    background: radial-gradient(circle at 34% 26%, #57B295 0%, var(--jade) 55%, #163A2E 100%);
-    transform: translate(-50%, -50%) rotate(180deg);
+    /* Vì cả quân được xoay 180° bên dưới, tâm sáng đặt ở góc dưới-phải trước khi xoay
+       để sau khi xoay, ánh sáng vẫn hắt từ góc trên-trái như quân đỏ — đồng bộ hướng sáng toàn bàn cờ */
+    background: radial-gradient(circle at 66% 76%, #5FBC9C 0%, var(--jade) 52%, #0F2B22 100%);
+    transform: translate(var(--tx, 0px), var(--ty, 0px)) translate(-50%, -50%) rotate(180deg);
+}
+
+.chess-piece:hover {
+    filter: brightness(1.08);
 }
 
 .chess-piece.selected {
-    scale: 1.14;
     border-color: var(--brass) !important;
-    box-shadow: 0 0 0 3px var(--brass-glow), 0 6px 16px rgba(0, 0, 0, 0.55) !important;
+    box-shadow:
+        0 0 0 1px rgba(18, 10, 5, 0.65),
+        inset 0 0 0 1.5px rgba(0, 0, 0, 0.22),
+        inset 0 3px 4px rgba(255, 255, 255, 0.32),
+        inset 0 -5px 8px rgba(0, 0, 0, 0.5),
+        0 0 0 3px var(--brass-glow), 0 6px 16px rgba(0, 0, 0, 0.55) !important;
+}
+/* Phóng to quân đang chọn: BẮT BUỘC gộp scale() vào chung chuỗi transform bên dưới
+   (chứ không dùng thuộc tính `scale` riêng ở trên) — vì thuộc tính `scale` riêng sẽ
+   phóng to quanh tâm hộp gốc (chưa dịch chuyển bằng --tx/--ty), khiến quân càng ở xa
+   góc trên-trái bàn cờ càng bị "văng" lệch xa khỏi vị trí thật khi được chọn. */
+.chess-piece.red.selected {
+    transform: translate(var(--tx, 0px), var(--ty, 0px)) translate(-50%, -50%) scale(1.14);
+}
+.chess-piece.black.selected {
+    transform: translate(var(--tx, 0px), var(--ty, 0px)) translate(-50%, -50%) rotate(180deg) scale(1.14);
 }
 
 .chess-piece.valid-enemy-target {
-    animation: enemyTargetGlow 1s ease-in-out infinite alternate;
     border-color: var(--brass) !important;
-}
-
-@keyframes enemyTargetGlow {
-    from { box-shadow: 0 0 6px var(--brass-glow); }
-    to   { box-shadow: 0 0 20px var(--brass), inset 0 0 8px var(--brass-glow); }
+    box-shadow:
+        0 0 0 1px rgba(18, 10, 5, 0.65),
+        inset 0 0 0 1.5px rgba(0, 0, 0, 0.22),
+        inset 0 3px 4px rgba(255, 255, 255, 0.32),
+        inset 0 -5px 8px rgba(0, 0, 0, 0.5),
+        0 0 14px var(--brass), inset 0 0 8px var(--brass-glow);
 }
 
 /* ========================================================
@@ -545,6 +696,12 @@ body {
     color: var(--vermillion);
 }
 .control-btn.btn-clear-score:hover .icon { color: var(--vermillion); }
+
+.control-btn.toggle-off {
+    opacity: 0.5;
+    color: var(--paper-dim);
+}
+.control-btn.toggle-off .icon { color: var(--paper-dim); }
 
 /* ========================================================
    ICON SVG NỘI BỘ
@@ -825,6 +982,8 @@ body {
                             <line x1="304" y1="416" x2="192" y2="528" />
                         </svg>
 
+                        <svg class="check-beam-layer" id="check-beam-layer"></svg>
+
                         <div class="click-matrix" id="matrix-grid"></div>
                         <div class="piece-container" id="pieces-box"></div>
                     </div>
@@ -852,6 +1011,14 @@ body {
                     <button class="control-btn btn-clear-score" onclick="engine.confirmResetRecords()" title="Xóa Điểm">
                         <span class="icon" data-icon="trash"></span>
                         <em>Xóa Điểm</em>
+                    </button>
+                    <button class="control-btn btn-sound-toggle" id="sound-toggle-btn" onclick="engine.toggleSound()" title="Bật/Tắt Âm Thanh">
+                        <span class="icon" data-icon="volume-on"></span>
+                        <em>Âm Thanh</em>
+                    </button>
+                    <button class="control-btn btn-hint-toggle" id="hint-toggle-btn" onclick="engine.toggleMoveHints()" title="Bật/Tắt Gợi Ý Nước Đi">
+                        <span class="icon" data-icon="target"></span>
+                        <em>Gợi Ý</em>
                     </button>
                 </div>
             </div>
@@ -1506,9 +1673,59 @@ function recordHistory(move, depth) {
     historyTable[key] = (historyTable[key] || 0) + depth * depth;
 }
 
-// ---- Quiescence Search: chỉ đuổi theo các nước ăn quân cho tới khi "yên tĩnh" ----
-function quiescence(alpha, beta, piecesState, isMaximizing, qDepth) {
+// Giới hạn số nước mở rộng LIÊN TIẾP do đang bị chiếu (tách riêng khỏi qDepth
+// của các nước ăn quân) — để truy đúng các đòn chiếu-ăn-chiếu-ăn... sâu, nhưng
+// vẫn chặn được trường hợp bị rượt chiếu (perpetual check) làm cây tìm kiếm
+// phình vô hạn hoặc tràn ngăn xếp gọi hàm.
+const MAX_CHECK_EXT = 6;
+
+// ---- Quiescence Search: đuổi theo các nước ăn quân cho tới khi "yên tĩnh",
+// CỘNG THÊM check-extension: nếu bên vừa nhận lượt đang bị chiếu, không được
+// phép "đứng yên" (stand-pat) — bắt buộc phải xét MỌI nước đi (kể cả không ăn
+// quân) để tìm cách thoát chiếu, nếu không AI có thể bỏ lỡ các đòn chiếu sâu
+// (hy sinh quân để dồn chiếu liên hoàn) vì trước đây quiescence chỉ nhìn thấy
+// nước ăn quân, bỏ qua các nước chiếu "chay" không ăn gì.
+function quiescence(alpha, beta, piecesState, isMaximizing, qDepth, checkExtLeft) {
     checkTime();
+    const side = isMaximizing ? 'black' : 'red';
+    const inCheck = isKingInCheck(side, piecesState);
+
+    // ---- Đang bị chiếu và còn ngân sách mở rộng: xét toàn bộ nước đi hợp lệ
+    // về mặt hình học (không chỉ nước ăn quân), không dùng stand-pat.
+    if (inCheck && checkExtLeft > 0) {
+        const moves = generatePseudoMoves(side, piecesState);
+        if (moves.length === 0) {
+            // Hết nước đi trong khi đang bị chiếu -> chiếu bí thật sự
+            return isMaximizing ? -29000 : 29000;
+        }
+
+        if (isMaximizing) {
+            let best = -Infinity;
+            for (let i = 0; i < moves.length; i++) {
+                const mv = moves[i];
+                const nextState = simulateMove(mv.pieceIndex, mv.targetX, mv.targetY, piecesState);
+                const score = quiescence(alpha, beta, nextState, false, qDepth, checkExtLeft - 1);
+                if (score > best) best = score;
+                if (score > alpha) alpha = score;
+                if (beta <= alpha) break;
+            }
+            return best;
+        } else {
+            let best = Infinity;
+            for (let i = 0; i < moves.length; i++) {
+                const mv = moves[i];
+                const nextState = simulateMove(mv.pieceIndex, mv.targetX, mv.targetY, piecesState);
+                const score = quiescence(alpha, beta, nextState, true, qDepth, checkExtLeft - 1);
+                if (score < best) best = score;
+                if (score < beta) beta = score;
+                if (beta <= alpha) break;
+            }
+            return best;
+        }
+    }
+
+    // ---- Trường hợp bình thường (không bị chiếu, hoặc đã hết ngân sách mở
+    // rộng): cho phép "đứng yên" rồi chỉ truy theo nước ăn quân như cũ.
     const standPat = evaluateBoard(piecesState);
 
     if (isMaximizing) {
@@ -1520,7 +1737,6 @@ function quiescence(alpha, beta, piecesState, isMaximizing, qDepth) {
     }
     if (qDepth <= 0) return isMaximizing ? alpha : beta;
 
-    const side = isMaximizing ? 'black' : 'red';
     const moves = generatePseudoMoves(side, piecesState).filter(m => m.isCapture);
     if (moves.length === 0) return isMaximizing ? alpha : beta;
 
@@ -1528,10 +1744,10 @@ function quiescence(alpha, beta, piecesState, isMaximizing, qDepth) {
         const mv = moves[i];
         const nextState = simulateMove(mv.pieceIndex, mv.targetX, mv.targetY, piecesState);
         if (isMaximizing) {
-            const score = quiescence(alpha, beta, nextState, false, qDepth - 1);
+            const score = quiescence(alpha, beta, nextState, false, qDepth - 1, checkExtLeft);
             if (score > alpha) alpha = score;
         } else {
-            const score = quiescence(alpha, beta, nextState, true, qDepth - 1);
+            const score = quiescence(alpha, beta, nextState, true, qDepth - 1, checkExtLeft);
             if (score < beta) beta = score;
         }
         if (beta <= alpha) break;
@@ -1555,7 +1771,7 @@ function minimax(depth, isMaximizing, alpha, beta, piecesState) {
     }
 
     if (depth === 0) {
-        return quiescence(alpha, beta, piecesState, isMaximizing, 3);
+        return quiescence(alpha, beta, piecesState, isMaximizing, 3, MAX_CHECK_EXT);
     }
 
     let moves = generatePseudoMoves(side, piecesState);
@@ -1737,6 +1953,89 @@ if (typeof importScripts === 'function') {
     </script>
     <script>
 // ==========================================================
+// HIỆU ỨNG ÂM THANH — tổng hợp trực tiếp bằng Web Audio API,
+// KHÔNG dùng file âm thanh ngoài nên không phụ thuộc mạng và
+// hoạt động ngay cả khi mở file HTML offline.
+// ==========================================================
+const SoundFX = {
+    ctx: null,
+    enabled: true,
+
+    // AudioContext chỉ được phép "resume" sau một cử chỉ (gesture) của người
+    // dùng (click/tap) theo chính sách autoplay của trình duyệt. Hàm này được
+    // gọi cả từ listener toàn trang (unlock sớm) lẫn ngay trước mỗi lần phát.
+    ensureContext() {
+        if (!this.ctx) {
+            try {
+                const AC = window.AudioContext || window.webkitAudioContext;
+                this.ctx = AC ? new AC() : null;
+            } catch (e) {
+                this.ctx = null;
+            }
+        }
+        if (this.ctx && this.ctx.state === 'suspended') {
+            this.ctx.resume().catch(() => {});
+        }
+        return this.ctx;
+    },
+
+    // Phát một nốt đơn với bao hình (envelope) tắt dần tự nhiên, tránh tiếng "tách" khô khốc
+    tone(freq, startTime, duration, { type = 'sine', gain = 0.2, glideTo = null } = {}) {
+        const ctx = this.ctx;
+        const osc = ctx.createOscillator();
+        const gainNode = ctx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, startTime);
+        if (glideTo) osc.frequency.exponentialRampToValueAtTime(glideTo, startTime + duration);
+        gainNode.gain.setValueAtTime(0.0001, startTime);
+        gainNode.gain.linearRampToValueAtTime(gain, startTime + 0.008);
+        gainNode.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
+        osc.connect(gainNode);
+        gainNode.connect(ctx.destination);
+        osc.start(startTime);
+        osc.stop(startTime + duration + 0.03);
+    },
+
+    playMove() {
+        if (!this.enabled) return;
+        const ctx = this.ensureContext();
+        if (!ctx) return;
+        const t = ctx.currentTime;
+        // Tiếng "cốc" gỗ nhẹ, gọn — mô phỏng quân cờ đặt xuống bàn gỗ
+        this.tone(392, t, 0.09, { type: 'triangle', gain: 0.16, glideTo: 280 });
+    },
+
+    playCapture() {
+        if (!this.enabled) return;
+        const ctx = this.ensureContext();
+        if (!ctx) return;
+        const t = ctx.currentTime;
+        // Tiếng "cạch" đanh hơn + một lớp trầm để cảm giác "va chạm" rõ ràng hơn nước đi thường
+        this.tone(220, t, 0.10, { type: 'square', gain: 0.14, glideTo: 130 });
+        this.tone(150, t + 0.025, 0.15, { type: 'sine', gain: 0.20, glideTo: 90 });
+    },
+
+    playCheck() {
+        if (!this.enabled) return;
+        const ctx = this.ensureContext();
+        if (!ctx) return;
+        const t = ctx.currentTime;
+        // Hai nốt cao dồn dập kiểu chuông báo — nổi bật hẳn so với tiếng đi/ăn quân bình thường
+        this.tone(880, t, 0.13, { type: 'sine', gain: 0.20 });
+        this.tone(1046, t + 0.13, 0.20, { type: 'sine', gain: 0.22 });
+    },
+
+    setEnabled(v) {
+        this.enabled = v;
+        try { localStorage.setItem('xiangqi_sound_enabled', v ? 'true' : 'false'); } catch (e) {}
+    }
+};
+// Mở khóa AudioContext càng sớm càng tốt ngay khi người dùng chạm/click lần đầu
+// vào trang (kể cả khi cú click đầu tiên đó là bấm nút chứ không phải đi quân) —
+// nhờ vậy các nước đi tự động của AI ngay sau đó vẫn phát được âm thanh.
+document.addEventListener('pointerdown', () => SoundFX.ensureContext(), { once: true, passive: true });
+
+// ==========================================================
 // BỘ ICON SVG NỘI BỘ (Thay thế Font Awesome để tránh lỗi tải font ngoài)
 // ==========================================================
 const ICONS = {
@@ -1747,7 +2046,11 @@ const ICONS = {
     'warning': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>',
     'trophy': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8"></path><path d="M12 17v4"></path><path d="M7 4h10v5a5 5 0 0 1-10 0V4z"></path><path d="M17 5h3a2 2 0 0 1 2 2v1a4 4 0 0 1-4 4"></path><path d="M7 5H4a2 2 0 0 0-2 2v1a4 4 0 0 0 4 4"></path></svg>',
     'users': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>',
-    'robot': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="8" width="16" height="12" rx="2"></rect><path d="M12 8V4"></path><circle cx="12" cy="3" r="1"></circle><circle cx="9" cy="13" r="1.2" fill="currentColor" stroke="none"></circle><circle cx="15" cy="13" r="1.2" fill="currentColor" stroke="none"></circle><path d="M9 17h6"></path><path d="M2 12h2"></path><path d="M20 12h2"></path></svg>'
+    'robot': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="8" width="16" height="12" rx="2"></rect><path d="M12 8V4"></path><circle cx="12" cy="3" r="1"></circle><circle cx="9" cy="13" r="1.2" fill="currentColor" stroke="none"></circle><circle cx="15" cy="13" r="1.2" fill="currentColor" stroke="none"></circle><path d="M9 17h6"></path><path d="M2 12h2"></path><path d="M20 12h2"></path></svg>',
+    'volume-on': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>',
+    'volume-off': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>',
+    'target': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>',
+    'target-off': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" stroke-dasharray="3 3"></circle><circle cx="12" cy="12" r="6" stroke-dasharray="2.5 2.5"></circle><circle cx="12" cy="12" r="2"></circle><line x1="3" y1="3" x2="21" y2="21"></line></svg>'
 };
 function iconHTML(name) {
     return ICONS[name] || ICONS['info'];
@@ -1762,6 +2065,25 @@ const DIFFICULTY_PRESETS = {
     hard: { maxDepth: 14, timeBudget: 3000, label: 'Khó' }
 };
 
+// ==========================================================
+// TÌM (CÁC) QUÂN ĐANG THỰC HIỆN CHIẾU TƯỚNG — dùng cho hiệu ứng tia sáng
+// (tách khỏi core-engine-src vì chỉ phục vụ UI, không cần trong Worker)
+// ==========================================================
+function findCheckingPieces(side, piecesState) {
+    const gen = piecesState.find(p => p.type === 'Tướng' && p.side === side);
+    if (!gen) return [];
+    const enemy = side === 'red' ? 'black' : 'red';
+    const grid = buildGrid(piecesState);
+    const checkers = [];
+    for (let i = 0; i < piecesState.length; i++) {
+        const p = piecesState[i];
+        if (p.side !== enemy) continue;
+        const moves = pieceMoves(p, grid);
+        if (moves.some(m => m[0] === gen.x && m[1] === gen.y)) checkers.push(p);
+    }
+    return checkers; // mảng vì hiếm khi có "song chiếu" (2 quân cùng chiếu 1 lúc)
+}
+
 const engine = {
     turn: 'red',
     selectedIdx: null,
@@ -1773,6 +2095,8 @@ const engine = {
     searchId: 0,
     aiWorker: null,
     positionCounts: {},
+    lastMove: null, // { fromX, fromY, toX, toY } — nước đi vừa thực hiện (của bất kỳ phe nào)
+    showMoveHints: true, // bật/tắt chấm gợi ý ô đi tới + viền quân địch có thể ăn khi chọn quân
 
     records: {
         red: { win: 0, lose: 0 },
@@ -1833,6 +2157,14 @@ const engine = {
         const savedDiff = localStorage.getItem('xiangqi_difficulty');
         if (savedDiff && DIFFICULTY_PRESETS[savedDiff]) this.difficulty = savedDiff;
         this.updateDifficultyUI();
+
+        const savedSound = localStorage.getItem('xiangqi_sound_enabled');
+        SoundFX.enabled = (savedSound === null) ? true : (savedSound === 'true');
+        this.updateSoundUI();
+
+        const savedHints = localStorage.getItem('xiangqi_move_hints');
+        this.showMoveHints = (savedHints === null) ? true : (savedHints === 'true');
+        this.updateHintUI();
 
         this.reset(); // reset() sẽ tự gọi createWorker() qua interruptAI(), không cần gọi thêm ở đây
     },
@@ -1924,6 +2256,73 @@ const engine = {
         }
     },
 
+    toggleSound() {
+        SoundFX.setEnabled(!SoundFX.enabled);
+        this.updateSoundUI();
+        if (SoundFX.enabled) SoundFX.playCapture(); // phát thử 1 tiếng để người dùng biết vừa bật lại
+    },
+
+    updateSoundUI() {
+        const btn = document.getElementById('sound-toggle-btn');
+        if (!btn) return;
+        const icon = btn.querySelector('.icon');
+        if (icon) icon.innerHTML = iconHTML(SoundFX.enabled ? 'volume-on' : 'volume-off');
+        btn.classList.toggle('toggle-off', !SoundFX.enabled);
+    },
+
+    toggleMoveHints() {
+        this.showMoveHints = !this.showMoveHints;
+        try { localStorage.setItem('xiangqi_move_hints', this.showMoveHints ? 'true' : 'false'); } catch (e) {}
+        this.updateHintUI();
+        this.refreshUI(); // vẽ/xoá ngay chấm gợi ý cho quân đang được chọn (nếu có)
+    },
+
+    updateHintUI() {
+        const btn = document.getElementById('hint-toggle-btn');
+        if (!btn) return;
+        const icon = btn.querySelector('.icon');
+        if (icon) icon.innerHTML = iconHTML(this.showMoveHints ? 'target' : 'target-off');
+        btn.classList.toggle('toggle-off', !this.showMoveHints);
+    },
+
+    // Vẽ tia sáng nối từ (các) quân đang chiếu tới Tướng bị chiếu. Toạ độ pixel
+    // dùng chung hệ quy chiếu với lưới bàn cờ (board-svg): ô (x,y) -> (24 + x*56, 24 + y*56).
+    renderCheckBeam(inCheck) {
+        const svg = document.getElementById('check-beam-layer');
+        if (!svg) return;
+        if (!inCheck) { svg.innerHTML = ''; return; }
+
+        const gen = this.pieces.find(p => p.type === 'Tướng' && p.side === this.turn);
+        const checkers = findCheckingPieces(this.turn, this.pieces);
+        if (!gen || checkers.length === 0) { svg.innerHTML = ''; return; }
+
+        const px = gx => 24 + gx * 56;
+        const py = gy => 24 + gy * 56;
+        const gx = px(gen.x), gy = py(gen.y);
+
+        let defsInner = `<radialGradient id="beamImpact" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#FFD9A0" stop-opacity="0.95"/>
+            <stop offset="45%" stop-color="#FF6A45" stop-opacity="0.55"/>
+            <stop offset="100%" stop-color="#FF6A45" stop-opacity="0"/>
+        </radialGradient>`;
+
+        let beams = '';
+        checkers.forEach((c, idx) => {
+            const cx = px(c.x), cy = py(c.y);
+            const gradId = `beamGrad${idx}`;
+            defsInner += `<linearGradient id="${gradId}" gradientUnits="userSpaceOnUse" x1="${cx}" y1="${cy}" x2="${gx}" y2="${gy}">
+                <stop offset="0%" stop-color="#C9A15C" stop-opacity="0.12"/>
+                <stop offset="60%" stop-color="#E8A85A" stop-opacity="0.78"/>
+                <stop offset="100%" stop-color="#FF5A3C" stop-opacity="1"/>
+            </linearGradient>`;
+            beams += `<line x1="${cx}" y1="${cy}" x2="${gx}" y2="${gy}" class="check-beam-glow" stroke="url(#${gradId})" />
+                <line x1="${cx}" y1="${cy}" x2="${gx}" y2="${gy}" class="check-beam-core" stroke="url(#${gradId})" />
+                <circle cx="${cx}" cy="${cy}" r="6" class="check-beam-origin" />`;
+        });
+
+        svg.innerHTML = `<defs>${defsInner}</defs>${beams}<circle cx="${gx}" cy="${gy}" r="26" class="check-beam-impact" />`;
+    },
+
     buildMatrixDOM() {
         const grid = document.getElementById('matrix-grid');
         grid.innerHTML = '';
@@ -1947,6 +2346,7 @@ const engine = {
         this.selectedIdx = null;
         this.historyStack = [];
         this.positionCounts = {};
+        this.lastMove = null;
 
         const nameBlack = document.getElementById('name-black');
         const avatarBlack = document.getElementById('avatar-black');
@@ -1982,6 +2382,7 @@ const engine = {
         const inCheck = isKingInCheck(this.turn, this.pieces);
         cardRed.classList.toggle('in-check', this.turn === 'red' && inCheck);
         cardBlack.classList.toggle('in-check', this.turn === 'black' && inCheck);
+        this.renderCheckBeam(inCheck);
 
         document.getElementById('win-red').innerText = this.records.red.win;
         document.getElementById('lose-red').innerText = this.records.red.lose;
@@ -2003,8 +2404,14 @@ const engine = {
             }
         });
 
-        document.querySelectorAll('.intersection').forEach(c => c.classList.remove('valid-target'));
-        if (this.selectedIdx !== null) {
+        document.querySelectorAll('.intersection').forEach(c => c.classList.remove('valid-target', 'last-move', 'last-move-from'));
+        if (this.lastMove) {
+            const fromEl = document.getElementById(`coord-${this.lastMove.fromX}-${this.lastMove.fromY}`);
+            const toEl = document.getElementById(`coord-${this.lastMove.toX}-${this.lastMove.toY}`);
+            if (fromEl) fromEl.classList.add('last-move', 'last-move-from');
+            if (toEl) toEl.classList.add('last-move');
+        }
+        if (this.selectedIdx !== null && this.showMoveHints) {
             for (let y = 0; y < 10; y++) {
                 for (let x = 0; x < 9; x++) {
                     if (isLegalMove(this.selectedIdx, x, y, this.pieces)) {
@@ -2014,18 +2421,43 @@ const engine = {
             }
         }
 
+        this.renderPieces();
+    },
+
+    // Render quân cờ theo kiểu "tái sử dụng phần tử DOM" (diff theo piece.id) thay vì
+    // xóa-và-tạo-lại-toàn-bộ mỗi lần refresh — vừa nhẹ hơn cho trình duyệt, vừa tránh mất
+    // trạng thái onclick/class không cần thiết. Quân cờ chuyển vị trí tức thì, không hiệu ứng.
+    renderPieces() {
         const box = document.getElementById('pieces-box');
-        box.innerHTML = '';
+        const existingEls = {};
+        box.querySelectorAll('.chess-piece[data-id]').forEach(el => { existingEls[el.dataset.id] = el; });
+        const aliveIds = new Set(this.pieces.map(p => String(p.id)));
+
         this.pieces.forEach((p, index) => {
-            const pEl = document.createElement('div');
+            const idStr = String(p.id);
+            let pEl = existingEls[idStr];
+
+            if (!pEl) {
+                pEl = document.createElement('div');
+                pEl.dataset.id = idStr;
+                pEl.innerHTML = `<span class="glyph">${p.name}</span>`;
+                box.appendChild(pEl);
+            }
+
             pEl.className = `chess-piece ${p.side}`;
             if (this.selectedIdx === index) pEl.classList.add('selected');
-            if (this.selectedIdx !== null) {
-                if (isLegalMove(this.selectedIdx, p.x, p.y, this.pieces)) pEl.classList.add('valid-enemy-target');
+            if (this.selectedIdx !== null && this.showMoveHints && isLegalMove(this.selectedIdx, p.x, p.y, this.pieces)) {
+                pEl.classList.add('valid-enemy-target');
             }
-            pEl.style.left = `${p.x * 56}px`; pEl.style.top = `${p.y * 56}px`; pEl.innerText = p.name;
             pEl.onclick = (e) => { e.stopPropagation(); this.handlePieceAction(index); };
-            box.appendChild(pEl);
+
+            pEl.style.setProperty('--tx', `${p.x * 56}px`);
+            pEl.style.setProperty('--ty', `${p.y * 56}px`);
+        });
+
+        // Xóa ngay khỏi DOM các quân không còn trong this.pieces (đã bị ăn)
+        Object.keys(existingEls).forEach(idStr => {
+            if (!aliveIds.has(idStr)) existingEls[idStr].remove();
         });
     },
 
@@ -2099,8 +2531,9 @@ const engine = {
         if (this.isAIActive && this.turn === 'black') return;
 
         if (isLegalMove(this.selectedIdx, x, y, this.pieces)) {
-            this.historyStack.push(JSON.stringify({ pieces: this.pieces, turn: this.turn }));
+            this.historyStack.push(JSON.stringify({ pieces: this.pieces, turn: this.turn, lastMove: this.lastMove }));
             const activePiece = this.pieces[this.selectedIdx];
+            const fromX = activePiece.x, fromY = activePiece.y;
             const enemyIdx = this.pieces.findIndex(p => p.x === x && p.y === y);
             let isGameOver = false;
 
@@ -2111,8 +2544,10 @@ const engine = {
             }
 
             activePiece.x = x; activePiece.y = y;
+            this.lastMove = { fromX, fromY, toX: x, toY: y, pieceId: activePiece.id, wasCapture: enemyIdx !== -1 };
 
             if (isGameOver) {
+                SoundFX.playCapture();
                 this.executeGameOver(activePiece.side);
                 return;
             }
@@ -2120,6 +2555,9 @@ const engine = {
             this.turn = (this.turn === 'red') ? 'black' : 'red';
             this.selectedIdx = null;
             this.refreshUI();
+
+            if (isKingInCheck(this.turn, this.pieces)) SoundFX.playCheck();
+            else if (enemyIdx !== -1) SoundFX.playCapture();
 
             // Kiểm tra hòa cờ do lặp lại thế cờ 3 lần
             if (this.checkRepetitionDraw()) return;
@@ -2195,9 +2633,11 @@ const engine = {
             this.historyStack.pop(); // Xóa nước của máy
             const previousState = JSON.parse(this.historyStack.pop()); // Lấy nước trước của người
             this.pieces = previousState.pieces; this.turn = previousState.turn;
+            this.lastMove = previousState.lastMove || null;
         } else {
             const previousState = JSON.parse(this.historyStack.pop());
             this.pieces = previousState.pieces; this.turn = previousState.turn;
+            this.lastMove = previousState.lastMove || null;
         }
         this.selectedIdx = null; this.refreshUI();
     },
@@ -2255,9 +2695,10 @@ const engine = {
             infoEl.innerText = `Độ sâu ${data.depth} · ${data.nodes.toLocaleString('vi-VN')} nút · điểm ${data.score}`;
         }
 
-        this.historyStack.push(JSON.stringify({ pieces: this.pieces, turn: this.turn }));
+        this.historyStack.push(JSON.stringify({ pieces: this.pieces, turn: this.turn, lastMove: this.lastMove }));
 
         const aiPiece = this.pieces[bestMove.pieceIndex];
+        const fromX = aiPiece.x, fromY = aiPiece.y;
         const enemyIdx = this.pieces.findIndex(p => p.x === bestMove.targetX && p.y === bestMove.targetY);
         let isGameOver = false;
 
@@ -2268,14 +2709,19 @@ const engine = {
 
         aiPiece.x = bestMove.targetX;
         aiPiece.y = bestMove.targetY;
+        this.lastMove = { fromX, fromY, toX: bestMove.targetX, toY: bestMove.targetY, pieceId: aiPiece.id, wasCapture: enemyIdx !== -1 };
 
         if (isGameOver) {
+            SoundFX.playCapture();
             this.executeGameOver('black');
             return;
         }
 
         this.turn = 'red';
         this.refreshUI();
+
+        if (isKingInCheck('red', this.pieces)) SoundFX.playCheck();
+        else if (enemyIdx !== -1) SoundFX.playCapture();
 
         if (this.checkRepetitionDraw()) return;
 
