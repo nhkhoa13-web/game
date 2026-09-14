@@ -235,6 +235,9 @@ body {
     min-height: 12px;
     margin-top: 2px;
 }
+.ai-search-info:empty {
+    display: none;
+}
 
 .plaque-tray-label {
     font-family: 'Inter', sans-serif;
@@ -1545,18 +1548,54 @@ function positionKey(piecesState, sideToMove) {
 // ==========================================================
 // HÀM ĐÁNH GIÁ TỔNG ĐIỂM BÀN CỜ (điểm dương = có lợi cho phe Xanh)
 // ==========================================================
+// Tổng giá trị vật chất (không tính Tướng) của CẢ HAI BÊN lúc khởi cuộc — dùng làm
+// mốc quy đổi "giai đoạn ván cờ" (phase): càng gần giá trị này càng ở khai/trung
+// cuộc (an toàn Tướng quan trọng), càng về 0 càng là tàn cuộc (ít quân tấn công
+// còn lại nên an toàn Tướng bớt quan trọng, hoạt động của quân còn lại quan trọng hơn).
+const OPENING_MATERIAL_TOTAL = 2 * (950 + 480 + 450 + 250 + 250) + 10 * 120; // = 10720
+
+// Quét dọc theo cột của Tướng ra phía đối phương, đếm số quân "che" (screen) của
+// chính mình gặp phải trước khi chạm quân địch — dùng để phát hiện nguy cơ bị Xe
+// nhắm thẳng (0 quân che) hoặc bị Pháo nhắm qua đúng 1 ngòi (1 quân che). Trả về
+// một số ÂM (mức độ nguy hiểm) theo góc nhìn của chính bên có Tướng đang được xét.
+function kingFileThreat(genX, genY, side, grid) {
+    const enemySide = side === 'red' ? 'black' : 'red';
+    const dir = side === 'red' ? -1 : 1; // hướng quét từ Tướng ra phía đối phương
+    let screenCount = 0;
+    for (let y = genY + dir; y >= 0 && y <= 9; y += dir) {
+        const occ = grid[genX][y];
+        if (!occ) continue;
+        if (occ.side === enemySide) {
+            if (occ.type === 'Xe') return screenCount === 0 ? -60 : -15;
+            if (occ.type === 'Pháo') return screenCount === 1 ? -45 : (screenCount === 0 ? -10 : 0);
+            return 0; // Mã/Tốt/quân khác không tạo áp lực trực tiếp dọc theo cách quét này
+        }
+        screenCount++;
+        if (screenCount > 1) return 0; // đã đủ 2 lớp che chắn thì coi như an toàn theo hướng cột này
+    }
+    return 0;
+}
+
 function evaluateBoard(piecesState) {
     let score = 0;
     let blackGeneralAlive = false;
     let redGeneralAlive = false;
+    let blackGen = null, redGen = null;
+    let blackGuards = 0, redGuards = 0; // số Sĩ + Tượng còn sống của mỗi bên (tối đa 4)
+    let totalMaterial = 0; // tổng giá trị quân (trừ Tướng) của CẢ 2 bên — dùng ước lượng giai đoạn ván cờ
 
     for (let i = 0; i < piecesState.length; i++) {
         const p = piecesState[i];
         let val = PIECE_VALUES[p.type] || 0;
 
         if (p.type === 'Tướng') {
-            if (p.side === 'black') blackGeneralAlive = true;
-            if (p.side === 'red') redGeneralAlive = true;
+            if (p.side === 'black') { blackGeneralAlive = true; blackGen = p; }
+            else { redGeneralAlive = true; redGen = p; }
+        } else {
+            totalMaterial += val;
+            if (p.type === 'Sĩ' || p.type === 'Tượng') {
+                if (p.side === 'black') blackGuards++; else redGuards++;
+            }
         }
 
         if (POS_TABLES[p.type]) {
@@ -1573,6 +1612,31 @@ function evaluateBoard(piecesState) {
     // vì thế cờ chiếu bí đã được phát hiện bằng hasLegalMoves trước đó)
     if (!blackGeneralAlive) return -99999;
     if (!redGeneralAlive) return 99999;
+
+    const grid = buildGrid(piecesState);
+
+    // ---- ĐỘ LINH HOẠT (MOBILITY): thưởng Xe/Mã/Pháo có nhiều lựa chọn di chuyển —
+    // một quân bị bó chân/kẹt góc dù còn nguyên giá trị vật chất vẫn kém giá trị
+    // thực chiến hơn một quân cùng loại đang hoạt động tự do.
+    const MOBILITY_WEIGHT = { 'Xe': 2, 'Mã': 3, 'Pháo': 2 };
+    for (let i = 0; i < piecesState.length; i++) {
+        const p = piecesState[i];
+        const w = MOBILITY_WEIGHT[p.type];
+        if (!w) continue;
+        const mob = pieceMoves(p, grid).length * w;
+        if (p.side === 'black') score += mob; else score -= mob;
+    }
+
+    // ---- AN TOÀN TƯỚNG (KING SAFETY) ----
+    // Hệ số giai đoạn: 1.0 lúc đầy đủ quân (khai cuộc), giảm dần về 0 khi tàn cuộc
+    // (ít quân tấn công còn lại thì an toàn Tướng đỡ quan trọng hơn hoạt động quân).
+    const phase = Math.min(1, totalMaterial / OPENING_MATERIAL_TOTAL);
+    const GUARD_VALUE = 14;
+    score += (blackGuards - 4) * GUARD_VALUE * phase; // thiếu Sĩ/Tượng nào bị trừ điểm nấy so với đủ 4 quân
+    score -= (redGuards - 4) * GUARD_VALUE * phase;
+
+    if (blackGen) score += kingFileThreat(blackGen.x, blackGen.y, 'black', grid) * phase;
+    if (redGen) score -= kingFileThreat(redGen.x, redGen.y, 'red', grid) * phase;
 
     return score;
 }
@@ -1642,12 +1706,15 @@ function moveKey(move) {
 }
 
 // Ưu tiên: MVV-LVA (đã có sẵn weight) > killer move > history heuristic
-function orderMovesForNode(moves, depth) {
+function orderMovesForNode(moves, depth, ttMove) {
     const km = killerMoves[depth] || [];
+    const ttKey = ttMove ? moveKey(ttMove) : null;
     for (let i = 0; i < moves.length; i++) {
         const mv = moves[i];
-        if (!mv.isCapture) {
-            const key = moveKey(mv);
+        const key = moveKey(mv);
+        if (ttKey && key === ttKey) {
+            mv.weight += 100000; // nước đi tốt nhất đã biết từ lần tìm kiếm trước — luôn thử đầu tiên
+        } else if (!mv.isCapture) {
             if (km[0] && moveKey(km[0]) === key) mv.weight += 9000;
             else if (km[1] && moveKey(km[1]) === key) mv.weight += 8000;
             else mv.weight += (historyTable[key] || 0);
@@ -1655,6 +1722,17 @@ function orderMovesForNode(moves, depth) {
     }
     moves.sort((a, b) => b.weight - a.weight);
     return moves;
+}
+
+// Bên "side" còn quân "nặng" (Xe/Pháo/Mã) hay không — dùng để chặn null-move
+// pruning ở các thế cờ tàn cuộc chỉ còn Tướng+Sĩ+Tượng+Tốt, nơi zugzwang (buộc
+// phải đi một nước bất lợi) dễ xảy ra hơn và null-move có thể cho kết quả sai.
+function hasNonPawnMaterial(side, piecesState) {
+    for (let i = 0; i < piecesState.length; i++) {
+        const p = piecesState[i];
+        if (p.side === side && (p.type === 'Xe' || p.type === 'Pháo' || p.type === 'Mã')) return true;
+    }
+    return false;
 }
 
 function recordKiller(move, depth) {
@@ -1755,23 +1833,54 @@ function quiescence(alpha, beta, piecesState, isMaximizing, qDepth, checkExtLeft
     return isMaximizing ? alpha : beta;
 }
 
-// ---- Minimax + Alpha-Beta + Transposition Table ----
-function minimax(depth, isMaximizing, alpha, beta, piecesState) {
+// ---- Minimax + Alpha-Beta + Transposition Table + Null-Move Pruning ----
+function minimax(depth, isMaximizing, alpha, beta, piecesState, canNull) {
+    if (canNull === undefined) canNull = true;
     checkTime();
     const side = isMaximizing ? 'black' : 'red';
 
     const hash = hashPosition(piecesState, side);
     const alphaOrig = alpha, betaOrig = beta;
     const ttEntry = TT.get(hash);
-    if (ttEntry && ttEntry.depth >= depth) {
-        if (ttEntry.flag === 'EXACT') return ttEntry.score;
-        if (ttEntry.flag === 'LOWER') alpha = Math.max(alpha, ttEntry.score);
-        else if (ttEntry.flag === 'UPPER') beta = Math.min(beta, ttEntry.score);
-        if (alpha >= beta) return ttEntry.score;
+    let ttMove = null;
+    if (ttEntry) {
+        ttMove = ttEntry.move || null;
+        if (ttEntry.depth >= depth) {
+            if (ttEntry.flag === 'EXACT') return ttEntry.score;
+            if (ttEntry.flag === 'LOWER') alpha = Math.max(alpha, ttEntry.score);
+            else if (ttEntry.flag === 'UPPER') beta = Math.min(beta, ttEntry.score);
+            if (alpha >= beta) return ttEntry.score;
+        }
     }
 
     if (depth === 0) {
         return quiescence(alpha, beta, piecesState, isMaximizing, 3, MAX_CHECK_EXT);
+    }
+
+    // ---- NULL-MOVE PRUNING ----
+    // Giả định "bỏ lượt" (không đi gì cả) để kiểm tra nhanh: nếu ngay cả khi được
+    // "cho không" một lượt, đối phương vẫn không thể kéo điểm số vượt qua cửa sổ
+    // alpha-beta hiện tại, thì gần như chắc chắn một nước đi thật sự còn tốt hơn nữa
+    // — cắt tỉa ngay mà không cần xét hết các nước đi ở node này. Bỏ qua kỹ thuật
+    // này khi: đang bị chiếu (bắt buộc phải đi, không được "bỏ lượt"), độ sâu còn
+    // lại quá nông (dễ cho kết quả sai), vừa mới null-move ở node cha (không làm
+    // 2 lần liên tiếp), hoặc bên đó chỉ còn Tướng/Sĩ/Tượng/Tốt (dễ zugzwang).
+    if (canNull && depth >= 3 && !isKingInCheck(side, piecesState) && hasNonPawnMaterial(side, piecesState)) {
+        const R = depth > 6 ? 3 : 2;
+        // QUAN TRỌNG: chỉ null-move khi cửa sổ alpha-beta đã có biên HỮU HẠN thực sự.
+        // Ở các node còn cửa sổ vô hạn (-Infinity, +Infinity) — điển hình là những
+        // nhánh đầu tiên chưa có gì để so sánh — phép "beta - 1" vẫn ra Infinity do
+        // đặc tính số học dấu phẩy động (Infinity - 1 === Infinity), khiến null-move
+        // trả thẳng về Infinity/-Infinity thay vì một điểm cắt hợp lệ, làm hỏng toàn
+        // bộ điểm số của cả cây tìm kiếm phía trên. Bỏ qua null-move trong trường hợp
+        // này — chỉ mất một chút cơ hội cắt tỉa ở vài node gần gốc, không đáng kể.
+        if (isMaximizing && Number.isFinite(beta)) {
+            const nullScore = minimax(depth - 1 - R, false, beta - 1, beta, piecesState, false);
+            if (nullScore >= beta) return beta;
+        } else if (!isMaximizing && Number.isFinite(alpha)) {
+            const nullScore = minimax(depth - 1 - R, true, alpha, alpha + 1, piecesState, false);
+            if (nullScore <= alpha) return alpha;
+        }
     }
 
     let moves = generatePseudoMoves(side, piecesState);
@@ -1779,19 +1888,20 @@ function minimax(depth, isMaximizing, alpha, beta, piecesState) {
         // Bị chiếu bí hoặc hết nước đi (thua theo luật cờ tướng)
         return isMaximizing ? -30000 : 30000;
     }
-    moves = orderMovesForNode(moves, depth);
+    moves = orderMovesForNode(moves, depth, ttMove);
 
     let bestScore = isMaximizing ? -Infinity : Infinity;
+    let bestMoveThisNode = null;
     for (let i = 0; i < moves.length; i++) {
         const mv = moves[i];
         const nextState = simulateMove(mv.pieceIndex, mv.targetX, mv.targetY, piecesState);
-        const evalScore = minimax(depth - 1, !isMaximizing, alpha, beta, nextState);
+        const evalScore = minimax(depth - 1, !isMaximizing, alpha, beta, nextState, true);
 
         if (isMaximizing) {
-            if (evalScore > bestScore) bestScore = evalScore;
+            if (evalScore > bestScore) { bestScore = evalScore; bestMoveThisNode = mv; }
             if (evalScore > alpha) alpha = evalScore;
         } else {
-            if (evalScore < bestScore) bestScore = evalScore;
+            if (evalScore < bestScore) { bestScore = evalScore; bestMoveThisNode = mv; }
             if (evalScore < beta) beta = evalScore;
         }
         if (beta <= alpha) {
@@ -1804,7 +1914,10 @@ function minimax(depth, isMaximizing, alpha, beta, piecesState) {
     let flag = 'EXACT';
     if (bestScore <= alphaOrig) flag = 'UPPER';
     else if (bestScore >= betaOrig) flag = 'LOWER';
-    TT.set(hash, { depth, score: bestScore, flag });
+    TT.set(hash, {
+        depth, score: bestScore, flag,
+        move: bestMoveThisNode ? { pieceIndex: bestMoveThisNode.pieceIndex, targetX: bestMoveThisNode.targetX, targetY: bestMoveThisNode.targetY } : null
+    });
 
     return bestScore;
 }
@@ -1813,7 +1926,11 @@ function searchRootAtDepth(side, piecesState, depth) {
     const isMaximizing = side === 'black';
     let moves = generateOrderedMoves(side, piecesState);
     if (moves.length === 0) return { move: null, score: isMaximizing ? -30000 : 30000 };
-    moves = orderMovesForNode(moves, depth);
+
+    const hash = hashPosition(piecesState, side);
+    const ttEntry = TT.get(hash);
+    const ttMove = ttEntry ? ttEntry.move : null;
+    moves = orderMovesForNode(moves, depth, ttMove);
 
     let bestMove = moves[0];
     let bestScore = isMaximizing ? -Infinity : Infinity;
@@ -1822,7 +1939,7 @@ function searchRootAtDepth(side, piecesState, depth) {
     for (let i = 0; i < moves.length; i++) {
         const mv = moves[i];
         const nextState = simulateMove(mv.pieceIndex, mv.targetX, mv.targetY, piecesState);
-        const score = minimax(depth - 1, !isMaximizing, alpha, beta, nextState);
+        const score = minimax(depth - 1, !isMaximizing, alpha, beta, nextState, true);
 
         if (isMaximizing) {
             if (score > bestScore) { bestScore = score; bestMove = mv; }
@@ -1832,11 +1949,91 @@ function searchRootAtDepth(side, piecesState, depth) {
             if (score < beta) beta = score;
         }
     }
+
+    TT.set(hash, {
+        depth, score: bestScore, flag: 'EXACT',
+        move: { pieceIndex: bestMove.pieceIndex, targetX: bestMove.targetX, targetY: bestMove.targetY }
+    });
+
     return { move: bestMove, score: bestScore };
+}
+
+// ==========================================================
+// SÁCH KHAI CUỘC (Opening Book) — vài thế trận kinh điển được công nhận rộng
+// rãi trong lý thuyết cờ tướng (Trung Pháo, Bình Phong Mã, Mã nhảy trước...),
+// giúp AI mở màn đúng bài bản thay vì tự tính từ nước đầu (khi độ sâu tìm
+// kiếm còn nông, dễ chọn nước "đúng nhưng chưa tối ưu"). Khi có nhiều lựa
+// chọn tốt, chọn NGẪU NHIÊN để mỗi ván đấu đa dạng hơn thay vì máy móc lặp
+// lại y hệt mỗi lần. Sách chỉ áp dụng ở 1 nước đầu của MỖI BÊN, xác định
+// bằng cách so khớp toạ độ hiện tại với toạ độ gốc của các quân liên quan
+// (định danh theo ID quân — ổn định xuyên suốt ván vì giai đoạn này chưa ai
+// ăn quân nào cả). Mọi nước trong sách đều được xác thực lại bằng isLegalMove
+// trước khi dùng — nếu không hợp lệ vì lý do gì đó, sách tự bỏ qua an toàn
+// thay vì áp dụng bừa, và search bình thường sẽ tự đảm nhiệm thay.
+// ==========================================================
+const OPENING_BOOK = {
+    redFirstMoves: [
+        { pieceId: 27, tx: 4, ty: 7, label: 'Pháo hai bình năm (Trung Pháo)' },
+        { pieceId: 26, tx: 4, ty: 7, label: 'Pháo tám bình năm (Trung Pháo)' },
+        { pieceId: 24, tx: 6, ty: 7, label: 'Mã nhảy trước (khai cuộc linh hoạt)' }
+    ],
+    blackReplyToCentralCannon: [
+        { pieceId: 2, tx: 2, ty: 2, label: 'Bình Phong Mã trái' },
+        { pieceId: 8, tx: 6, ty: 2, label: 'Bình Phong Mã phải' }
+    ]
+};
+
+// Toạ độ gốc của các quân liên quan tới sách, dùng để nhận diện "vẫn còn nguyên khai cuộc"
+const BOOK_HOME = {
+    2: { x: 1, y: 0 }, 8: { x: 7, y: 0 },              // 2 Mã đen
+    24: { x: 7, y: 9 }, 26: { x: 1, y: 7 }, 27: { x: 7, y: 7 } // Mã phải đỏ, 2 Pháo đỏ
+};
+function atBookHome(piecesState, id) {
+    const p = piecesState.find(pp => pp.id === id);
+    const home = BOOK_HOME[id];
+    return !!p && p.x === home.x && p.y === home.y;
+}
+
+function probeOpeningBook(side, piecesState) {
+    if (piecesState.length !== 32) return null; // đã có quân bị ăn -> ra khỏi sách, nhường cho search
+
+    const findIdx = id => piecesState.findIndex(p => p.id === id);
+    const pickFrom = list => {
+        const cands = list.filter(m => {
+            const idx = findIdx(m.pieceId);
+            return idx !== -1 && isLegalMove(idx, m.tx, m.ty, piecesState);
+        });
+        if (cands.length === 0) return null;
+        const m = cands[Math.floor(Math.random() * cands.length)];
+        const idx = findIdx(m.pieceId);
+        return { pieceIndex: idx, targetX: m.tx, targetY: m.ty, weight: 0, isCapture: false, bookLabel: m.label };
+    };
+
+    if (side === 'red') {
+        if (atBookHome(piecesState, 26) && atBookHome(piecesState, 27) && atBookHome(piecesState, 24)) {
+            return pickFrom(OPENING_BOOK.redFirstMoves);
+        }
+        return null;
+    }
+
+    if (side === 'black') {
+        if (atBookHome(piecesState, 2) && atBookHome(piecesState, 8)) {
+            const centralPao = piecesState.some(p => p.side === 'red' && p.type === 'Pháo' && p.x === 4 && p.y === 7);
+            if (centralPao) return pickFrom(OPENING_BOOK.blackReplyToCentralCannon);
+        }
+        return null;
+    }
+
+    return null;
 }
 
 // ---- Iterative Deepening có giới hạn thời gian ----
 function findBestMoveTimed(side, piecesState, budgetMs, maxDepth) {
+    const bookMove = probeOpeningBook(side, piecesState);
+    if (bookMove) {
+        return { move: bookMove, score: 0, depth: 0, nodes: 0, book: true, bookLabel: bookMove.bookLabel };
+    }
+
     TT = new Map();
     killerMoves = {};
     historyTable = {};
@@ -1877,6 +2074,12 @@ function findBestMoveTimed(side, piecesState, budgetMs, maxDepth) {
 // không có Web Worker). Chia nhỏ theo từng độ sâu bằng setTimeout để trình duyệt
 // có cơ hội vẽ lại giao diện giữa các lượt, thay vì đơ hoàn toàn suốt cả quá trình.
 function findBestMoveAsync(side, piecesState, budgetMs, maxDepth, onDone) {
+    const bookMove = probeOpeningBook(side, piecesState);
+    if (bookMove) {
+        onDone({ move: bookMove, score: 0, depth: 0, nodes: 0, book: true, bookLabel: bookMove.bookLabel });
+        return;
+    }
+
     TT = new Map();
     killerMoves = {};
     historyTable = {};
@@ -1932,7 +2135,8 @@ if (typeof importScripts === 'function') {
                 const result = findBestMoveTimed(data.side, data.pieces, data.timeBudget, data.maxDepth);
                 self.postMessage({
                     type: 'result', searchId: data.searchId,
-                    move: result.move, score: result.score, depth: result.depth, nodes: result.nodes
+                    move: result.move, score: result.score, depth: result.depth, nodes: result.nodes,
+                    book: result.book, bookLabel: result.bookLabel
                 });
             } catch (err) {
                 self.postMessage({ type: 'error', searchId: data.searchId, message: String(err && err.message || err) });
@@ -2233,7 +2437,7 @@ const engine = {
 
         if (this.isAIActive) {
             btn.classList.add('active');
-            nameBlack.innerText = "Siêu Máy Skynet (AI v6.0)";
+            nameBlack.innerText = "Siêu Máy Skynet";
             avatarBlack.innerHTML = iconHTML('robot');
             if (diffBar) diffBar.style.display = 'flex';
             this.showModal({
@@ -2354,7 +2558,7 @@ const engine = {
         if (infoEl) infoEl.innerText = '';
 
         if (this.isAIActive) {
-            nameBlack.innerText = "Siêu Máy Skynet (AI v6.0)";
+            nameBlack.innerText = "Siêu Máy Skynet";
             avatarBlack.innerHTML = iconHTML('robot');
         } else {
             nameBlack.innerText = "Bạch Hổ Kỳ Vương";
@@ -2607,7 +2811,7 @@ const engine = {
         let msg = `🏆 Phe <b style="color:${winner === 'red' ? '#ff3333' : '#00e6ff'}">${winner === 'red' ? 'ĐỎ' : 'XANH'}</b> thắng!`;
         if (this.isAIActive) {
             msg = winner === 'black'
-                ? "🤖 Bạn đã thất bại trước **Siêu Máy Skynet v6.0**! Hãy thử lại ở ván sau để phục hận."
+                ? "🤖 Bạn đã thất bại trước **Siêu Máy Skynet**! Hãy thử lại ở ván sau để phục hận."
                 : "🎉 Thật kinh ngạc! Bạn đã hạ gục siêu trí tuệ AI cao cấp thành công!";
         }
 
@@ -2665,7 +2869,8 @@ const engine = {
                 findBestMoveAsync('black', piecesSnapshot, diff.timeBudget, diff.maxDepth, (result) => {
                     this.handleSearchResult({
                         type: 'result', searchId: myId,
-                        move: result.move, score: result.score, depth: result.depth, nodes: result.nodes
+                        move: result.move, score: result.score, depth: result.depth, nodes: result.nodes,
+                        book: result.book, bookLabel: result.bookLabel
                     });
                 });
             }, 30);
@@ -2692,7 +2897,7 @@ const engine = {
         }
 
         if (infoEl) {
-            infoEl.innerText = `Độ sâu ${data.depth} · ${data.nodes.toLocaleString('vi-VN')} nút · điểm ${data.score}`;
+            infoEl.innerText = data.book ? `📖 Sách khai cuộc: ${data.bookLabel}` : '';
         }
 
         this.historyStack.push(JSON.stringify({ pieces: this.pieces, turn: this.turn, lastMove: this.lastMove }));
