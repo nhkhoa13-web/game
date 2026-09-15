@@ -1480,7 +1480,9 @@ function generateOrderedMoves(side, piecesState) {
             const targetOccupant = grid[tx][ty];
             const move = {
                 pieceIndex: i, targetX: tx, targetY: ty,
-                weight: 0, isCapture: !!targetOccupant
+                weight: 0, isCapture: !!targetOccupant,
+                capturedType: targetOccupant ? targetOccupant.type : null,
+                capturedSide: targetOccupant ? targetOccupant.side : null
             };
             if (targetOccupant) {
                 move.weight = (PIECE_VALUES[targetOccupant.type] * 10) - PIECE_VALUES[piece.type];
@@ -1512,7 +1514,14 @@ function generatePseudoMoves(side, piecesState) {
         for (let j = 0; j < pmoves.length; j++) {
             const tx = pmoves[j][0], ty = pmoves[j][1];
             const targetOccupant = grid[tx][ty];
-            const move = { pieceIndex: i, targetX: tx, targetY: ty, weight: 0, isCapture: !!targetOccupant };
+            const move = {
+                pieceIndex: i, targetX: tx, targetY: ty, weight: 0, isCapture: !!targetOccupant,
+                // Lưu sẵn loại/phe quân bị ăn (nếu có) ngay lúc này — vì targetOccupant đã có
+                // sẵn trong tay ở đây với chi phí O(1); nhờ vậy incrementalHash() sau này không
+                // cần quét lại toàn bộ mảng quân cờ để tìm quân bị ăn là ai.
+                capturedType: targetOccupant ? targetOccupant.type : null,
+                capturedSide: targetOccupant ? targetOccupant.side : null
+            };
             if (targetOccupant) {
                 move.weight = (PIECE_VALUES[targetOccupant.type] * 10) - PIECE_VALUES[piece.type];
             }
@@ -1682,6 +1691,24 @@ function hashPosition(piecesState, sideToMove) {
     return h >>> 0;
 }
 
+// ---- ZOBRIST HASH TĂNG DẦN (incremental) ----
+// hashPosition() ở trên phải quét lại TOÀN BỘ quân cờ (O(số quân)) — tốn kém vì
+// được gọi ở MỌI node của cây tìm kiếm. Hàm này cập nhật hash CHỈ DỰA TRÊN phần
+// thay đổi của MỘT nước đi (quân dời khỏi ô cũ, tới ô mới, quân bị ăn nếu có, và
+// đổi lượt) — chi phí O(1) thay vì O(32), giúp minimax không cần hashPosition()
+// lại từ đầu ở mỗi node con, chỉ cần cập nhật tăng dần từ hash của node cha.
+function incrementalHash(prevHash, movedPiece, fromX, fromY, toX, toY, capturedType, capturedSide) {
+    let h = prevHash;
+    const movedKey = movedPiece.side + '_' + movedPiece.type;
+    h ^= ZOBRIST[movedKey][fromX][fromY]; // quân rời ô cũ
+    h ^= ZOBRIST[movedKey][toX][toY];     // quân tới ô mới
+    if (capturedType) {
+        h ^= ZOBRIST[capturedSide + '_' + capturedType][toX][toY]; // quân bị ăn biến mất khỏi ô đó
+    }
+    h ^= ZOBRIST.sideToMove; // sau mỗi nước đi luôn đổi lượt -> luôn phải lật cờ này
+    return h >>> 0;
+}
+
 // ---- Trạng thái tìm kiếm (reset mỗi lần gọi findBestMoveTimed) ----
 let TT = new Map();
 let killerMoves = {};
@@ -1834,12 +1861,15 @@ function quiescence(alpha, beta, piecesState, isMaximizing, qDepth, checkExtLeft
 }
 
 // ---- Minimax + Alpha-Beta + Transposition Table + Null-Move Pruning ----
-function minimax(depth, isMaximizing, alpha, beta, piecesState, canNull) {
+function minimax(depth, isMaximizing, alpha, beta, piecesState, canNull, hash) {
     if (canNull === undefined) canNull = true;
     checkTime();
     const side = isMaximizing ? 'black' : 'red';
 
-    const hash = hashPosition(piecesState, side);
+    // Hash được truyền TĂNG DẦN từ node cha (O(1)) thay vì quét lại toàn bộ quân cờ.
+    // Chỉ tính lại từ đầu bằng hashPosition() nếu vì lý do gì đó chưa có sẵn (an toàn
+    // dự phòng, ví dụ gọi minimax() trực tiếp từ nơi khác chưa truyền hash).
+    if (hash === undefined) hash = hashPosition(piecesState, side);
     const alphaOrig = alpha, betaOrig = beta;
     const ttEntry = TT.get(hash);
     let ttMove = null;
@@ -1874,11 +1904,12 @@ function minimax(depth, isMaximizing, alpha, beta, piecesState, canNull) {
         // trả thẳng về Infinity/-Infinity thay vì một điểm cắt hợp lệ, làm hỏng toàn
         // bộ điểm số của cả cây tìm kiếm phía trên. Bỏ qua null-move trong trường hợp
         // này — chỉ mất một chút cơ hội cắt tỉa ở vài node gần gốc, không đáng kể.
+        const nullHash = (hash ^ ZOBRIST.sideToMove) >>> 0; // bỏ lượt: quân không đổi, chỉ đổi bên đi
         if (isMaximizing && Number.isFinite(beta)) {
-            const nullScore = minimax(depth - 1 - R, false, beta - 1, beta, piecesState, false);
+            const nullScore = minimax(depth - 1 - R, false, beta - 1, beta, piecesState, false, nullHash);
             if (nullScore >= beta) return beta;
         } else if (!isMaximizing && Number.isFinite(alpha)) {
-            const nullScore = minimax(depth - 1 - R, true, alpha, alpha + 1, piecesState, false);
+            const nullScore = minimax(depth - 1 - R, true, alpha, alpha + 1, piecesState, false, nullHash);
             if (nullScore <= alpha) return alpha;
         }
     }
@@ -1894,8 +1925,10 @@ function minimax(depth, isMaximizing, alpha, beta, piecesState, canNull) {
     let bestMoveThisNode = null;
     for (let i = 0; i < moves.length; i++) {
         const mv = moves[i];
+        const movedPiece = piecesState[mv.pieceIndex];
         const nextState = simulateMove(mv.pieceIndex, mv.targetX, mv.targetY, piecesState);
-        const evalScore = minimax(depth - 1, !isMaximizing, alpha, beta, nextState, true);
+        const nextHash = incrementalHash(hash, movedPiece, movedPiece.x, movedPiece.y, mv.targetX, mv.targetY, mv.capturedType, mv.capturedSide);
+        const evalScore = minimax(depth - 1, !isMaximizing, alpha, beta, nextState, true, nextHash);
 
         if (isMaximizing) {
             if (evalScore > bestScore) { bestScore = evalScore; bestMoveThisNode = mv; }
@@ -1938,8 +1971,10 @@ function searchRootAtDepth(side, piecesState, depth) {
 
     for (let i = 0; i < moves.length; i++) {
         const mv = moves[i];
+        const movedPiece = piecesState[mv.pieceIndex];
         const nextState = simulateMove(mv.pieceIndex, mv.targetX, mv.targetY, piecesState);
-        const score = minimax(depth - 1, !isMaximizing, alpha, beta, nextState, true);
+        const nextHash = incrementalHash(hash, movedPiece, movedPiece.x, movedPiece.y, mv.targetX, mv.targetY, mv.capturedType, mv.capturedSide);
+        const score = minimax(depth - 1, !isMaximizing, alpha, beta, nextState, true, nextHash);
 
         if (isMaximizing) {
             if (score > bestScore) { bestScore = score; bestMove = mv; }
